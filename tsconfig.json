@@ -16,9 +16,10 @@
 		"types": ["node"],
 		"emitDecoratorMetadata": false,
 		"downlevelIteration": true,
+		"experimentalDecorators": true,
 		"paths": {
-			"@utils/*": ["src/utils/*"],
-			"@structures": ["src/structures/index"]
+			"@lib/*": ["src/lib/*"],
+			"@commands/*": ["src/commands/*"]
 		},
 		"plugins": [
 			{

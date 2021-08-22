@@ -1,10 +1,10 @@
 {
-  "name": "pattebot",
+  "name": "nox",
   "version": "0.0.1",
   "description": "A simple Sapphire-based bot",
-  "main": "index.js",
+  "main": "build/src/index.js",
   "scripts": {
-    "build": "npx ttsc",
+    "build": "npx ttsc --build --clean && npx ttsc",
     "start": "node build/src/index.js"
   },
   "repository": {
@@ -18,8 +18,10 @@
   },
   "homepage": "https://github.com/Tokipudi/nox#readme",
   "dependencies": {
+    "@sapphire/decorators": "^2.2.0",
     "@sapphire/discord-utilities": "^2.1.5",
     "@sapphire/discord.js-utilities": "next",
+    "@sapphire/framework": "^2.0.0-next.27bbcfb4.0",
     "@sapphire/pieces": "^2.1.0",
     "@sapphire/ratelimits": "^2.0.1",
     "@sapphire/utilities": "^2.0.1",
@@ -31,12 +33,10 @@
     "@commitlint/cli": "^13.1.0",
     "@commitlint/config-conventional": "^13.1.0",
     "@favware/rollup-type-bundler": "^1.0.3",
-    "@sapphire/eslint-config": "^3.2.3",
-    "@sapphire/prettier-config": "^1.1.6",
-    "@sapphire/ts-config": "^3.0.0",
     "@types/jest": "^26.0.24",
     "@types/node": "^16.6.1",
     "@types/ws": "^7.4.7",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@zerollup/ts-transform-paths": "^1.7.18",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",

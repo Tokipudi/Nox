@@ -1,6 +1,24 @@
 {
-	"extends": "@sapphire",
+	"plugins": ["@typescript-eslint"], // Add
+	"extends": [
+	  "next",
+	  "next/core-web-vitals",
+	  "plugin:@typescript-eslint/recommended" // Add
+	],
+	"env": {
+		"node": true,
+		"es6": true
+	  },
+	
+	  "parserOptions": {
+		"ecmaVersion": 8
+	},
 	"rules": {
-		"prettier/prettier": ["error", {"singleQuote": true, "parser": "flow", "endOfLine": "auto"}]
+	  // You can remove the prefer-const rule, as it is already added by @typescript-eslint/recommended
+  
+	  // I suggest you add at least those two rules:
+	  "@typescript-eslint/no-unused-vars": "error",
+	  "@typescript-eslint/no-explicit-any": "error",
+	  "prettier/prettier": 0
 	}
-}
+  }
