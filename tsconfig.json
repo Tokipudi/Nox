@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"lib": ["ES2019.Array"],
+		"target": "es6",
+		"module": "commonjs",
+		"sourceMap": false,
+		"alwaysStrict": true,
+		"declaration": false,
+		"listEmittedFiles": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"strictPropertyInitialization": false,
+		"outDir": "build",
+		"types": ["node"],
+		"emitDecoratorMetadata": false,
+		"downlevelIteration": true,
+		"paths": {
+			"@utils/*": ["src/utils/*"],
+			"@structures": ["src/structures/index"]
+		},
+		"plugins": [
+			{
+				"transform": "@zerollup/ts-transform-paths"
+			}
+		],
+		"baseUrl": ".",
+		"rootDir": "."
+	},
+	"include": ["src/**/*"]
+  }
