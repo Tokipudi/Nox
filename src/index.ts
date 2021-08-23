@@ -8,8 +8,4 @@ const client = new NoxClient({
   defaultPrefix: '!',
 });
 
-client.once('ready', () => {
-  console.log('Ready!');
-});
-
 client.login(process.env.DISCORD_TOKEN);
