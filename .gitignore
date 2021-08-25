@@ -108,3 +108,8 @@ build/
 
 # package lock
 package-lock.json
+
+# Prisma tools
+*.db
+*.db-journal
+*.sql

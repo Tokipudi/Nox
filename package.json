@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Tokipudi/nox#readme",
   "dependencies": {
+    "@prisma/client": "^2.30.0",
     "@sapphire/decorators": "^2.2.0",
     "@sapphire/discord-utilities": "^2.1.5",
     "@sapphire/discord.js-utilities": "next",
@@ -48,6 +49,7 @@
     "@zerollup/ts-transform-paths": "^1.7.18",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
+    "prisma": "^2.30.0",
     "ttypescript": "^1.5.12",
     "typescript": "^4.3.5"
   }

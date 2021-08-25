@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model Gods {
+    id                         Int         @id
+    name                       String      @unique
+    pantheon                   Pantheons[]
+    roles                      String
+    title                      String
+    type                       String
+    lore                       String
+    pros                       String
+    cons                       String
+    autoBanned                 Boolean     @default(false)
+    onFreeRotation             Boolean     @default(false)
+    latestGod                  Boolean     @default(false)
+    ability1                   String
+    ability2                   String
+    ability3                   String
+    ability4                   String
+    ability5                   String
+    attackSpeed                Float       @default(0)
+    AttackSpeedPerLevel        Float       @default(0)
+    hp5PerLevel                Float       @default(0)
+    health                     Int         @default(0)
+    healthPerLevel             Int         @default(0)
+    mp5PerLevel                Float       @default(0)
+    magicProtection            Int         @default(0)
+    magicProtectionPerLevel    Float       @default(0)
+    magicalPower               Int         @default(0)
+    magicalPowerPerLevel       Float       @default(0)
+    mana                       Int         @default(0)
+    manaPerFive                Float       @default(0)
+    manaPerLevel               Int         @default(0)
+    physicalPower              Int         @default(0)
+    physicalPowerPerLevel      Float       @default(0)
+    physicalProtection         Int         @default(0)
+    physicalProtectionPerLevel Float       @default(0)
+    speed                      Int         @default(0)
+    godCard                    String
+    godIcon                    String
+    skins                      Skins[]
+}
+
+model Pantheons {
+    id   Int    @id @default(autoincrement())
+    name String @unique
+    gods Gods[]
+}
+
+model Skins {
+    id            Int    @id
+    god           Gods   @relation(fields: [godId], references: [id])
+    godId         Int
+    name          String
+    godIcon       String
+    godSkin       String
+    obtainability String
+    priceFavor    Int
+    priceGems     Int
+}
