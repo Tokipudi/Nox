@@ -11,41 +11,48 @@ generator client {
 }
 
 model Gods {
-    id                         Int         @id
-    name                       String      @unique
-    pantheon                   Pantheons[]
+    id                         Int       @id
+    name                       String    @unique
+    pantheon                   Pantheons @relation(fields: [pantheonId], references: [id])
+    pantheonId                 Int
     roles                      String
     title                      String
     type                       String
     lore                       String
     pros                       String
     cons                       String
-    autoBanned                 Boolean     @default(false)
-    onFreeRotation             Boolean     @default(false)
-    latestGod                  Boolean     @default(false)
+    autoBanned                 Boolean   @default(false)
+    onFreeRotation             Boolean   @default(false)
+    latestGod                  Boolean   @default(false)
     ability1                   String
     ability2                   String
     ability3                   String
     ability4                   String
     ability5                   String
-    attackSpeed                Float       @default(0)
-    AttackSpeedPerLevel        Float       @default(0)
-    hp5PerLevel                Float       @default(0)
-    health                     Int         @default(0)
-    healthPerLevel             Int         @default(0)
-    mp5PerLevel                Float       @default(0)
-    magicProtection            Int         @default(0)
-    magicProtectionPerLevel    Float       @default(0)
-    magicalPower               Int         @default(0)
-    magicalPowerPerLevel       Float       @default(0)
-    mana                       Int         @default(0)
-    manaPerFive                Float       @default(0)
-    manaPerLevel               Int         @default(0)
-    physicalPower              Int         @default(0)
-    physicalPowerPerLevel      Float       @default(0)
-    physicalProtection         Int         @default(0)
-    physicalProtectionPerLevel Float       @default(0)
-    speed                      Int         @default(0)
+    abilityThumbnail1          String
+    abilityThumbnail2          String
+    abilityThumbnail3          String
+    abilityThumbnail4          String
+    abilityThumbnail5          String
+    basicAttack                String
+    attackSpeed                Float     @default(0)
+    AttackSpeedPerLevel        Float     @default(0)
+    hp5PerLevel                Float     @default(0)
+    health                     Int       @default(0)
+    healthPerLevel             Int       @default(0)
+    mp5PerLevel                Float     @default(0)
+    magicProtection            Int       @default(0)
+    magicProtectionPerLevel    Float     @default(0)
+    magicalPower               Int       @default(0)
+    magicalPowerPerLevel       Float     @default(0)
+    mana                       Int       @default(0)
+    manaPerFive                Float     @default(0)
+    manaPerLevel               Int       @default(0)
+    physicalPower              Int       @default(0)
+    physicalPowerPerLevel      Float     @default(0)
+    physicalProtection         Int       @default(0)
+    physicalProtectionPerLevel Float     @default(0)
+    speed                      Int       @default(0)
     godCard                    String
     godIcon                    String
     skins                      Skins[]
