@@ -59,4 +59,19 @@ export interface God {
     id: number,
     latestGod: string
 }
-export interface GodsResponse extends Array<God> {}
+export interface GodsResponse extends Array<God> { }
+
+export interface Skin {
+    godIcon_URL: string,
+    godSkin_URL: string,
+    god_id: number,
+    god_name: string,
+    obtainability: string,
+    price_favor: number,
+    price_gems: number,
+    ret_msg: string,
+    skin_id1: number,
+    skin_id2: number,
+    skin_name: string
+}
+export interface SkinsResponse extends Array<Skin> { }

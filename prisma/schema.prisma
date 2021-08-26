@@ -53,8 +53,8 @@ model Gods {
     physicalProtection         Int       @default(0)
     physicalProtectionPerLevel Float     @default(0)
     speed                      Int       @default(0)
-    godCard                    String
-    godIcon                    String
+    godCardUrl                 String
+    godIconUrl                 String
     skins                      Skins[]
 }
 
@@ -65,13 +65,21 @@ model Pantheons {
 }
 
 model Skins {
-    id            Int    @id
-    god           Gods   @relation(fields: [godId], references: [id])
-    godId         Int
-    name          String
-    godIcon       String
-    godSkin       String
-    obtainability String
-    priceFavor    Int
-    priceGems     Int
+    id              Int               @id
+    god             Gods              @relation(fields: [godId], references: [id])
+    godId           Int
+    name            String
+    godIconUrl      String
+    godSkinUrl      String
+    obtainability   SkinObtainability @relation(fields: [obtainabilityId], references: [id])
+    obtainabilityId Int
+    priceFavor      Int
+    priceGems       Int
+}
+
+model SkinObtainability {
+    id     Int     @id @default(autoincrement())
+    name   String  @unique
+    weight Int     @default(1)
+    Skins  Skins[]
 }
