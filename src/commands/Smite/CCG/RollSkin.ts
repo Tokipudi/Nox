@@ -1,6 +1,5 @@
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
-import { shuffleArray } from '@lib/utils/Utils';
 
 export class RollSkin extends Command {
     public constructor(context: PieceContext, options: CommandOptions) {
@@ -34,6 +33,7 @@ export class RollSkin extends Command {
             .setTimestamp()
             .setFooter(`${skin.obtainabilityName} skin`);
 
+        await msg.edit('React with any emoji to claim.');
         await msg.edit({ embeds: [embed] });
 
         const collector = msg.createReactionCollector({ max: 1 });
