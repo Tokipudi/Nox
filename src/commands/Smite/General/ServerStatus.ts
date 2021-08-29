@@ -23,7 +23,7 @@ export class ServerStatus extends Command {
             .setColor('#0099ff')
             .setTitle('Smite Servers Status')
             .setURL('https://status.hirezstudios.com/')
-            .setThumbnail('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fexternal-preview.redd.it%2F59ZgrmHWkfJfVE4lsgscbKCuyPUyoH_jk7eSidkM5KQ.png%3Fauto%3Dwebp%26s%3Df1e15e9dc720c3c0ae3d27fbeee31386e12c7e90&f=1&nofb=1')
+            .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setTimestamp();
 
         for (let i = 0; i < data.length; i++) {

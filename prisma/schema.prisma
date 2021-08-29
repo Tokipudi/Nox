@@ -75,6 +75,8 @@ model Skins {
     obtainabilityId Int
     priceFavor      Int
     priceGems       Int
+    player          Players?          @relation(fields: [playerId], references: [id])
+    playerId        String?
 }
 
 model SkinObtainability {
@@ -82,4 +84,9 @@ model SkinObtainability {
     name   String  @unique
     weight Int     @default(1)
     Skins  Skins[]
+}
+
+model Players {
+    id    String  @id
+    skins Skins[]
 }
