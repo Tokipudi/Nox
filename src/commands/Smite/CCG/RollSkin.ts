@@ -22,7 +22,6 @@ export class RollSkin extends Command {
             'AND Skins.godSkinUrl != "" ' +
             'ORDER BY RANDOM() LIMIT 1;'
         );
-
         let skin = skins[0];
 
         let embed = new MessageEmbed()
@@ -73,5 +72,25 @@ export class RollSkin extends Command {
                 this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`)
             }).catch(err => this.container.logger.error(err));
         });
+
+        let wishedPlayers = await this.container.prisma.players.findMany({
+            where: {
+                wishedSkins: {
+                    some: {
+                        id: {
+                            equals: skin.id
+                        }
+                    }
+                }
+            }
+        });
+        if (wishedPlayers && wishedPlayers.length > 0) {
+            for (let k in wishedPlayers) {
+                let player = wishedPlayers[k];
+
+                let user = this.container.client.users.cache.get(player.id);
+                user.send('A skin in your wishlist is available for grab! ' + msg.url);
+            }
+        }
     }
 }

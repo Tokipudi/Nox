@@ -75,8 +75,9 @@ model Skins {
     obtainabilityId Int
     priceFavor      Int
     priceGems       Int
-    player          Players?          @relation(fields: [playerId], references: [id])
+    player          Players?          @relation(name: "PlayerSkins", fields: [playerId], references: [id])
     playerId        String?
+    wishedByPlayer  Players[]         @relation("PlayersWishes")
 }
 
 model SkinObtainability {
@@ -87,6 +88,7 @@ model SkinObtainability {
 }
 
 model Players {
-    id    String  @id
-    skins Skins[]
+    id          String  @id
+    skins       Skins[] @relation(name: "PlayerSkins")
+    wishedSkins Skins[] @relation(name: "PlayersWishes")
 }

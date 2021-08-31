@@ -1,13 +1,13 @@
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
 
-export class ListSkins extends Command {
+export class ListWishedSkins extends Command {
     public constructor(context: PieceContext, options: CommandOptions) {
         super(context, {
             ...options,
-            name: 'listskins',
-            aliases: ['list'],
-            description: 'List the skins you currently own.'
+            name: 'listwishes',
+            aliases: ['wishlist'],
+            description: 'List the skins in your wishlist.'
         });
     }
 
@@ -91,10 +91,12 @@ export class ListSkins extends Command {
     protected async getSkins(user: User) {
         return await this.container.prisma.$queryRaw(
             'SELECT Skins.*, Gods.name as godName, SkinObtainability.name as obtainabilityName ' +
-            'FROM Skins, Gods, SkinObtainability ' +
+            'FROM Skins, Gods, SkinObtainability, Players, _PlayersWishes ' +
             'WHERE Skins.godId = Gods.id ' +
             'AND Skins.obtainabilityId = SkinObtainability.id ' +
-            'AND Skins.playerId = "' + user.id + '" ' +
+            'AND Players.id = _PlayersWishes.A ' +
+            'AND Skins.id = _PlayersWishes.B ' +
+            'AND Players.id = "' + user.id + '" ' +
             'ORDER BY Skins.name;'
         );
     }
