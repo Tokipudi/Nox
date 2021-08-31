@@ -1,15 +1,13 @@
+import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { Message, MessageEmbed, User } from 'discord.js';
 
+@ApplyOptions<CommandOptions>({
+    name: 'wishskin',
+    aliases: ['wish'],
+    description: 'Add a skin to your wishlist and get notified when it is rolled.'
+})
 export class WishSkin extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'wishskin',
-            aliases: ['wish'],
-            description: 'Add a skin to your wishlist and get notified when it is rolled.'
-        });
-    }
 
     public async run(message: Message, args) {
         const skinName: string = await args.rest('string');

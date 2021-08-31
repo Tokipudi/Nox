@@ -1,15 +1,13 @@
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
-import { Message, MessageEmbed, User } from 'discord.js';
+import { ApplyOptions } from '@sapphire/decorators';
+import { Command, CommandOptions } from '@sapphire/framework';
+import { Message, User } from 'discord.js';
 
+@ApplyOptions<CommandOptions>({
+    name: 'giveskin',
+    aliases: ['give'],
+    description: 'Gives a skin you own to a user of your choice.'
+})
 export class GiveSkin extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'giveskin',
-            aliases: ['give'],
-            description: 'Gives a skin you own to a user of your choice.'
-        });
-    }
 
     public async run(message: Message, args) {
         const user: User = await args.pick('user');

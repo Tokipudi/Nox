@@ -1,15 +1,13 @@
+import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
 
+@ApplyOptions<CommandOptions>({
+    name: 'rollskin',
+    aliases: ['roll'],
+    description: 'Roll skins.'
+})
 export class RollSkin extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'rollskin',
-            aliases: ['roll'],
-            description: 'Roll skins.'
-        });
-    }
 
     public async run(message: Message) {
         const msg = await message.reply('Fetching data...');

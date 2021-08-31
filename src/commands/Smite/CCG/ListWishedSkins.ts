@@ -1,19 +1,16 @@
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
+import { ApplyOptions } from '@sapphire/decorators';
+import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
 
+@ApplyOptions<CommandOptions>({
+    name: 'listwishes',
+    aliases: ['wishlist'],
+    description: 'List the skins in your wishlist.'
+})
 export class ListWishedSkins extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'listwishes',
-            aliases: ['wishlist'],
-            description: 'List the skins in your wishlist.'
-        });
-    }
 
     public async run(message: Message) {
         // Constants
-
         const backId = 'back'
         const forwardId = 'forward'
         const backButton = new MessageButton({

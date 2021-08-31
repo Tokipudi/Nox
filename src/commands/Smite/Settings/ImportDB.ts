@@ -1,16 +1,14 @@
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { SmiteGodsApi } from '@lib/hirez/smite/SmiteGodsApi';
-import { Message, MessageEmbed } from 'discord.js';
+import { Message } from 'discord.js';
+import { ApplyOptions } from '@sapphire/decorators';
 
+@ApplyOptions<CommandOptions>({
+    name: 'importdb',
+    aliases: ['idb'],
+    description: 'Import data to the database.'
+})
 export class ImportDB extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'importdb',
-            aliases: ['idb'],
-            description: 'Import data to the database.'
-        });
-    }
 
     public async run(message: Message) {
         const msg = await message.reply('Fetching data from Smite\'s servers...');

@@ -1,16 +1,14 @@
 import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import { SmiteServerApi } from '@lib/hirez/smite/SmiteServerApi';
 import { Message, MessageEmbed } from 'discord.js';
+import { ApplyOptions } from '@sapphire/decorators';
 
+@ApplyOptions<CommandOptions>({
+    name: 'serverstatus',
+    aliases: ['status'],
+    description: 'Returns Smite\'s server status.'
+})
 export class ServerStatus extends Command {
-    public constructor(context: PieceContext, options: CommandOptions) {
-        super(context, {
-            ...options,
-            name: 'serverstatus',
-            aliases: ['ss'],
-            description: 'Returns Smite\'s server status.'
-        });
-    }
 
     public async run(message: Message) {
         const msg = await message.reply('Fetching data from Smite\'s servers...');
