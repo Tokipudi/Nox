@@ -17,7 +17,7 @@ export class GiveSkin extends Command {
 
         if (!user) return message.reply('The first argument **must** be a user.');
         if (user.id === message.author.id) return message.reply('You cannot give yourself a skin!');
-        // if (user.bot) return message.reply('You cannot give a skin to a bot!');
+        if (user.bot) return message.reply('You cannot give a skin to a bot!');
         if (!skinName) return message.reply('The second argument needs to be a valid skin name!');
 
         skinName.trim();
