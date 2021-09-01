@@ -32,13 +32,7 @@ export class GiveSkin extends Command {
                 id: user.id
             }
         });
-        if (!player) {
-            player = await this.container.prisma.players.create({
-                data: {
-                    id: user.id
-                }
-            });
-        }
+        if (!player) return message.reply(`${user} is not registered as a user. They first need to add a skin to their collection to be able to exchange with you!`);
 
         const prefix = this.container.client.options.defaultPrefix;
         let reply = await message.reply(`${user} An exchange has been started.\u200B` +

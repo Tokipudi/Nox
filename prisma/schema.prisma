@@ -88,7 +88,9 @@ model SkinObtainability {
 }
 
 model Players {
-    id          String  @id
-    skins       Skins[] @relation(name: "PlayerSkins")
-    wishedSkins Skins[] @relation(name: "PlayersWishes")
+    id           String   @id
+    skins        Skins[]  @relation(name: "PlayerSkins")
+    wishedSkins  Skins[]  @relation(name: "PlayersWishes")
+    lastSkinDate DateTime @default(now())
+    isNew        Boolean  @default(true)
 }
