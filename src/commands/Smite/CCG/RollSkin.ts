@@ -52,7 +52,7 @@ export class RollSkin extends Command {
             }
             return player.isNew || moment.utc().isSameOrAfter(moment(player.lastSkinDate).add(3, 'hour'));
         };
-        const collector = msg.createReactionCollector({ filter });
+        const collector = msg.createReactionCollector({ filter, time: 45000 });
 
         collector.on('collect', async (reaction, user) => {
             await this.container.prisma.players.update({
