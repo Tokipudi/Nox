@@ -1,5 +1,5 @@
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
+import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
@@ -9,7 +9,14 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'di
 })
 export class ListSkins extends Command {
 
-    public async run(message: Message) {
+    public async run(message: Message, args: Args) {
+        try {
+            var user: User | null = await args.pick('user');
+        } catch (e) {
+            // Do nothing...
+        }
+        const player = user ?? message.author;
+
         // Constants
         const backId = 'back'
         const forwardId = 'forward'
@@ -29,9 +36,13 @@ export class ListSkins extends Command {
         // Put the following code wherever you want to send the embed pages:
 
         const { author, channel } = message
-        const skins = await this.getSkins(message.author);
-        if (!skins || skins.length === 0) return message.reply('You currently don\'t own any skin!');
-
+        const skins = await this.getSkins(player);
+        if (!skins || skins.length === 0) {
+            return player.id === message.author.id
+                ? message.reply('You currently don\'t own any skin!')
+                : message.reply(`${player} does not own any skin!`);
+        }
+        
         /**
          * Creates an embed with skins starting from an index.
          * @param {number} index The index to start from.
