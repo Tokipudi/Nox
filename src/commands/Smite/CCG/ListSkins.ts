@@ -30,7 +30,7 @@ export class ListSkins extends Command {
 
         const { author, channel } = message
         const skins = await this.getSkins(message.author);
-        if (!skins) return message.reply('You currently don\'t own any skin!');
+        if (!skins || skins.length === 0) return message.reply('You currently don\'t own any skin!');
 
         /**
          * Creates an embed with skins starting from an index.
