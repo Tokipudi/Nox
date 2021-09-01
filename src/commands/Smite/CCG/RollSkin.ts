@@ -7,7 +7,7 @@ import moment from 'moment';
     name: 'rollskin',
     aliases: ['roll'],
     description: 'Roll skins.',
-    cooldownLimit: 1,
+    cooldownLimit: 10,
     cooldownDelay: 3600000,
     cooldownScope: 3
 })
