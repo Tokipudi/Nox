@@ -1,4 +1,4 @@
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
+import { Command, CommandOptions } from '@sapphire/framework';
 import { SmiteGodsApi } from '@lib/hirez/smite/SmiteGodsApi';
 import { Message } from 'discord.js';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -31,7 +31,7 @@ export class ImportDB extends Command {
         for (let i in data) {
             let god = data[i];
 
-            let godFromDb = this.container.prisma.gods.findUnique({
+            let godFromDb = await this.container.prisma.gods.findUnique({
                 where: {
                     id: god.id
                 }
@@ -106,7 +106,7 @@ export class ImportDB extends Command {
                 id: true
             },
             orderBy: {
-                id: 'asc'
+                name: 'asc'
             }
         });
 
@@ -117,16 +117,33 @@ export class ImportDB extends Command {
             for (let i in data) {
                 let skin = data[i];
 
-                let skinFromDb = this.container.prisma.skins.findUnique({
+                let skinFromDb = await this.container.prisma.skins.findUnique({
                     where: {
                         id: skin.skin_id1
                     }
                 });
                 if (!skinFromDb) {
+                    let skinName = skin.skin_name;
+
+                    let skinFromDb = await this.container.prisma.skins.findUnique({
+                        where: {
+                            name: skinName
+                        }
+                    });
+
+                    if (
+                        skinFromDb
+                        || skinName === 'Golden'
+                        || skinName === 'Legendary'
+                        || skinName === 'Diamond'
+                    ) {
+                        skinName += ` ${skin.god_name}`
+                    }
+
                     await this.container.prisma.skins.create({
                         data: {
                             id: skin.skin_id1,
-                            name: skin.skin_name,
+                            name: skinName,
                             godIconUrl: skin.godIcon_URL,
                             godSkinUrl: skin.godSkin_URL,
                             priceFavor: skin.price_favor,
@@ -149,7 +166,7 @@ export class ImportDB extends Command {
                         }
                     });
 
-                    this.container.logger.info('Skin ' + skin.skin_name + ' (' + skin.god_name + ') has been added to the database.');
+                    this.container.logger.info('Skin ' + skinName + ' has been added to the database.');
                 }
             }
         }
