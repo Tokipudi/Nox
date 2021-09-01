@@ -3,9 +3,9 @@ import { Command, CommandOptions } from '@sapphire/framework';
 import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    name: 'removewishskin',
-    aliases: ['removewish', 'rwish'],
-    description: 'Remove a skin from your wishlist.'
+    name: 'removeskin',
+    aliases: ['remove', 'r'],
+    description: 'Remove a skin from your team.'
 })
 export class RemoveWishSkin extends Command {
 
@@ -18,14 +18,10 @@ export class RemoveWishSkin extends Command {
         const skin = await this.container.prisma.skins.findFirst({
             where: {
                 name: skinName,
-                wishedByPlayer: {
-                    some: {
-                        id: message.author.id
-                    }
-                }
+                playerId: message.author.id
             }
         });
-        if (!skin) return message.reply('The skin **' + skinName + '** does not exist or is not in your wishlist!');
+        if (!skin) return message.reply('The skin **' + skinName + '** does not exist or does not belong to you!');
 
         const player = await this.container.prisma.players.findUnique({
             where: {
@@ -36,10 +32,8 @@ export class RemoveWishSkin extends Command {
 
         await this.container.prisma.skins.update({
             data: {
-                wishedByPlayer: {
-                    disconnect: {
-                        id: message.author.id
-                    }
+                player: {
+                    disconnect: true
                 }
             },
             select: {
@@ -51,7 +45,7 @@ export class RemoveWishSkin extends Command {
             }
         });
 
-        this.container.logger.info(`The skin ${skin.name}<${skin.id}> was removed from the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
-        return message.reply(`The skin **${skinName}** was successfully removed from your wishlist!`);
+        this.container.logger.info(`The skin ${skin.name}<${skin.id}> was removed from the team of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
+        return message.reply(`The skin **${skinName}** was successfully removed from your team!`);
     }
 }
