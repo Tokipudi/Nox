@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
-import { Message, MessageEmbed, User } from 'discord.js';
+import { Command, CommandOptions } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
+import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'exchangeskin',
@@ -11,7 +12,8 @@ export class GiveSkin extends Command {
 
     public async run(message: Message, args) {
         const user: User = await args.pick('user');
-        const skinName: string = await args.rest('string');
+        let skinName: string = await args.rest('string');
+        skinName = toTitleCase(skinName);
 
         if (!user) return message.reply('The first argument **must** be a user.');
         if (user.id === message.author.id) return message.reply('You cannot exchange a skin with yourself!');

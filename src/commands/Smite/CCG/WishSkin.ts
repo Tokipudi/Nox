@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
-import { Message, MessageEmbed, User } from 'discord.js';
+import { Command, CommandOptions } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
+import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'wishskin',
@@ -10,7 +11,8 @@ import { Message, MessageEmbed, User } from 'discord.js';
 export class WishSkin extends Command {
 
     public async run(message: Message, args) {
-        const skinName: string = await args.rest('string');
+        let skinName: string = await args.rest('string');
+        skinName = toTitleCase(skinName);
 
         if (!skinName) return message.reply('The first argument needs to be a valid skin name!');
 
