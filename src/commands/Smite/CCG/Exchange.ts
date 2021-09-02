@@ -58,8 +58,8 @@ export class Exchange extends Command {
 
             return new MessageEmbed()
                 .setTitle(skin.name)
-                .setDescription(`${skin.obtainabilityName} skin`)
-                .setAuthor(skin.godName, skin.godIconUrl)
+                .setDescription(`${skin.obtainability.name} skin`)
+                .setAuthor(skin.god.name, skin.godIconUrl)
                 .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
                 .setImage(skin.godSkinUrl)
                 .setFooter(`Showing skin ${index + 1} out of ${skins.length}`);
@@ -243,6 +243,7 @@ export class Exchange extends Command {
 
                             this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
                             message.reply(`${message.author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
+                            isValidated = true;
                             collector3.stop();
                         }
                     }
@@ -250,7 +251,7 @@ export class Exchange extends Command {
 
                 collector3.on('end', collected => {
                     if (!isValidated) {
-                        message.edit(`${user} did not give an answer. The exchange has been closed.`);
+                        message.reply(`${user} did not give an answer. The exchange has been closed.`);
                     }
                 })
             });
@@ -258,13 +259,27 @@ export class Exchange extends Command {
     }
 
     protected async getSkins(user: User) {
-        return await this.container.prisma.$queryRaw(
-            'SELECT Skins.*, Gods.name as godName, SkinObtainability.name as obtainabilityName ' +
-            'FROM Skins, Gods, SkinObtainability ' +
-            'WHERE Skins.godId = Gods.id ' +
-            'AND Skins.obtainabilityId = SkinObtainability.id ' +
-            'AND Skins.playerId = "' + user.id + '" ' +
-            'ORDER BY Skins.name;'
-        );
+        return await this.container.prisma.skins.findMany({
+            where: {
+                playerId: user.id
+            },
+            include: {
+                god: {
+                    select: {
+                        name: true
+                    }
+                },
+                obtainability: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                god: {
+                    name: 'asc'
+                }
+            }
+        });
     }
 }
