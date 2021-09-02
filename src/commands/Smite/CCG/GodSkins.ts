@@ -1,7 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
-import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
+import { Message, MessageActionRow, MessageButton, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'godskins',
