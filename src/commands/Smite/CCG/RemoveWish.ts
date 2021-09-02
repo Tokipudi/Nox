@@ -157,6 +157,11 @@ export class RemoveWish extends Command {
                         name: true
                     }
                 }
+            },
+            orderBy: {
+                god: {
+                    name: 'asc'   
+                }
             }
         });
     }
