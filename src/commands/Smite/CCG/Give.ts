@@ -92,7 +92,7 @@ export class Give extends Command {
                 case selectId:
                     skinName = interaction.message.embeds[0].title;
                     await interaction.update({
-                        content: `You selected **${user}**`,
+                        content: `You selected **${skinName}**`,
                         embeds: [],
                         components: []
                     });
