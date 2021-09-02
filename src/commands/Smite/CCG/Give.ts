@@ -4,11 +4,10 @@ import { toTitleCase } from '@sapphire/utilities';
 import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    name: 'giveskin',
-    aliases: ['give'],
+    name: 'give',
     description: 'Gives a skin you own to a user of your choice.'
 })
-export class GiveSkin extends Command {
+export class Give extends Command {
 
     public async run(message: Message, args) {
         const user: User = await args.pick('user');

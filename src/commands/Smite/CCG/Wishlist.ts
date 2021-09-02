@@ -3,11 +3,10 @@ import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    name: 'listwishes',
-    aliases: ['wishlist'],
+    name: 'wishlist',
     description: 'List the skins in your wishlist.'
 })
-export class ListWishedSkins extends Command {
+export class Wishlist extends Command {
 
     public async run(message: Message, args: Args) {
         try {

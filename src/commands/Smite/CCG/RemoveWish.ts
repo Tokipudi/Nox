@@ -4,11 +4,11 @@ import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    name: 'removewishskin',
-    aliases: ['removewish', 'rwish'],
+    name: 'removewish',
+    aliases: ['rwish'],
     description: 'Remove a skin from your wishlist.'
 })
-export class RemoveWishSkin extends Command {
+export class RemoveWish extends Command {
 
     public async run(message: Message, args) {
         let skinName: string = await args.rest('string');

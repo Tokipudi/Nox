@@ -4,14 +4,13 @@ import { Message, MessageEmbed } from 'discord.js';
 import moment from 'moment';
 
 @ApplyOptions<CommandOptions>({
-    name: 'rollskin',
-    aliases: ['roll'],
-    description: 'Roll skins.',
-    cooldownLimit: 10,
+    name: 'roll',
+    description: 'Roll a skin and react with an emoji to claim it.',
+    cooldownLimit: 3,
     cooldownDelay: 3600000,
     cooldownScope: 3
 })
-export class RollSkin extends Command {
+export class Roll extends Command {
 
     public async run(message: Message) {
         const msg = await message.reply('Fetching data...');

@@ -4,11 +4,10 @@ import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    name: 'wishskin',
-    aliases: ['wish'],
+    name: 'wish',
     description: 'Add a skin to your wishlist and get notified when it is rolled.'
 })
-export class WishSkin extends Command {
+export class Wish extends Command {
 
     public async run(message: Message, args) {
         let skinName: string = await args.rest('string');
