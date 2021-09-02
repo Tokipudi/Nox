@@ -53,8 +53,8 @@ export class Give extends Command {
 
             return new MessageEmbed()
                 .setTitle(skin.name)
-                .setDescription(`${skin.obtainabilityName} skin`)
-                .setAuthor(skin.godName, skin.godIconUrl)
+                .setDescription(`${skin.obtainability.name} skin`)
+                .setAuthor(skin.god.name, skin.godIconUrl)
                 .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
                 .setImage(skin.godSkinUrl)
                 .setFooter(`Showing skin ${index + 1} out of ${skins.length}`);
@@ -144,13 +144,27 @@ export class Give extends Command {
     }
 
     protected async getSkins(user: User) {
-        return await this.container.prisma.$queryRaw(
-            'SELECT Skins.*, Gods.name as godName, SkinObtainability.name as obtainabilityName ' +
-            'FROM Skins, Gods, SkinObtainability ' +
-            'WHERE Skins.godId = Gods.id ' +
-            'AND Skins.obtainabilityId = SkinObtainability.id ' +
-            'AND Skins.playerId = "' + user.id + '" ' +
-            'ORDER BY Skins.name;'
-        );
+        return await this.container.prisma.skins.findMany({
+            where: {
+                playerId: user.id
+            },
+            include: {
+                god: {
+                    select: {
+                        name: true
+                    }
+                },
+                obtainability: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                god: {
+                    name: 'asc'
+                }
+            }
+        });
     }
 }
