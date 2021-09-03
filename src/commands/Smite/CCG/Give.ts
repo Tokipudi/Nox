@@ -41,10 +41,10 @@ export class Give extends Command {
 
         const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
-        })
+        });
 
         let skinName = '';
-        let currentIndex = 0
+        let currentIndex = 0;
         collector.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
                 // Increase/decrease index
