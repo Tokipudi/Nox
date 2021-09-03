@@ -1,7 +1,9 @@
+import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
+import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
-import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
+import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'exchange',
@@ -10,69 +12,37 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'di
 export class Exchange extends Command {
 
     public async run(message: Message, args: Args) {
+        const { author } = message
         const user: User = await args.rest('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
-        if (user.id === message.author.id) return message.reply('You cannot exchange a skin with yourself!');
+        if (user.id === author.id) return message.reply('You cannot exchange a skin with yourself!');
         if (user.bot) return message.reply('You cannot exchange a skin with a bot!');
 
-        // Constants
-        const backId = 'back'
-        const forwardId = 'forward'
-        const selectId = 'select';
-        const backButton = new MessageButton({
-            style: 'SECONDARY',
-            label: '',
-            emoji: '⬅️',
-            customId: backId
-        })
-        const forwardButton = new MessageButton({
-            style: 'SECONDARY',
-            label: '',
-            emoji: '➡️',
-            customId: forwardId
-        })
-        const selectButton = new MessageButton({
-            style: 'SUCCESS',
-            label: 'Select',
-            customId: selectId
-        })
+        const backButton = getBackButton();
+        const forwardButton = getForwardButton();
+        const selectButton = getSelectButton('Select', 'SUCCESS');
 
-        const { author } = message
-        const skins1 = await this.getSkins(message.author);
+        const skins1 = await getSkinsByUserId(author.id);
         if (!skins1 || skins1.length === 0) {
             return message.reply('You currently don\'t own any skin!');
         }
-        const skins2 = await this.getSkins(user);
+        const skins2 = await getSkinsByUserId(user.id);
         if (!skins2 || skins2.length === 0) {
             return message.reply(`${user} does not own any skin!`);
         }
 
-        /**
-         * Creates an embed with skins starting from an index.
-         * @param {number} index The index to start from.
-         * @returns {Promise<MessageEmbed>}
-         */
-        const generateEmbed = async (skins, index) => {
-            const skin = skins[index];
-
-            return new MessageEmbed()
-                .setTitle(skin.name)
-                .setDescription(`${skin.obtainability.name} skin`)
-                .setAuthor(skin.god.name, skin.godIconUrl)
-                .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-                .setImage(skin.godSkinUrl)
-                .setFooter(`Showing skin ${index + 1} out of ${skins.length}`);
-        }
-
         // Send the embed with the first skin
-        let uniqueSkin = skins1.length <= 1;
+        let currentIndex = 0;
+        skins1.length <= 1
+            ? forwardButton.setDisabled(true)
+            : forwardButton.setDisabled(false);
         const embedMessage1 = await message.reply({
             content: 'Select the skin you wish to exchange.',
-            embeds: [await generateEmbed(skins1, 0)],
+            embeds: [generateEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
-                    components: uniqueSkin ? [...([selectButton])] : [...([selectButton]), ...([forwardButton])]
+                    components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                 })
             ]
         })
@@ -85,54 +55,54 @@ export class Exchange extends Command {
 
         let skinName1 = '';
         let skinName2 = '';
-        let currentIndex = 0
         collector1.on('collect', async interaction => {
-            // Increase/decrease index
-            switch (interaction.customId) {
-                case backId:
-                    currentIndex -= 1;
-                    break;
-                case forwardId:
-                    currentIndex += 1;
-                    break;
-                case selectId:
-                    skinName1 = interaction.message.embeds[0].title;
-                    await interaction.update({
-                        content: `Select the skin you wish to get from ${user}`,
-                        embeds: [],
-                        components: []
-                    });
-                    collector1.stop();
-                    break;
-            }
+            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                // Increase/decrease index
+                switch (interaction.customId) {
+                    case backButton.customId:
+                        if (currentIndex > 0) {
+                            currentIndex -= 1;
+                        }
+                        break;
+                    case forwardButton.customId:
+                        if (currentIndex < skins1.length - 1) {
+                            currentIndex += 1;
+                        }
+                        break;
+                }
 
-            if (interaction.customId === backId || interaction.customId === forwardId) {
+                // Disable the buttons if they cannot be used
+                forwardButton.disabled = currentIndex === skins1.length - 1;
+                backButton.disabled = currentIndex === 0;
+
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await generateEmbed(skins1, currentIndex)],
+                    embeds: [generateEmbed(skins1, currentIndex)],
                     components: [
                         new MessageActionRow({
-                            components: [
-                                // back button if it isn't the start
-                                ...(currentIndex ? [backButton] : []),
-                                ...([selectButton]),
-                                // forward button if it isn't the end
-                                ...(currentIndex + 1 < skins1.length ? [forwardButton] : [])
-                            ]
+                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                         })
                     ]
                 })
+            } else if (interaction.customId === selectButton.customId) {
+                skinName1 = interaction.message.embeds[0].title;
+                await embedMessage1.delete();
+                collector1.stop();
             }
         });
 
         collector1.on('end', async collected => {
-            uniqueSkin = skins2.length <= 1;
-            const embedMessage2 = await embedMessage1.edit({
+            currentIndex = 0
+            backButton.setDisabled(true);
+            skins2.length <= 1
+                ? forwardButton.setDisabled(true)
+                : forwardButton.setDisabled(false);
+            const embedMessage2 = await message.reply({
                 content: `Select the skin you wish to get from ${user}.`,
-                embeds: [await generateEmbed(skins2, 0)],
+                embeds: [generateEmbed(skins2, currentIndex)],
                 components: [
                     new MessageActionRow({
-                        components: uniqueSkin ? [...([selectButton])] : [...([selectButton]), ...([forwardButton])]
+                        components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                     })
                 ]
             })
@@ -142,46 +112,42 @@ export class Exchange extends Command {
             const collector2 = embedMessage2.createMessageComponentCollector({
                 filter: ({ user }) => user.id === author.id
             })
-
-            currentIndex = 0
             collector2.on('collect', async interaction => {
-                // Increase/decrease index
-                switch (interaction.customId) {
-                    case backId:
-                        currentIndex -= 1;
-                        break;
-                    case forwardId:
-                        currentIndex += 1;
-                        break;
-                    case selectId:
-                        skinName2 = interaction.message.embeds[0].title;
-                        await interaction.update({
-                            content: `An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**. Type \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`,
-                            embeds: [],
-                            components: []
-                        });
-                        await user.send('A user started an exchange with you! ' + embedMessage2.url);
-                        collector2.stop();
-                        break;
-                }
+                if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                    // Increase/decrease index
+                    switch (interaction.customId) {
+                        case backButton.customId:
+                            if (currentIndex > 0) {
+                                currentIndex -= 1;
+                            }
+                            break;
+                        case forwardButton.customId:
+                            if (currentIndex < skins2.length - 1) {
+                                currentIndex += 1;
+                            }
+                            break;
+                    }
 
-                if (interaction.customId === backId || interaction.customId === forwardId) {
+                    // Disable the buttons if they cannot be used
+                    forwardButton.disabled = currentIndex === skins2.length - 1;
+                    backButton.disabled = currentIndex === 0;
+
                     // Respond to interaction by updating message with new embed
                     await interaction.update({
-                        embeds: [await generateEmbed(skins2, currentIndex)],
+                        embeds: [generateEmbed(skins2, currentIndex)],
                         components: [
                             new MessageActionRow({
-                                components: [
-                                    // back button if it isn't the start
-                                    ...(currentIndex ? [backButton] : []),
-                                    // select button to chose the skin to exchange
-                                    ...([selectButton]),
-                                    // forward button if it isn't the end
-                                    ...(currentIndex + 1 < skins2.length ? [forwardButton] : [])
-                                ]
+                                components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                             })
                         ]
                     })
+                } else if (interaction.customId === selectButton.customId) {
+                    skinName2 = interaction.message.embeds[0].title;
+                    await embedMessage2.delete();
+                    skinName2 = interaction.message.embeds[0].title;
+                    let msg = await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
+                    await user.send('A user started an exchange with you! ' + msg.url);
+                    collector2.stop();
                 }
             });
 
@@ -216,70 +182,17 @@ export class Exchange extends Command {
                         }
 
                         if (skinId1 && skinId2) {
-                            await this.container.prisma.skins.update({
-                                data: {
-                                    player: {
-                                        connect: {
-                                            id: message.author.id
-                                        }
-                                    }
-                                },
-                                where: {
-                                    id: skinId2
-                                }
-                            });
-                            await this.container.prisma.skins.update({
-                                data: {
-                                    player: {
-                                        connect: {
-                                            id: user.id
-                                        }
-                                    }
-                                },
-                                where: {
-                                    id: skinId1
-                                }
-                            });
+                            await giveSkinByUserId(user.id, skinName1)
+                            await giveSkinByUserId(author.id, skinName2);
 
-                            this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
-                            message.reply(`${message.author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
+                            this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
+                            message.reply(`${author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
                             isValidated = true;
                             collector3.stop();
                         }
                     }
                 });
-
-                collector3.on('end', collected => {
-                    if (!isValidated) {
-                        message.reply(`${user} did not give an answer. The exchange has been closed.`);
-                    }
-                })
             });
-        });
-    }
-
-    protected async getSkins(user: User) {
-        return await this.container.prisma.skins.findMany({
-            where: {
-                playerId: user.id
-            },
-            include: {
-                god: {
-                    select: {
-                        name: true
-                    }
-                },
-                obtainability: {
-                    select: {
-                        name: true
-                    }
-                }
-            },
-            orderBy: {
-                god: {
-                    name: 'asc'
-                }
-            }
         });
     }
 }

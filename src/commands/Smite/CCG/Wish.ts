@@ -22,41 +22,28 @@ export class Wish extends Command {
             }
         });
         if (!skin) return message.reply('The skin **' + skinName + '** does not exist!');
-
-        const player = await this.container.prisma.players.findUnique({
-            where: {
-                id: message.author.id
-            }
-        });
-        if (!player) {
-            await this.container.prisma.players.create({
-                data: {
-                    id: message.author.id,
-                    wishedSkins: {
-                        connect: {
-                            id: skin.id
-                        }
-                    }
-                }
-            });
-        } else {
-            await this.container.prisma.skins.update({
-                data: {
-                    wishedByPlayer: {
-                        connect: {
+        
+        await this.container.prisma.skins.update({
+            data: {
+                wishedByPlayer: {
+                    connectOrCreate: {
+                        create: {
+                            id: message.author.id
+                        },
+                        where: {
                             id: message.author.id
                         }
                     }
-                },
-                select: {
-                    id: true,
-                    name: true
-                },
-                where: {
-                    id: skin.id
                 }
-            });
-        }
+            },
+            select: {
+                id: true,
+                name: true
+            },
+            where: {
+                id: skin.id
+            }
+        });
 
         this.container.logger.info(`The skin ${skin.name}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
         return message.reply(`The skin **${skinName}** was successfully added to your wishlist!`);

@@ -1,7 +1,7 @@
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
-import { SmiteServerApi } from '@lib/hirez/smite/SmiteServerApi';
-import { Message, MessageEmbed } from 'discord.js';
+import { SmiteServerApi } from '@lib/api/hirez/smite/SmiteServerApi';
 import { ApplyOptions } from '@sapphire/decorators';
+import { Command, CommandOptions } from '@sapphire/framework';
+import { Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'serverstatus',

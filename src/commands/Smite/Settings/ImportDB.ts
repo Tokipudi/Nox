@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@sapphire/framework';
-import { SmiteGodsApi } from '@lib/hirez/smite/SmiteGodsApi';
-import { Message } from 'discord.js';
+import { SmiteGodsApi } from '@lib/api/hirez/smite/SmiteGodsApi';
 import { ApplyOptions } from '@sapphire/decorators';
+import { Command, CommandOptions } from '@sapphire/framework';
+import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'importdb',

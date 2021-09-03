@@ -1,6 +1,6 @@
 import fetch, { FetchResultTypes } from '@sapphire/fetch';
-import type { GodsResponse, SkinsResponse } from './api/interfaces/GodsInterfaces';
-import { SmiteApiSession } from './api/SmiteApiSession';
+import type { GodsResponse, SkinsResponse } from './interfaces/GodsInterfaces';
+import { SmiteApiSession } from './SmiteApiSession';
 import { sprintf } from 'sprintf-js';
 
 export class SmiteGodsApi extends SmiteApiSession {

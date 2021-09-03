@@ -1,7 +1,9 @@
+import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
+import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
-import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'discord.js';
+import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'give',
@@ -9,71 +11,34 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed, User } from 'di
 })
 export class Give extends Command {
 
-    public async run(message: Message, args) {
+    public async run(message: Message, args: Args) {
+        const { author } = message
         const user: User = await args.pick('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
-        if (user.id === message.author.id) return message.reply('You cannot give yourself a skin!');
+        if (user.id === author.id) return message.reply('You cannot give yourself a skin!');
         if (user.bot) return message.reply('You cannot give a skin to a bot!');
-        // Constants
-        const backId = 'back'
-        const forwardId = 'forward'
-        const selectId = 'select';
-        const backButton = new MessageButton({
-            style: 'SECONDARY',
-            label: '',
-            emoji: '⬅️',
-            customId: backId
-        })
-        const forwardButton = new MessageButton({
-            style: 'SECONDARY',
-            label: '',
-            emoji: '➡️',
-            customId: forwardId
-        })
-        const selectButton = new MessageButton({
-            style: 'DANGER',
-            label: 'Give',
-            customId: selectId
-        })
 
-        const { author } = message
-        const skins = await this.getSkins(message.author);
+        const backButton = getBackButton();
+        const forwardButton = getForwardButton();
+        const selectButton = getSelectButton('Give', 'DANGER');
+
+        const skins = await getSkinsByUserId(author.id);
         if (!skins || skins.length === 0) {
             return message.reply('You currently don\'t own any skin!');
         }
 
-        /**
-         * Creates an embed with skins starting from an index.
-         * @param {number} index The index to start from.
-         * @returns {Promise<MessageEmbed>}
-         */
-        const generateEmbed = async (skins, index) => {
-            const skin = skins[index];
-
-            return new MessageEmbed()
-                .setTitle(skin.name)
-                .setDescription(`${skin.obtainability.name} skin`)
-                .setAuthor(skin.god.name, skin.godIconUrl)
-                .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-                .setImage(skin.godSkinUrl)
-                .setFooter(`Showing skin ${index + 1} out of ${skins.length}`);
-        }
-
-        // Send the embed with the first skin
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
-            content: 'Select the skin you wish to exchange.',
-            embeds: [await generateEmbed(skins, 0)],
+            content: 'Select the skin you wish to give.',
+            embeds: [generateEmbed(skins, 0)],
             components: [
                 new MessageActionRow({
-                    components: uniqueSkin ? [...([selectButton])] : [...([selectButton]), ...([forwardButton])]
+                    components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
                 })
             ]
         })
 
-        // Collect button interactions (when a user clicks a button),
-        // but only when the button as clicked by the original message author
         const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
         })
@@ -81,90 +46,50 @@ export class Give extends Command {
         let skinName = '';
         let currentIndex = 0
         collector.on('collect', async interaction => {
-            // Increase/decrease index
-            switch (interaction.customId) {
-                case backId:
-                    currentIndex -= 1;
-                    break;
-                case forwardId:
-                    currentIndex += 1;
-                    break;
-                case selectId:
-                    skinName = interaction.message.embeds[0].title;
-                    await interaction.update({
-                        content: `You selected **${skinName}**`,
-                        embeds: [],
-                        components: []
-                    });
-                    collector.stop();
-                    break;
-            }
+            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                // Increase/decrease index
+                switch (interaction.customId) {
+                    case backButton.customId:
+                        if (currentIndex > 0) {
+                            currentIndex -= 1;
+                        }
+                        break;
+                    case forwardButton.customId:
+                        if (currentIndex < skins.length - 1) {
+                            currentIndex += 1;
+                        }
+                        break;
+                }
 
-            if (interaction.customId === backId || interaction.customId === forwardId) {
+                // Disable the buttons if they cannot be used
+                forwardButton.disabled = currentIndex === skins.length - 1;
+                backButton.disabled = currentIndex === 0;
+
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await generateEmbed(skins, currentIndex)],
+                    embeds: [generateEmbed(skins, currentIndex)],
                     components: [
                         new MessageActionRow({
-                            components: [
-                                // back button if it isn't the start
-                                ...(currentIndex ? [backButton] : []),
-                                ...([selectButton]),
-                                // forward button if it isn't the end
-                                ...(currentIndex + 1 < skins.length ? [forwardButton] : [])
-                            ]
+                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                         })
                     ]
                 })
+            } else if (interaction.customId === selectButton.customId) {
+                skinName = interaction.message.embeds[0].title;
+                collector.stop();
             }
         });
 
         collector.on('end', async collected => {
-            let skin = await this.container.prisma.skins.update({
-                data: {
-                    player: {
-                        connectOrCreate: {
-                            where: {
-                                id: user.id
-                            },
-                            create: {
-                                id: user.id
-                            }
-                        }
-                    }
-                },
-                where: {
-                    name: skinName
-                }
-            })
-            this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`)
-            message.reply(`The skin **${skinName}** was successfully given to ${user}!`);
+            let skin = await giveSkinByUserId(user.id, skinName);
+
+            this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
+            embedMessage1.edit({
+                content: `The skin **${skinName}** was successfully given to ${user}!`,
+                embeds: [],
+                components: []
+            });
         });
 
-    }
-
-    protected async getSkins(user: User) {
-        return await this.container.prisma.skins.findMany({
-            where: {
-                playerId: user.id
-            },
-            include: {
-                god: {
-                    select: {
-                        name: true
-                    }
-                },
-                obtainability: {
-                    select: {
-                        name: true
-                    }
-                }
-            },
-            orderBy: {
-                god: {
-                    name: 'asc'
-                }
-            }
-        });
     }
 }

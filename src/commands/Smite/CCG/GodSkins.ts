@@ -1,7 +1,11 @@
+import { addSkinToWishlistByUserId, getSkinsByGodName, getSkinWishlistByUserId } from '@lib/database/utils/SkinsUtils';
+import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
-import { Message, MessageActionRow, MessageButton, MessageEmbed } from 'discord.js';
+import { Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'godskins',
@@ -11,105 +15,89 @@ import { Message, MessageActionRow, MessageButton, MessageEmbed } from 'discord.
 export class GodSkins extends Command {
 
     public async run(message: Message, args: Args) {
+        const { author } = message
+
         let godName: string = await args.rest('string');
         godName = toTitleCase(godName);
 
-        // Constants
-        const backId = 'back'
-        const forwardId = 'forward'
-        const backButton = new MessageButton({
-            style: 'SECONDARY',
-            label: 'Back',
-            emoji: '⬅️',
-            customId: backId
-        })
-        const forwardButton = new MessageButton({
-            style: 'SECONDARY',
-            label: 'Forward',
-            emoji: '➡️',
-            customId: forwardId
-        })
+        const backButton = getBackButton();
+        const forwardButton = getForwardButton();
+        const selectButton = getSelectButton('Wish', 'SUCCESS');
 
-        // Put the following code wherever you want to send the embed pages:
+        let skins = await getSkinsByGodName(godName);
 
-        const { author, channel } = message
-        const skins = await this.getSkins(godName);
-
-        /**
-         * Creates an embed with skins starting from an index.
-         * @param {number} index The index to start from.
-         * @returns {Promise<MessageEmbed>}
-         */
-        const generateEmbed = async index => {
-            const skin = skins[index];
-
-            return new MessageEmbed()
-                .setTitle(skin.name)
-                .setDescription(`${skin.obtainability.name} skin`)
-                .setAuthor(skin.god.name, skin.godIconUrl)
-                .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-                .setImage(skin.godSkinUrl)
-                .setFooter(`Showing skin ${index + 1} out of ${skins.length}`);
-        }
-
-        // Send the embed with the first skin
         let uniqueSkin = skins.length <= 1;
-        const embedMessage = await message.reply({
-            embeds: [await generateEmbed(0)],
-            components: uniqueSkin ? [] : [new MessageActionRow({ components: [forwardButton] })]
-        })
-        // Exit if there is only one page of skins (no need for all of this)
-        if (uniqueSkin) return
+        const embedMessage1 = await message.reply({
+            content: 'Here is your wishlist.',
+            embeds: [generateEmbed(skins, 0)],
+            components: [
+                new MessageActionRow({
+                    components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                })
+            ]
+        });
 
-        // Collect button interactions (when a user clicks a button),
-        // but only when the button as clicked by the original message author
-        const collector = embedMessage.createMessageComponentCollector({
+        const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
         })
 
         let currentIndex = 0
         collector.on('collect', async interaction => {
-            // Increase/decrease index
-            interaction.customId === backId ? (currentIndex -= 1) : (currentIndex += 1)
-            // Respond to interaction by updating message with new embed
-            await interaction.update({
-                embeds: [await generateEmbed(currentIndex)],
-                components: [
-                    new MessageActionRow({
-                        components: [
-                            // back button if it isn't the start
-                            ...(currentIndex ? [backButton] : []),
-                            // forward button if it isn't the end
-                            ...(currentIndex + 1 < skins.length ? [forwardButton] : [])
-                        ]
-                    })
-                ]
-            })
-        })
-    }
+            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                // Increase/decrease index
+                switch (interaction.customId) {
+                    case backButton.customId:
+                        if (currentIndex > 0) {
+                            currentIndex -= 1;
+                        }
+                        break;
+                    case forwardButton.customId:
+                        if (currentIndex < skins.length - 1) {
+                            currentIndex += 1;
+                        }
+                        break;
+                }
 
-    protected async getSkins(godName: string) {
-        return await this.container.prisma.skins.findMany({
-            where: {
-                god: {
-                    name: godName
-                }
-            },
-            include: {
-                god: {
-                    select: {
-                        name: true
-                    }
-                },
-                obtainability: {
-                    select: {
-                        name: true
-                    }
-                }
-            },
-            orderBy: {
-                name: 'asc'
+                // Disable the buttons if they cannot be used
+                forwardButton.disabled = currentIndex === skins.length - 1;
+                backButton.disabled = currentIndex === 0;
+                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlistByUserId(author.id));
+
+                // Respond to interaction by updating message with new embed
+                await interaction.update({
+                    embeds: [generateEmbed(skins, currentIndex)],
+                    components: [
+                        new MessageActionRow({
+                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                        })
+                    ]
+                })
+            } else if (interaction.customId === selectButton.customId) {
+                let skinName = interaction.message.embeds[0].title;
+                let skin = await addSkinToWishlistByUserId(author.id, skinName);
+                this.container.logger.info(`The skin ${skinName}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
+
+                // Disable the wish button
+                selectButton.disabled = true;
+                await interaction.update({
+                    embeds: [generateEmbed(skins, currentIndex)],
+                    components: [
+                        new MessageActionRow({
+                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                        })
+                    ]
+                })
             }
         });
+    }
+
+    protected isSkinInWishlist(skinName: string, wishlist: Skins[]) {
+        for (let i in wishlist) {
+            let skin = wishlist[i];
+            if (skin.name === skinName) {
+                return true;
+            }
+        }
+        return false;
     }
 }
