@@ -1,6 +1,6 @@
 import { addSkinToWishlistByUserId, getSkinsByGodName, getSkinWishlistByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
-import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { generateSkinEmbed } from '@lib/utils/smite/SmitePaginationUtils';
 import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
@@ -29,7 +29,7 @@ export class GodSkins extends Command {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: 'Here is your wishlist.',
-            embeds: [generateEmbed(skins, 0)],
+            embeds: [generateSkinEmbed(skins, 0)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -65,7 +65,7 @@ export class GodSkins extends Command {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateEmbed(skins, currentIndex)],
+                    embeds: [generateSkinEmbed(skins, currentIndex)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -80,7 +80,7 @@ export class GodSkins extends Command {
                 // Disable the wish button
                 selectButton.disabled = true;
                 await interaction.update({
-                    embeds: [generateEmbed(skins, currentIndex)],
+                    embeds: [generateSkinEmbed(skins, currentIndex)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
