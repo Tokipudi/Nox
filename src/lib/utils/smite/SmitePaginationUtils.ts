@@ -1,6 +1,6 @@
 import { MessageEmbed } from "discord.js";
 
-export function generateEmbed(skins, index) {
+export function generateSkinEmbed(skins, index) {
     const skin = skins[index];
 
     return new MessageEmbed()

@@ -1,6 +1,6 @@
 import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
-import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { generateSkinEmbed } from '@lib/utils/smite/SmitePaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, User } from 'discord.js';
@@ -39,7 +39,7 @@ export class Exchange extends Command {
             : forwardButton.setDisabled(false);
         const embedMessage1 = await message.reply({
             content: 'Select the skin you wish to exchange.',
-            embeds: [generateEmbed(skins1, currentIndex)],
+            embeds: [generateSkinEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
                     components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -77,7 +77,7 @@ export class Exchange extends Command {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateEmbed(skins1, currentIndex)],
+                    embeds: [generateSkinEmbed(skins1, currentIndex)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -99,7 +99,7 @@ export class Exchange extends Command {
                 : forwardButton.setDisabled(false);
             const embedMessage2 = await message.reply({
                 content: `Select the skin you wish to get from ${user}.`,
-                embeds: [generateEmbed(skins2, currentIndex)],
+                embeds: [generateSkinEmbed(skins2, currentIndex)],
                 components: [
                     new MessageActionRow({
                         components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -134,7 +134,7 @@ export class Exchange extends Command {
 
                     // Respond to interaction by updating message with new embed
                     await interaction.update({
-                        embeds: [generateEmbed(skins2, currentIndex)],
+                        embeds: [generateSkinEmbed(skins2, currentIndex)],
                         components: [
                             new MessageActionRow({
                                 components: [...([backButton]), ...([selectButton]), ...([forwardButton])]

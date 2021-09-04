@@ -1,6 +1,6 @@
 import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
-import { generateEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { generateSkinEmbed } from '@lib/utils/smite/SmitePaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, User } from 'discord.js';
@@ -31,7 +31,7 @@ export class Give extends Command {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: 'Select the skin you wish to give.',
-            embeds: [generateEmbed(skins, 0)],
+            embeds: [generateSkinEmbed(skins, 0)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -67,7 +67,7 @@ export class Give extends Command {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateEmbed(skins, currentIndex)],
+                    embeds: [generateSkinEmbed(skins, currentIndex)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
