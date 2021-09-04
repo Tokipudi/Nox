@@ -2,15 +2,17 @@ import { EmojiIdentifierResolvable, MessageButton, MessageButtonStyle } from 'di
 
 export function getBackButton(
     label: string = '',
+    customId: string = 'back',
     style: MessageButtonStyle | null = 'SECONDARY'
 ) {
-    return getButton('back', label, style, '⬅️', true);
+    return getButton(customId, label, style, '⬅️', true);
 }
 export function getForwardButton(
     label: string = '',
+    customId: string = 'forward',
     style: MessageButtonStyle | null = 'SECONDARY'
 ) {
-    return getButton('forward', label, style, '➡️');
+    return getButton(customId, label, style, '➡️');
 }
 export function getSelectButton(
     label: string | null = null,
