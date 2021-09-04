@@ -1,6 +1,6 @@
 import { disconnectSkinByName, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
-import { generateSkinEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow } from 'discord.js';

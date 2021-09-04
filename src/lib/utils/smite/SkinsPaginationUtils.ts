@@ -1,3 +1,4 @@
+import { Gods } from ".prisma/client";
 import { MessageEmbed } from "discord.js";
 
 export function generateSkinEmbed(skins, index) {

@@ -1,6 +1,6 @@
 import { addSkinToWishlistByUserId, getSkinsByGodName, getSkinWishlistByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
-import { generateSkinEmbed } from '@lib/utils/smite/SmitePaginationUtils';
+import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
