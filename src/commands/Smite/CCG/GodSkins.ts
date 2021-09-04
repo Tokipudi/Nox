@@ -28,7 +28,7 @@ export class GodSkins extends Command {
 
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
-            content: 'Here is your wishlist.',
+            content: `Here are the skins for ${godName}.`,
             embeds: [generateSkinEmbed(skins, 0)],
             components: [
                 new MessageActionRow({

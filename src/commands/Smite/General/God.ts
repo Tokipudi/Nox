@@ -7,7 +7,7 @@ import { Message, MessageActionRow } from 'discord.js';
 import { generateGodDetailsEmbed, generateGodLoreEmbed, generateGodAbilityEmbed, godCustomId, loreCustomId, ability1CustomId, ability2CustomId, ability3CustomId, ability4CustomId, ability5CustomId } from '@lib/utils/smite/GodsPaginationUtils';
 
 @ApplyOptions<CommandOptions>({
-    description: 'List the skins of a given god.'
+    description: 'Get more information about a god.'
 })
 export class God extends Command {
 
