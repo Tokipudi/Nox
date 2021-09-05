@@ -1,3 +1,4 @@
+import { getPlayerById } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
@@ -49,7 +50,7 @@ export class Roll extends Command {
                     }
                 });
             }
-            return player.isNew || moment.utc().isSameOrAfter(moment(player.lastSkinDate).add(3, 'hour'));
+            return (player.isNew || moment.utc().isSameOrAfter(moment(player.lastSkinDate).add(3, 'hour'))) && !player.isBanned;
         };
         const collector = msg.createReactionCollector({ filter, time: 45000 });
 

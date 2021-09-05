@@ -96,4 +96,5 @@ model Players {
     wishedSkins  Skins[]  @relation(name: "PlayersWishes")
     lastSkinDate DateTime @default(now())
     isNew        Boolean  @default(true)
+    isBanned     Boolean  @default(false)
 }
