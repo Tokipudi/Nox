@@ -163,3 +163,14 @@ export async function addSkinToWishlistByUserId(userId: string, skinName: string
         }
     });
 }
+
+export async function exhaustSkinByName(name: string) {
+    return await container.prisma.skins.update({
+        data: {
+            isExhausted: true
+        },
+        where: {
+            name: name
+        }
+    });
+}

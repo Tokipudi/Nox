@@ -79,6 +79,7 @@ model Skins {
     player          Players?          @relation(name: "PlayerSkins", fields: [playerId], references: [id])
     playerId        String?
     wishedByPlayer  Players[]         @relation("PlayersWishes")
+    isExhausted     Boolean           @default(false)
 }
 
 model SkinObtainability {
