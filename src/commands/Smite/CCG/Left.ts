@@ -1,8 +1,7 @@
+import { getUnclaimedSkins } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
-import { addSkinToWishlistByUserId, getUnclaimedSkins } from '@lib/database/utils/SkinsUtils';
 
 @ApplyOptions<CommandOptions>({
     description: 'Checks the amount of skins available.'
