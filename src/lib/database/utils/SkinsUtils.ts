@@ -52,26 +52,6 @@ export async function getSkinsByUserId(id: string) {
     });
 }
 
-export async function giveSkinByUserId(recipientId: string, skinName: string) {
-    return await container.prisma.skins.update({
-        data: {
-            player: {
-                connectOrCreate: {
-                    where: {
-                        id: recipientId
-                    },
-                    create: {
-                        id: recipientId
-                    }
-                }
-            }
-        },
-        where: {
-            name: skinName
-        }
-    });
-}
-
 export async function getSkinsByGodName(name: string) {
     return await container.prisma.skins.findMany({
         where: {
@@ -93,6 +73,34 @@ export async function getSkinsByGodName(name: string) {
         },
         orderBy: {
             name: 'asc'
+        }
+    });
+}
+
+export async function getUnclaimedSkins() {
+    return await container.prisma.skins.findMany({
+        where: {
+            playerId: null
+        }
+    });
+}
+
+export async function giveSkinByUserId(recipientId: string, skinName: string) {
+    return await container.prisma.skins.update({
+        data: {
+            player: {
+                connectOrCreate: {
+                    where: {
+                        id: recipientId
+                    },
+                    create: {
+                        id: recipientId
+                    }
+                }
+            }
+        },
+        where: {
+            name: skinName
         }
     });
 }
