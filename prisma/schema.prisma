@@ -66,20 +66,21 @@ model Pantheons {
 }
 
 model Skins {
-    id              Int               @id
-    god             Gods              @relation(fields: [godId], references: [id])
-    godId           Int
-    name            String            @unique
-    godIconUrl      String
-    godSkinUrl      String
-    obtainability   SkinObtainability @relation(fields: [obtainabilityId], references: [id])
-    obtainabilityId Int
-    priceFavor      Int
-    priceGems       Int
-    player          Players?          @relation(name: "PlayerSkins", fields: [playerId], references: [id])
-    playerId        String?
-    wishedByPlayer  Players[]         @relation("PlayersWishes")
-    isExhausted     Boolean           @default(false)
+    id                Int               @id
+    god               Gods              @relation(fields: [godId], references: [id])
+    godId             Int
+    name              String            @unique
+    godIconUrl        String
+    godSkinUrl        String
+    obtainability     SkinObtainability @relation(fields: [obtainabilityId], references: [id])
+    obtainabilityId   Int
+    priceFavor        Int
+    priceGems         Int
+    player            Players?          @relation(name: "PlayerSkins", fields: [playerId], references: [id])
+    playerId          String?
+    wishedByPlayer    Players[]         @relation("PlayersWishes")
+    isExhausted       Boolean           @default(false)
+    exhaustChangeDate DateTime          @default(now())
 }
 
 model SkinObtainability {

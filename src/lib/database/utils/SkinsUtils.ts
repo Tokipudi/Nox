@@ -1,4 +1,5 @@
 import { container } from '@sapphire/framework';
+import moment from 'moment';
 
 export async function disconnectSkinById(id: number) {
     return await container.prisma.skins.update({
@@ -167,7 +168,20 @@ export async function addSkinToWishlistByUserId(userId: string, skinName: string
 export async function exhaustSkinByName(name: string) {
     return await container.prisma.skins.update({
         data: {
-            isExhausted: true
+            isExhausted: true,
+            exhaustChangeDate: moment.utc().toDate()
+        },
+        where: {
+            name: name
+        }
+    });
+}
+
+export async function unexhaustSkinByName(name: string) {
+    return await container.prisma.skins.update({
+        data: {
+            isExhausted: false,
+            exhaustChangeDate: moment.utc().toDate()
         },
         where: {
             name: name
