@@ -69,7 +69,7 @@ export class Roll extends Command {
                     id: user.id
                 }
             });
-            msg.reply(`${user} has added *${skin.godName}* **${skin.name}** to its collection.`);
+            msg.reply(`${user} has added *${skin.godName}* **${skin.name}** to their collection.`);
             this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`);
         });
 
