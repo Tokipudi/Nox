@@ -119,137 +119,149 @@ export class Fight extends Command {
         });
 
         collector1.on('end', async collected => {
-            const reply = await message.reply(`${player} You have been challenged to a fight!\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
+            if (skinName1 === '') {
+                message.reply('You did not select a fighter in the given time. The fight is canceled.');
+            } else {
+                const reply = await message.reply(`${player} You have been challenged to a fight!\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
 
-            const prefix = this.container.client.options.defaultPrefix;
-            const filter = (m: Message) => {
-                return m.author.id === player.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
-            };
-            const collector2 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
+                const prefix = this.container.client.options.defaultPrefix;
+                const filter = (m: Message) => {
+                    return m.author.id === player.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
+                };
+                const collector2 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
 
-            let isAboutToFight = false;
-            collector2.on('collect', async (m: Message) => {
-                if (m.content.startsWith(`${prefix}deny`)) {
-                    await reply.channel.send(`${player} does not want to fight you.`)
-                    collector2.stop();
-                } else if (m.content.startsWith(`${prefix}accept`)) {
-                    isAboutToFight = true;
-                    collector2.stop();
-                }
-            });
-
-            collector2.on('end', async collected => {
-                currentIndex = 0
-                backButton.setDisabled(true);
-                skins2.length <= 1
-                    ? forwardButton.setDisabled(true)
-                    : forwardButton.setDisabled(false);
-                selectButton.disabled = skins2[currentIndex].isExhausted;
-
-                const embedMessage3 = await message.reply({
-                    content: `Select your fighter.`,
-                    embeds: [generateSkinEmbed(skins2, currentIndex)],
-                    components: [
-                        new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
-                        })
-                    ]
-                })
-
-                // Collect button interactions (when a user clicks a button),
-                // but only when the button as clicked by the original message author
-                const collector3 = await embedMessage3.createMessageComponentCollector({
-                    filter: ({ user }) => user.id === player.id
+                let isAboutToFight = false;
+                collector2.on('collect', async (m: Message) => {
+                    if (m.content.startsWith(`${prefix}deny`)) {
+                        await reply.channel.send(`${player} does not want to fight you.`)
+                        collector2.stop();
+                    } else if (m.content.startsWith(`${prefix}accept`)) {
+                        isAboutToFight = true;
+                        collector2.stop();
+                    }
                 });
-                collector3.on('collect', async interaction => {
-                    if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
-                        // Increase/decrease index
-                        switch (interaction.customId) {
-                            case backButton.customId:
-                                if (currentIndex > 0) {
-                                    currentIndex -= 1;
-                                }
-                                break;
-                            case forwardButton.customId:
-                                if (currentIndex < skins2.length - 1) {
-                                    currentIndex += 1;
-                                }
-                                break;
-                        }
 
-                        // Disable the buttons if they cannot be used
-                        forwardButton.disabled = currentIndex === skins2.length - 1;
-                        backButton.disabled = currentIndex === 0;
+                collector2.on('end', async collected => {
+                    if (!isAboutToFight) {
+                        message.reply(`${player} did not answer in time. The fight is canceled.`);
+                    } else {
+                        currentIndex = 0
+                        backButton.setDisabled(true);
+                        skins2.length <= 1
+                            ? forwardButton.setDisabled(true)
+                            : forwardButton.setDisabled(false);
                         selectButton.disabled = skins2[currentIndex].isExhausted;
 
-                        // Respond to interaction by updating message with new embed
-                        await interaction.update({
+                        const embedMessage3 = await message.reply({
+                            content: `Select your fighter.`,
                             embeds: [generateSkinEmbed(skins2, currentIndex)],
                             components: [
                                 new MessageActionRow({
                                     components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                                 })
                             ]
+                        })
+
+                        // Collect button interactions (when a user clicks a button),
+                        // but only when the button as clicked by the original message author
+                        const collector3 = await embedMessage3.createMessageComponentCollector({
+                            filter: ({ user }) => user.id === player.id
                         });
-                    } else if (interaction.customId === selectButton.customId) {
-                        skinName2 = interaction.message.embeds[0].title;
-                        godName2 = interaction.message.embeds[0].author.name;
-                        await embedMessage3.delete();
-                        await message.channel.send(`A fight was started between ${author}'s **${skinName1}** and ${player}'s **${skinName2}**!`);
-                        collector3.stop();
+                        collector3.on('collect', async interaction => {
+                            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                                // Increase/decrease index
+                                switch (interaction.customId) {
+                                    case backButton.customId:
+                                        if (currentIndex > 0) {
+                                            currentIndex -= 1;
+                                        }
+                                        break;
+                                    case forwardButton.customId:
+                                        if (currentIndex < skins2.length - 1) {
+                                            currentIndex += 1;
+                                        }
+                                        break;
+                                }
+
+                                // Disable the buttons if they cannot be used
+                                forwardButton.disabled = currentIndex === skins2.length - 1;
+                                backButton.disabled = currentIndex === 0;
+                                selectButton.disabled = skins2[currentIndex].isExhausted;
+
+                                // Respond to interaction by updating message with new embed
+                                await interaction.update({
+                                    embeds: [generateSkinEmbed(skins2, currentIndex)],
+                                    components: [
+                                        new MessageActionRow({
+                                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                                        })
+                                    ]
+                                });
+                            } else if (interaction.customId === selectButton.customId) {
+                                skinName2 = interaction.message.embeds[0].title;
+                                godName2 = interaction.message.embeds[0].author.name;
+                                await embedMessage3.delete();
+                                await message.channel.send(`A fight was started between ${author}'s **${skinName1}** and ${player}'s **${skinName2}**!`);
+                                collector3.stop();
+                            }
+                        });
+
+                        collector3.on('end', async collected => {
+                            if (skinName2 === '') {
+                                message.channel.send(`${player} you did not select a fighter in time. The fight is canceled.`);
+                            } else {
+                                let god1 = await getGodByName(godName1);
+                                let god2 = await getGodByName(godName2);
+                                let god1Health = god1.health;
+                                let god2Health = god2.health;
+
+                                const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+                                let randomDamage = 0;
+                                let randomAbility;
+                                let embed;
+                                while (god1Health > 0 && god2Health > 0) {
+                                    await delay(4000);
+
+                                    let playingPlayer = Math.floor(Math.random() * 2) + 1;
+                                    switch (playingPlayer) {
+                                        case 1:
+                                            randomAbility = JSON.parse(god1['ability' + (Math.floor(Math.random() * 4) + 1)]);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god1.health);
+                                            god2Health -= randomDamage;
+                                            if (god2Health < 0) {
+                                                god2Health = 0;
+                                            }
+                                            embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, author);
+                                            message.channel.send({ embeds: [embed] });
+                                            break;
+                                        case 2:
+                                            randomAbility = JSON.parse(god2['ability' + (Math.floor(Math.random() * 4) + 1)]);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god2.health);
+                                            god1Health -= randomDamage;
+                                            if (god1Health < 0) {
+                                                god1Health = 0;
+                                            }
+                                            embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player);
+                                            message.channel.send({ embeds: [embed] });
+                                            break;
+                                    }
+                                }
+
+                                if (god1Health > 0) {
+                                    await exhaustSkinByName(skinName2);
+                                    await message.channel.send(`${author}'s **${skinName1}** won the fight!`);
+                                    await message.channel.send(`${player} your skin **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                } else {
+                                    await exhaustSkinByName(skinName1);
+                                    await message.channel.send(`${player}'s **${skinName2}** won the fight!`);
+                                    await message.channel.send(`${author} your skin **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                }
+                            }
+                        });
                     }
                 });
-
-                collector3.on('end', async collected => {
-                    let god1 = await getGodByName(godName1);
-                    let god2 = await getGodByName(godName2);
-                    let god1Health = god1.health;
-                    let god2Health = god2.health;
-
-                    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-                    let randomDamage = 0;
-                    let randomAbility;
-                    let embed;
-                    while (god1Health > 0 && god2Health > 0) {
-                        await delay(4000);
-
-                        let playingPlayer = Math.floor(Math.random() * 2) + 1;
-                        switch (playingPlayer) {
-                            case 1:
-                                randomAbility = JSON.parse(god1['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                randomDamage = this.getRandomDamageFromMaxHealth(god1.health);
-                                god2Health -= randomDamage;
-                                if (god2Health < 0) {
-                                    god2Health = 0;
-                                }
-                                embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, author);
-                                message.channel.send({ embeds: [embed] });
-                                break;
-                            case 2:
-                                randomAbility = JSON.parse(god2['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                randomDamage = this.getRandomDamageFromMaxHealth(god2.health);
-                                god1Health -= randomDamage;
-                                if (god1Health < 0) {
-                                    god1Health = 0;
-                                }
-                                embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player);
-                                message.channel.send({ embeds: [embed] });
-                                break;
-                        }
-                    }
-
-                    if (god1Health > 0) {
-                        await exhaustSkinByName(skinName2);
-                        await message.channel.send(`${author}'s **${skinName1}** won the fight!`);
-                        await message.channel.send(`${player} your skin **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
-                    } else {
-                        await exhaustSkinByName(skinName1);
-                        await message.channel.send(`${player}'s **${skinName2}** won the fight!`);
-                        await message.channel.send(`${author} your skin **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
-                    }
-                });
-            });
+            }
         });
     }
 
