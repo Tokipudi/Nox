@@ -48,7 +48,6 @@ export class Ready extends Listener {
                     this.container.logger.info(`The skin ${skin.name}<${skin.id}> has been unexhausted.`);
                 }
             }
-            this.container.logger.info('exhaust');
         }, 60000);
     }
 };
