@@ -92,106 +92,114 @@ export class Exchange extends Command {
         });
 
         collector1.on('end', async collected => {
-            currentIndex = 0
-            backButton.setDisabled(true);
-            skins2.length <= 1
-                ? forwardButton.setDisabled(true)
-                : forwardButton.setDisabled(false);
-            const embedMessage2 = await message.reply({
-                content: `Select the skin you wish to get from ${user}.`,
-                embeds: [generateSkinEmbed(skins2, currentIndex)],
-                components: [
-                    new MessageActionRow({
-                        components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
-                    })
-                ]
-            })
+            if (skinName1 === '') {
+                message.reply('You did not select a skin. The exchange is canceled.');
+            } else {
+                currentIndex = 0
+                backButton.setDisabled(true);
+                skins2.length <= 1
+                    ? forwardButton.setDisabled(true)
+                    : forwardButton.setDisabled(false);
+                const embedMessage2 = await message.reply({
+                    content: `Select the skin you wish to get from ${user}.`,
+                    embeds: [generateSkinEmbed(skins2, currentIndex)],
+                    components: [
+                        new MessageActionRow({
+                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                        })
+                    ]
+                })
 
-            // Collect button interactions (when a user clicks a button),
-            // but only when the button as clicked by the original message author
-            const collector2 = embedMessage2.createMessageComponentCollector({
-                filter: ({ user }) => user.id === author.id
-            })
-            collector2.on('collect', async interaction => {
-                if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
-                    // Increase/decrease index
-                    switch (interaction.customId) {
-                        case backButton.customId:
-                            if (currentIndex > 0) {
-                                currentIndex -= 1;
-                            }
-                            break;
-                        case forwardButton.customId:
-                            if (currentIndex < skins2.length - 1) {
-                                currentIndex += 1;
-                            }
-                            break;
-                    }
-
-                    // Disable the buttons if they cannot be used
-                    forwardButton.disabled = currentIndex === skins2.length - 1;
-                    backButton.disabled = currentIndex === 0;
-
-                    // Respond to interaction by updating message with new embed
-                    await interaction.update({
-                        embeds: [generateSkinEmbed(skins2, currentIndex)],
-                        components: [
-                            new MessageActionRow({
-                                components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
-                            })
-                        ]
-                    })
-                } else if (interaction.customId === selectButton.customId) {
-                    skinName2 = interaction.message.embeds[0].title;
-                    await embedMessage2.delete();
-                    let msg = await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
-                    await user.send('A user started an exchange with you! ' + msg.url);
-                    collector2.stop();
-                }
-            });
-
-            collector2.on('end', async collected => {
-                const prefix = this.container.client.options.defaultPrefix;
-                const filter = (m: Message) => {
-                    return m.author.id === user.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
-                };
-                const collector3 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
-
-                let isValidated = false;
-                collector3.on('collect', async (m: Message) => {
-                    if (m.content.startsWith(`${prefix}deny`)) {
-                        message.reply(`${user} has rejected your exchange offer.`)
-                        isValidated = true;
-                        collector3.stop();
-                    } else if (m.content.startsWith(`${prefix}accept`)) {
-                        let skinId1 = 0;
-                        for (let i = 0; i < skins1.length; i++) {
-                            if (skins1[i].name === skinName1) {
-                                skinId1 = skins1[i].id;
+                // Collect button interactions (when a user clicks a button),
+                // but only when the button as clicked by the original message author
+                const collector2 = embedMessage2.createMessageComponentCollector({
+                    filter: ({ user }) => user.id === author.id
+                })
+                collector2.on('collect', async interaction => {
+                    if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                        // Increase/decrease index
+                        switch (interaction.customId) {
+                            case backButton.customId:
+                                if (currentIndex > 0) {
+                                    currentIndex -= 1;
+                                }
                                 break;
-                            }
-                        }
-
-                        let skinId2 = 0;
-                        for (let i = 0; i < skins2.length; i++) {
-                            if (skins2[i].name === skinName2) {
-                                skinId2 = skins2[i].id;
+                            case forwardButton.customId:
+                                if (currentIndex < skins2.length - 1) {
+                                    currentIndex += 1;
+                                }
                                 break;
-                            }
                         }
 
-                        if (skinId1 && skinId2) {
-                            await giveSkinByUserId(user.id, skinName1)
-                            await giveSkinByUserId(author.id, skinName2);
+                        // Disable the buttons if they cannot be used
+                        forwardButton.disabled = currentIndex === skins2.length - 1;
+                        backButton.disabled = currentIndex === 0;
 
-                            this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
-                            message.reply(`${author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
-                            isValidated = true;
-                            collector3.stop();
-                        }
+                        // Respond to interaction by updating message with new embed
+                        await interaction.update({
+                            embeds: [generateSkinEmbed(skins2, currentIndex)],
+                            components: [
+                                new MessageActionRow({
+                                    components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                                })
+                            ]
+                        })
+                    } else if (interaction.customId === selectButton.customId) {
+                        skinName2 = interaction.message.embeds[0].title;
+                        await embedMessage2.delete();
+                        let msg = await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
+                        await user.send('A user started an exchange with you! ' + msg.url);
+                        collector2.stop();
                     }
                 });
-            });
+
+                collector2.on('end', async collected => {
+                    if (skinName2 === '') {
+                        message.reply(`You did not select a skin. The exchange is canceled.`);
+                    } else {
+                        const prefix = this.container.client.options.defaultPrefix;
+                        const filter = (m: Message) => {
+                            return m.author.id === user.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
+                        };
+                        const collector3 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
+
+                        let isValidated = false;
+                        collector3.on('collect', async (m: Message) => {
+                            if (m.content.startsWith(`${prefix}deny`)) {
+                                message.reply(`${user} has rejected your exchange offer.`)
+                                isValidated = true;
+                                collector3.stop();
+                            } else if (m.content.startsWith(`${prefix}accept`)) {
+                                let skinId1 = 0;
+                                for (let i = 0; i < skins1.length; i++) {
+                                    if (skins1[i].name === skinName1) {
+                                        skinId1 = skins1[i].id;
+                                        break;
+                                    }
+                                }
+
+                                let skinId2 = 0;
+                                for (let i = 0; i < skins2.length; i++) {
+                                    if (skins2[i].name === skinName2) {
+                                        skinId2 = skins2[i].id;
+                                        break;
+                                    }
+                                }
+
+                                if (skinId1 && skinId2) {
+                                    await giveSkinByUserId(user.id, skinName1)
+                                    await giveSkinByUserId(author.id, skinName2);
+
+                                    this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
+                                    message.reply(`${author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
+                                    isValidated = true;
+                                    collector3.stop();
+                                }
+                            }
+                        });
+                    }
+                });
+            }
         });
     }
 }
