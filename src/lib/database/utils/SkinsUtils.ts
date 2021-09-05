@@ -196,3 +196,13 @@ export async function unexhaustSkinByName(name: string) {
         }
     });
 }
+
+export async function resetAllSkins() {
+    return await container.prisma.skins.updateMany({
+        data: {
+            exhaustChangeDate: moment.utc().toDate(),
+            isExhausted: false,
+            playerId: null
+        }
+    })
+}
