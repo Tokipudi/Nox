@@ -81,14 +81,18 @@ export class Give extends Command {
         });
 
         collector.on('end', async collected => {
-            let skin = await giveSkinByUserId(user.id, skinName);
+            if (skinName === '') {
+                message.reply('You did not select a skin.');
+            } else {
+                let skin = await giveSkinByUserId(user.id, skinName);
 
-            this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
-            embedMessage1.edit({
-                content: `The skin **${skinName}** was successfully given to ${user}!`,
-                embeds: [],
-                components: []
-            });
+                this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
+                embedMessage1.edit({
+                    content: `The skin **${skinName}** was successfully given to ${user}!`,
+                    embeds: [],
+                    components: []
+                });
+            }
         });
 
     }

@@ -112,11 +112,13 @@ export class Wishlist extends Command {
         });
 
         collector.on('end', collected => {
-            reply.edit({
+            if (skins == null || skins.length === 0) {
+                reply.edit({
                 content: 'Your wishlist is empty!',
                 embeds: [],
-                components: []
-            });
+                    components: []
+                });
+            }
         });
     }
 }

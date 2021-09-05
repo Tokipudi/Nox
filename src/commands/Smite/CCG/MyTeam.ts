@@ -13,7 +13,7 @@ export class MyTeam extends Command {
 
     public async run(message: Message) {
         const { author } = message
-        
+
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
@@ -76,14 +76,16 @@ export class MyTeam extends Command {
         });
 
         collector.on('end', async collected => {
-            let skin = await disconnectSkinByName(skinName);
+            if (skinName) {
+                let skin = await disconnectSkinByName(skinName);
 
-            this.container.logger.info(`The skin ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
-            embedMessage1.edit({
-                content: `The skin **${skinName}** was successfully fired from your team!`,
-                embeds: [],
-                components: []
-            });
+                this.container.logger.info(`The skin ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
+                embedMessage1.edit({
+                    content: `The skin **${skinName}** was successfully fired from your team!`,
+                    embeds: [],
+                    components: []
+                });
+            }
         });
     }
 }
