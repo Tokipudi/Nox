@@ -18,7 +18,6 @@ export class ServerStatus extends Command {
 
         // inside a command, event listener, etc.
         const embed = new MessageEmbed()
-            .setColor('#0099ff')
             .setTitle('Smite Servers Status')
             .setURL('https://status.hirezstudios.com/')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -30,7 +29,7 @@ export class ServerStatus extends Command {
             }
             embed.addField(
                 data[i].platform.toUpperCase() + ' (' + data[i].environment + ')',
-                data[i].status,
+                `\`\`\`\n${data[i].status}\n\`\`\``,
                 true
             );
         }
