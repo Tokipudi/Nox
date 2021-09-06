@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { getSkinsByUserId, exhaustSkinById } from '@lib/database/utils/SkinsUtils';
+import { exhaustSkinById, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { getRandomIntInclusive } from '@lib/utils/Utils';
@@ -8,7 +8,10 @@ import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    description: 'Fight against another player.'
+    description: 'Fight against another player.',
+    cooldownDelay: 120000,
+    cooldownLimit: 1,
+    cooldownScope: 2
 })
 export class Fight extends Command {
 
@@ -252,7 +255,7 @@ export class Fight extends Command {
                                             if (god2Health < 0) {
                                                 god2Health = 0;
                                             }
-                                            embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, author);
+                                            embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, godName1, godName2, god1Health, god2Health, randomAbility, randomDamage, author);
                                             message.channel.send({ embeds: [embed] });
                                             break;
                                         case 2:
@@ -262,7 +265,7 @@ export class Fight extends Command {
                                             if (god1Health < 0) {
                                                 god1Health = 0;
                                             }
-                                            embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player);
+                                            embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, godName1, godName2, god1Health, god2Health, randomAbility, randomDamage, player);
                                             message.channel.send({ embeds: [embed] });
                                             break;
                                     }
@@ -296,7 +299,7 @@ export class Fight extends Command {
                 advantage = 0.15;
                 break;
             case 'Exclusive':
-                advantage = 0.05
+                advantage = 0.05;
                 break;
             case 'Standard':
             default:
@@ -306,14 +309,14 @@ export class Fight extends Command {
         return getRandomIntInclusive(advantage, health * 0.75);
     }
 
-    protected generateFightEmbed(god, title, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player) {
+    protected generateFightEmbed(god, title, skinName1, skinName2, godName1, godName2, god1Health, god2Health, randomAbility, randomDamage, player) {
         return new MessageEmbed()
             .setAuthor(title, god.godIconUrl)
             .setTitle(randomAbility.Summary)
             .setDescription(`*${god.name}* dealt \`${randomDamage}\` damage.`)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .addField(`${skinName1} ${god.name}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
-            .addField(`${skinName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)
+            .addField(`${skinName1} ${godName1}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
+            .addField(`${skinName2} ${godName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)
             .setImage(randomAbility.URL)
             .setFooter(`${player.username}#${player.discriminator}`)
             .setTimestamp();
