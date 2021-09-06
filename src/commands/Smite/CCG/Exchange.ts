@@ -187,8 +187,8 @@ export class Exchange extends Command {
                                 }
 
                                 if (skinId1 && skinId2) {
-                                    await giveSkinByUserId(user.id, skinName1)
-                                    await giveSkinByUserId(author.id, skinName2);
+                                    await giveSkinByUserId(user.id, skinId1)
+                                    await giveSkinByUserId(author.id, skinId2);
 
                                     this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
                                     message.reply(`${author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);

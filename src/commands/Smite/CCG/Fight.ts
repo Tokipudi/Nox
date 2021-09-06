@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { getSkinsByUserId, exhaustSkinByName } from '@lib/database/utils/SkinsUtils';
+import { getSkinsByUserId, exhaustSkinById } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -201,7 +201,7 @@ export class Fight extends Command {
                                 skinName2 = interaction.message.embeds[0].title;
                                 godName2 = interaction.message.embeds[0].author.name;
                                 await embedMessage3.delete();
-                                await message.channel.send(`A fight was started between ${author}'s **${skinName1}** and ${player}'s **${skinName2}**!`);
+                                await message.channel.send(`A fight was started between ${author}'s **${godName1} ${skinName1}** and ${player}'s **${godName2} ${skinName2}**!`);
                                 collector3.stop();
                             }
                         });
@@ -248,12 +248,28 @@ export class Fight extends Command {
                                     }
                                 }
 
+                                let skinId1 = 0;
+                                for (let i = 0; i < skins1.length; i++) {
+                                    if (skins1[i].name === skinName1) {
+                                        skinId1 = skins1[i].id;
+                                        break;
+                                    }
+                                }
+
+                                let skinId2 = 0;
+                                for (let i = 0; i < skins2.length; i++) {
+                                    if (skins2[i].name === skinName2) {
+                                        skinId2 = skins2[i].id;
+                                        break;
+                                    }
+                                }
+
                                 if (god1Health > 0) {
-                                    await exhaustSkinByName(skinName2);
+                                    await exhaustSkinById(skinId2);
                                     await message.channel.send(`${author}'s **${skinName1}** won the fight!`);
                                     await message.channel.send(`${player} your skin **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 } else {
-                                    await exhaustSkinByName(skinName1);
+                                    await exhaustSkinById(skinId1);
                                     await message.channel.send(`${player}'s **${skinName2}** won the fight!`);
                                     await message.channel.send(`${author} your skin **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }

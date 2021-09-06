@@ -1,17 +1,6 @@
 import { container } from '@sapphire/framework';
 import moment from 'moment';
 
-export async function getSkinForGod(skinName: string, godName: string) {
-    return await container.prisma.skins.findFirst({
-        where: {
-            name: skinName,
-            god: {
-                name: godName
-            }
-        }
-    });
-}
-
 export async function disconnectSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {
@@ -21,19 +10,6 @@ export async function disconnectSkinById(id: number) {
         },
         where: {
             id: id
-        }
-    });
-}
-
-export async function disconnectSkinByName(name: string) {
-    return await container.prisma.skins.update({
-        data: {
-            player: {
-                disconnect: true
-            }
-        },
-        where: {
-            name: name
         }
     });
 }
@@ -58,6 +34,29 @@ export async function getSkinsByUserId(id: string) {
         orderBy: {
             god: {
                 name: 'asc'
+            }
+        }
+    });
+}
+
+export async function getSkinByGodName(godName: string, skinName: string) {
+    return await container.prisma.skins.findFirst({
+        where: {
+            god: {
+                name: godName
+            },
+            name: skinName
+        },
+        include: {
+            god: {
+                select: {
+                    name: true
+                }
+            },
+            obtainability: {
+                select: {
+                    name: true
+                }
             }
         }
     });
@@ -96,7 +95,7 @@ export async function getUnclaimedSkins() {
     });
 }
 
-export async function giveSkinByUserId(recipientId: string, skinName: string) {
+export async function giveSkinByUserId(recipientId: string, skinId: number) {
     return await container.prisma.skins.update({
         data: {
             player: {
@@ -111,7 +110,7 @@ export async function giveSkinByUserId(recipientId: string, skinName: string) {
             }
         },
         where: {
-            name: skinName
+            id: skinId
         }
     });
 }
@@ -145,7 +144,7 @@ export async function getSkinWishlistByUserId(id: string) {
     });
 }
 
-export async function disconnectWishlistSkinByUserId(userId: string, skinName: string) {
+export async function disconnectWishlistSkinByUserId(userId: string, skinId: number) {
     return await container.prisma.skins.update({
         data: {
             wishedByPlayer: {
@@ -155,12 +154,12 @@ export async function disconnectWishlistSkinByUserId(userId: string, skinName: s
             }
         },
         where: {
-            name: skinName
+            id: skinId
         }
     });
 }
 
-export async function addSkinToWishlistByUserId(userId: string, skinName: string) {
+export async function addSkinToWishlistByUserId(userId: string, skinId: number) {
     return await container.prisma.skins.update({
         data: {
             wishedByPlayer: {
@@ -179,31 +178,31 @@ export async function addSkinToWishlistByUserId(userId: string, skinName: string
             name: true
         },
         where: {
-            name: skinName
+            id: skinId
         }
     });
 }
 
-export async function exhaustSkinByName(name: string) {
+export async function exhaustSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {
             isExhausted: true,
             exhaustChangeDate: moment.utc().toDate()
         },
         where: {
-            name: name
+            id: id
         }
     });
 }
 
-export async function unexhaustSkinByName(name: string) {
+export async function unexhaustSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {
             isExhausted: false,
             exhaustChangeDate: moment.utc().toDate()
         },
         where: {
-            name: name
+            id: id
         }
     });
 }
@@ -215,5 +214,5 @@ export async function resetAllSkins() {
             isExhausted: false,
             playerId: null
         }
-    })
+    });
 }

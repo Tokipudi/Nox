@@ -74,7 +74,16 @@ export class GodSkins extends Command {
                 })
             } else if (interaction.customId === selectButton.customId) {
                 let skinName = interaction.message.embeds[0].title;
-                let skin = await addSkinToWishlistByUserId(author.id, skinName);
+
+                let skinId = 0;
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === skinName) {
+                        skinId = skins[i].id;
+                        break;
+                    }
+                }
+
+                let skin = await addSkinToWishlistByUserId(author.id, skinId);
                 this.container.logger.info(`The skin ${skinName}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
 
                 // Disable the wish button

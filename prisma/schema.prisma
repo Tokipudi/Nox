@@ -69,7 +69,7 @@ model Skins {
     id                Int                 @id
     god               Gods                @relation(fields: [godId], references: [id])
     godId             Int
-    name              String              @unique
+    name              String
     godIconUrl        String
     godSkinUrl        String
     obtainability     SkinsObtainability? @relation(fields: [obtainabilityId], references: [id])

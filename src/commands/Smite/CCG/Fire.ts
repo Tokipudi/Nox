@@ -11,13 +11,20 @@ export class Fire extends Command {
 
     public async run(message: Message, args: Args) {
         const { author } = message;
+
+        let godName: string = await args.pick('string');
+        godName = godName.trim();
+        if (!godName) return message.reply('The first argument needs to be a valid god name!');
+
         let skinName: string = await args.rest('string');
+        skinName = skinName.trim();
+        if (!skinName) return message.reply('The second argument needs to be a valid skin name!');
 
-        if (!skinName) return message.reply('The first argument needs to be a valid skin name!');
-
-        skinName = toTitleCase(skinName.trim());
         const skin = await this.container.prisma.skins.findFirst({
             where: {
+                god: {
+                    name: godName
+                },
                 name: skinName,
                 playerId: author.id
             },
@@ -26,7 +33,7 @@ export class Fire extends Command {
                 name: true
             }
         });
-        if (!skin) return message.reply('The skin **' + skinName + '** does not exist or does not belong to you!');
+        if (!skin) return message.reply('The skin **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
 
         await disconnectSkinById(skin.id);
 

@@ -1,6 +1,6 @@
 import { SmiteGodsApi } from '@lib/api/hirez/smite/SmiteGodsApi';
 import { getGods } from '@lib/database/utils/GodsUtils';
-import { getSkinForGod } from '@lib/database/utils/SkinsUtils';
+import { getSkinByGodName } from '@lib/database/utils/SkinsUtils';
 import { getGodSkinMissingData } from '@lib/utils/smite/fandom/SmiteFandomUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
@@ -18,12 +18,14 @@ export class ImportDB extends Command {
 
     public async run(message: Message) {
         const msg = await message.reply('Importing gods from Smite\'s servers...');
-        this.container.logger.info('Importing gods from Smite\'s servers...');
 
+        this.container.logger.info('Importing gods from Smite\'s servers...');
         await this.importGods();
+
         msg.edit('Gods imported. Importing skins...');
         this.container.logger.info('Gods imported. Importing skins...');
         await this.importSkins();
+
         msg.edit('Skins imported. Importing missing data from <https://smite.fandom.com/>');
         this.container.logger.info('Skins imported. Importing missing data from https://smite.fandom.com/');
         await this.importFandomMissingData();
@@ -131,22 +133,20 @@ export class ImportDB extends Command {
                     }
                 });
                 if (!skinFromDb) {
-                    let skinName = toTitleCase(skin.skin_name);
+                    let skinName = toTitleCase(skin.skin_name.trim());
 
-                    let skinFromDb = await this.container.prisma.skins.findUnique({
-                        where: {
-                            name: skinName
-                        }
-                    });
-
-                    if (
-                        skinFromDb
-                        || skinName === 'Golden'
-                        || skinName === 'Legendary'
-                        || skinName === 'Diamond'
-                        || skinName === 'Shadow'
-                    ) {
-                        skinName += ` ${skin.god_name}`
+                    // Handle specific cases
+                    if (skinName.endsWith('.')) {
+                        skinName = skinName.slice(0, -1);
+                    }
+                    if (skinName.startsWith('Standard')) {
+                        skinName = 'Default';
+                    }
+                    if (skinName === 'Triumphandagni') {
+                        skinName = 'Triumph & Agni';
+                    }
+                    if (skinName === 'Blitz Athena') {
+                        skinName = 'Blitz';
                     }
 
                     await this.container.prisma.skins.create({
@@ -165,7 +165,7 @@ export class ImportDB extends Command {
                         }
                     });
 
-                    this.container.logger.info('Skin ' + skinName + ' has been added to the database.');
+                    this.container.logger.info('Skin ' + skinName + ' (godId<' + godId + '>) has been added to the database.');
                 }
             }
         }
@@ -173,57 +173,63 @@ export class ImportDB extends Command {
     }
 
     private async importFandomMissingData() {
+        let failed = [];
+
         const gods = await getGods();
         for (let i in gods) {
             const god = gods[i];
 
             let skinsMissingData = await getGodSkinMissingData(god.name);
             for (let i in skinsMissingData) {
-                let skinMissingData = skinsMissingData[i];
-                let skinName = skinMissingData.name;
+                let skin = skinsMissingData[i];
+                let skinName = toTitleCase(skin.name.trim());
 
-                switch (skinName) {
-                    case 'Default':
-                        skinName = 'Standard ' + god.name;
-                        break;
-                    case 'Golden':
-                    case 'Legendary':
-                    case 'Diamond':
-                        skinName += ' ' + god.name;
-                        break;
-                    default:
-                        const skinForGod = await getSkinForGod(skinName, god.name);
-                        if (!skinForGod) {
-                            skinName += ' ' + god.name;
-                        }
-                        break;
+                // Handle specific cases
+                if (skinName.endsWith('.')) {
+                    skinName = skinName.slice(0, -1);
+                }
+                if (skinName === 'Classic') {
+                    skinName += ` ${god.name}`;
+                }
+                if (skinName.startsWith('Hrx') && god.name === 'Loki') {
+                    skinName = 'Hrx';
+                }
+                if (skinName === 'X' && god.name === 'Amaterasu') {
+                    skinName = 'Amaterasu X';
                 }
 
-                const skinForGod = await getSkinForGod(skinName, god.name);
-                if (!skinForGod) {
-                    this.container.logger.warn(`Unable to find a skin with the name ${skinName}.`)
+                const skinDb = await getSkinByGodName(god.name, skinName);
+                if (!skinDb) {
+                    failed.push(`Unable to find a skin with the name ${skinName} for the god ${god.name}.`);
                 } else {
                     await this.container.prisma.skins.update({
                         data: {
-                            releaseDate: skinMissingData.releaseDate ? moment(skinMissingData.releaseDate, 'MMMM DD, YYYY').utc().toDate() : undefined,
+                            releaseDate: skin.releaseDate ? moment(skin.releaseDate, 'MMMM DD, YYYY').utc().toDate() : undefined,
                             obtainability: {
                                 connectOrCreate: {
                                     create: {
-                                        name: skinMissingData.obtainability
+                                        name: skin.obtainability
                                     },
                                     where: {
-                                        name: skinMissingData.obtainability
+                                        name: skin.obtainability
                                     }
                                 }
                             }
                         },
                         where: {
-                            name: skinName
+                            id: skinDb.id
                         }
                     });
 
-                    // this.container.logger.info('Skin ' + skinName + ' has been updated with fandom data.');
+                    this.container.logger.info('Skin ' + skinName + ' has been updated with fandom data.');
                 }
+            }
+        }
+
+        if (failed.length > 0) {
+            for (let i in failed) {
+                let msg = failed[i];
+                this.container.logger.warn(msg);
             }
         }
     }

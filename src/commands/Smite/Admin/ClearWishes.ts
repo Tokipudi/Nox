@@ -18,7 +18,7 @@ export class ClearWishes extends Command {
 
         for (let i in skins) {
             let skin = skins[i];
-            await disconnectWishlistSkinByUserId(user.id, skin.name);
+            await disconnectWishlistSkinByUserId(user.id, skin.id);
             this.container.logger.info(`The skin ${skin.name}<${skin.id}> was removed from the wishlist of ${user.username}#${user.discriminator}<${user.id}>`);
         }
 

@@ -84,7 +84,14 @@ export class Give extends Command {
             if (skinName === '') {
                 message.reply('You did not select a skin.');
             } else {
-                let skin = await giveSkinByUserId(user.id, skinName);
+                let skinId = 0;
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === skinName) {
+                        skinId = skins[i].id;
+                        break;
+                    }
+                }
+                let skin = await giveSkinByUserId(user.id, skinId);
 
                 this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

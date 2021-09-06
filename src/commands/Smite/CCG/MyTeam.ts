@@ -1,4 +1,4 @@
-import { disconnectSkinByName, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkinById, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -77,7 +77,14 @@ export class MyTeam extends Command {
 
         collector.on('end', async collected => {
             if (skinName) {
-                let skin = await disconnectSkinByName(skinName);
+                let skinId = 0;
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === skinName) {
+                        skinId = skins[i].id;
+                        break;
+                    }
+                }
+                let skin = await disconnectSkinById(skinId);
 
                 this.container.logger.info(`The skin ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

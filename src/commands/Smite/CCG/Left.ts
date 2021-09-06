@@ -9,8 +9,6 @@ import { Message } from 'discord.js';
 export class Left extends Command {
 
     public async run(message: Message) {
-        const { author } = message;
-
         const skins = await getUnclaimedSkins();
         
         return message.reply(`There are still ${skins.length} skins available for grab!`);

@@ -17,14 +17,15 @@ export class Roll extends Command {
         const msg = await message.reply('Fetching data...');
 
         const skins = await this.container.prisma.$queryRaw(
-            'SELECT Skins.*, Gods.name as godName, SkinObtainability.name as obtainabilityName ' +
-            'FROM Skins, Gods, SkinObtainability ' +
+            'SELECT Skins.*, Gods.name as godName, SkinsObtainability.name as obtainabilityName ' +
+            'FROM Skins, Gods, SkinsObtainability ' +
             'WHERE Skins.godId = Gods.id ' +
-            'AND Skins.obtainabilityId = SkinObtainability.id ' +
+            'AND Skins.obtainabilityId = SkinsObtainability.id ' +
             'AND Skins.godSkinUrl != "" ' +
             'AND Skins.playerId IS NULL ' +
             'ORDER BY RANDOM() LIMIT 1;'
         );
+
         let skin = skins[0];
 
         let embed = new MessageEmbed()

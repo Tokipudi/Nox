@@ -6,7 +6,7 @@ export async function getGodByName(name: string) {
             pantheon: true,
             skins: {
                 where: {
-                    name: 'Standard ' + name
+                    name: 'Default'
                 }
             }
         },

@@ -84,7 +84,16 @@ export class Wishlist extends Command {
                 })
             } else if (interaction.customId === selectButton.customId && player.id === author.id) {
                 let skinName = interaction.message.embeds[0].title;
-                let skin = await disconnectWishlistSkinByUserId(player.id, skinName);
+
+                let skinId = 0;
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === skinName) {
+                        skinId = skins[i].id;
+                        break;
+                    }
+                }
+
+                let skin = await disconnectWishlistSkinByUserId(player.id, skinId);
                 this.container.logger.info(`The skin ${skinName}<${skin.id}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
                 skins = await getSkinWishlistByUserId(player.id);
 
@@ -114,8 +123,8 @@ export class Wishlist extends Command {
         collector.on('end', collected => {
             if (skins == null || skins.length === 0) {
                 reply.edit({
-                content: 'Your wishlist is empty!',
-                embeds: [],
+                    content: 'Your wishlist is empty!',
+                    embeds: [],
                     components: []
                 });
             }

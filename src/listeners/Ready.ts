@@ -1,4 +1,4 @@
-import { unexhaustSkinByName } from '@lib/database/utils/SkinsUtils';
+import { unexhaustSkinById } from '@lib/database/utils/SkinsUtils';
 import { Listener } from '@sapphire/framework';
 import { PieceContext } from "@sapphire/pieces";
 import moment from 'moment';
@@ -44,7 +44,7 @@ export class Ready extends Listener {
             for (let i in skins) {
                 let skin = skins[i];
                 if (moment.utc().isSameOrAfter(moment(skin.exhaustChangeDate).add(6, 'hour'))) {
-                    await unexhaustSkinByName(skin.name);
+                    await unexhaustSkinById(skin.id);
                     this.container.logger.info(`The skin ${skin.name}<${skin.id}> has been unexhausted.`);
                 }
             }

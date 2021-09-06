@@ -1,5 +1,20 @@
 import { container } from '@sapphire/framework';
 
+export async function disconnectSkinById(playerId: string, skinId: number) {
+    return await container.prisma.players.update({
+        data: {
+            skins: {
+                disconnect: {
+                    id: skinId
+                }
+            }
+        },
+        where: {
+            id: playerId
+        }
+    });
+}
+
 export async function getPlayerById(id: string) {
     return await container.prisma.players.findUnique({
         where: {
