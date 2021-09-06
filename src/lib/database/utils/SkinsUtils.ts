@@ -1,6 +1,29 @@
 import { container } from '@sapphire/framework';
 import moment from 'moment';
 
+export async function getSkins() {
+    return await container.prisma.skins.findMany({
+        include: {
+            god: {
+                select: {
+                    name: true
+                }
+            },
+            obtainability: true
+        }
+    });
+}
+
+export async function getSkinByObtainability(obtainability: string) {
+    return await container.prisma.skins.findMany({
+        where: {
+            obtainability: {
+                name: obtainability
+            }
+        }
+    });
+}
+
 export async function disconnectSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {
