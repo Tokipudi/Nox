@@ -2,6 +2,7 @@ import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { getSkinsByUserId, exhaustSkinById } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
+import { getRandomIntInclusive } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
@@ -210,10 +211,29 @@ export class Fight extends Command {
                             if (skinName2 === '') {
                                 message.channel.send(`${player} you did not select a fighter in time. The fight is canceled.`);
                             } else {
+                                let skin1, skin2;
                                 let god1 = await getGodByName(godName1);
                                 let god2 = await getGodByName(godName2);
                                 let god1Health = god1.health;
                                 let god2Health = god2.health;
+
+                                let skinId1 = 0;
+                                for (let i = 0; i < skins1.length; i++) {
+                                    if (skins1[i].name === skinName1) {
+                                        skinId1 = skins1[i].id;
+                                        skin1 = skins1[i];
+                                        break;
+                                    }
+                                }
+
+                                let skinId2 = 0;
+                                for (let i = 0; i < skins2.length; i++) {
+                                    if (skins2[i].name === skinName2) {
+                                        skinId2 = skins2[i].id;
+                                        skin2 = skins2[i];
+                                        break;
+                                    }
+                                }
 
                                 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -227,7 +247,7 @@ export class Fight extends Command {
                                     switch (playingPlayer) {
                                         case 1:
                                             randomAbility = JSON.parse(god1['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                            randomDamage = this.getRandomDamageFromMaxHealth(god1.health);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god1.health, skin1.obtainability.name);
                                             god2Health -= randomDamage;
                                             if (god2Health < 0) {
                                                 god2Health = 0;
@@ -237,7 +257,7 @@ export class Fight extends Command {
                                             break;
                                         case 2:
                                             randomAbility = JSON.parse(god2['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                            randomDamage = this.getRandomDamageFromMaxHealth(god2.health);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god2.health, skin2.obtainability.name);
                                             god1Health -= randomDamage;
                                             if (god1Health < 0) {
                                                 god1Health = 0;
@@ -245,22 +265,6 @@ export class Fight extends Command {
                                             embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player);
                                             message.channel.send({ embeds: [embed] });
                                             break;
-                                    }
-                                }
-
-                                let skinId1 = 0;
-                                for (let i = 0; i < skins1.length; i++) {
-                                    if (skins1[i].name === skinName1) {
-                                        skinId1 = skins1[i].id;
-                                        break;
-                                    }
-                                }
-
-                                let skinId2 = 0;
-                                for (let i = 0; i < skins2.length; i++) {
-                                    if (skins2[i].name === skinName2) {
-                                        skinId2 = skins2[i].id;
-                                        break;
                                     }
                                 }
 
@@ -281,8 +285,25 @@ export class Fight extends Command {
         });
     }
 
-    protected getRandomDamageFromMaxHealth(health: number) {
-        return Math.round(health * Math.random());
+    protected getRandomDamageFromMaxHealth(health: number, obtainability: string) {
+        let advantage = 0;
+        switch (obtainability) {
+            case 'Clan Reward':
+            case 'Unlimited':
+                advantage = 0.2;
+                break;
+            case 'Limited':
+                advantage = 0.15;
+                break;
+            case 'Exclusive':
+                advantage = 0.05
+                break;
+            case 'Standard':
+            default:
+                // Do nothing
+                break;
+        }
+        return getRandomIntInclusive(advantage, health * 0.75);
     }
 
     protected generateFightEmbed(god, title, skinName1, skinName2, god1Health, god2Health, randomAbility, randomDamage, player) {
@@ -291,7 +312,7 @@ export class Fight extends Command {
             .setTitle(randomAbility.Summary)
             .setDescription(`*${god.name}* dealt \`${randomDamage}\` damage.`)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .addField(`${skinName1}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
+            .addField(`${skinName1} ${god.name}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
             .addField(`${skinName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)
             .setImage(randomAbility.URL)
             .setFooter(`${player.username}#${player.discriminator}`)
