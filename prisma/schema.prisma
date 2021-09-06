@@ -20,8 +20,8 @@ model Gods {
     title                      String
     type                       String
     lore                       String
-    pros                       String
-    cons                       String
+    pros                       String?
+    cons                       String?
     autoBanned                 Boolean   @default(false)
     onFreeRotation             Boolean   @default(false)
     latestGod                  Boolean   @default(false)
@@ -54,7 +54,7 @@ model Gods {
     physicalProtection         Int       @default(0)
     physicalProtectionPerLevel Float     @default(0)
     speed                      Int       @default(0)
-    godCardUrl                 String
+    godCardUrl                 String?
     godIconUrl                 String
     skins                      Skins[]
 }
@@ -66,35 +66,35 @@ model Pantheons {
 }
 
 model Skins {
-    id                Int               @id
-    god               Gods              @relation(fields: [godId], references: [id])
+    id                Int                 @id
+    god               Gods                @relation(fields: [godId], references: [id])
     godId             Int
-    name              String            @unique
+    name              String              @unique
     godIconUrl        String
     godSkinUrl        String
-    obtainability     SkinObtainability @relation(fields: [obtainabilityId], references: [id])
-    obtainabilityId   Int
-    priceFavor        Int
-    priceGems         Int
-    player            Players?          @relation(name: "PlayerSkins", fields: [playerId], references: [id])
+    obtainability     SkinsObtainability? @relation(fields: [obtainabilityId], references: [id])
+    obtainabilityId   Int?
+    priceFavor        Int                 @default(0)
+    priceGems         Int                 @default(0)
+    player            Players?            @relation(name: "PlayerSkins", fields: [playerId], references: [id])
     playerId          String?
-    wishedByPlayer    Players[]         @relation("PlayersWishes")
-    isExhausted       Boolean           @default(false)
-    exhaustChangeDate DateTime          @default(now())
+    wishedByPlayer    Players[]           @relation("PlayersWishes")
+    isExhausted       Boolean?            @default(false)
+    exhaustChangeDate DateTime?
+    releaseDate       DateTime?
 }
 
-model SkinObtainability {
-    id     Int     @id @default(autoincrement())
-    name   String  @unique
-    weight Int     @default(1)
-    Skins  Skins[]
+model SkinsObtainability {
+    id    Int     @id @default(autoincrement())
+    name  String  @unique
+    Skins Skins[]
 }
 
 model Players {
-    id           String   @id
-    skins        Skins[]  @relation(name: "PlayerSkins")
-    wishedSkins  Skins[]  @relation(name: "PlayersWishes")
-    lastSkinDate DateTime @default(now())
-    isNew        Boolean  @default(true)
-    isBanned     Boolean  @default(false)
+    id           String    @id
+    skins        Skins[]   @relation(name: "PlayerSkins")
+    wishedSkins  Skins[]   @relation(name: "PlayersWishes")
+    lastSkinDate DateTime?
+    isNew        Boolean   @default(true)
+    isBanned     Boolean   @default(false)
 }

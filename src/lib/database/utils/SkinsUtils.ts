@@ -1,6 +1,17 @@
 import { container } from '@sapphire/framework';
 import moment from 'moment';
 
+export async function getSkinForGod(skinName: string, godName: string) {
+    return await container.prisma.skins.findFirst({
+        where: {
+            name: skinName,
+            god: {
+                name: godName
+            }
+        }
+    });
+}
+
 export async function disconnectSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {
