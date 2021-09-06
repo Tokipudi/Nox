@@ -35,6 +35,23 @@ export class Roll extends Command {
             .setImage(skin.godSkinUrl)
             .setFooter(`${skin.obtainabilityName} skin`);
 
+        switch (skin.obtainabilityName) {
+            case 'Clan Reward':
+            case 'Unlimited':
+                embed.setColor('GOLD');
+                break;
+            case 'Limited':
+                embed.setColor('PURPLE');
+                break;
+            case 'Exclusive':
+                embed.setColor('BLUE');
+                break;
+            case 'Standard':
+            default:
+                embed.setColor('GREEN');
+                break;
+        }
+
         await msg.edit('React with any emoji to claim.');
         await msg.edit({ embeds: [embed] });
 
