@@ -15,3 +15,7 @@ export async function getGodByName(name: string) {
         }
     });
 }
+
+export async function getGods() {
+    return await container.prisma.gods.findMany();
+}
