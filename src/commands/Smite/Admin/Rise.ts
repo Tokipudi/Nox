@@ -1,4 +1,4 @@
-import { getPlayerById, setPlayerAsNewById } from '@lib/database/utils/PlayersUtils';
+import { getPlayerById, resetLastClaimDate } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
@@ -16,7 +16,7 @@ export class Rise extends Command {
         const player = await getPlayerById(user.id);
         if (!player) return message.reply(`${user} has not rolled any skin yet.`);
 
-        await setPlayerAsNewById(user.id);
+        await resetLastClaimDate(user.id);
 
         message.reply(`${user} can claim a skin again.`);
     }

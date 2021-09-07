@@ -24,6 +24,36 @@ export async function getSkinByObtainability(obtainability: string) {
     });
 }
 
+export async function connectSkinById(skinId: number, playerId: string) {
+    const skin = await container.prisma.skins.update({
+        data: {
+            player: {
+                connectOrCreate: {
+                    create: {
+                        id: playerId
+                    },
+                    where: {
+                        id: playerId
+                    }
+                }
+            }
+        },
+        where: {
+            id: skinId
+        }
+    });
+    await container.prisma.players.update({
+        data: {
+            lastClaimDate: moment.utc().toDate()
+        },
+        where: {
+            id: playerId
+        }
+    });
+
+    return skin;
+}
+
 export async function disconnectSkinById(id: number) {
     return await container.prisma.skins.update({
         data: {

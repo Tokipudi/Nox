@@ -1,4 +1,5 @@
 import { container } from '@sapphire/framework';
+import moment from 'moment';
 
 export async function disconnectSkinById(playerId: string, skinId: number) {
     return await container.prisma.players.update({
@@ -23,10 +24,10 @@ export async function getPlayerById(id: string) {
     });
 }
 
-export async function setPlayerAsNewById(id: string) {
+export async function resetLastClaimDate(id: string) {
     return await container.prisma.players.update({
         data: {
-            isNew: true
+            lastClaimDate: null
         },
         where: {
             id: id
@@ -47,4 +48,18 @@ export async function setPlayerAsBannedById(id: string) {
 
 export async function deleteAllPlayers() {
     return await container.prisma.players.deleteMany();
+}
+
+export async function canPlayerClaimRoll(playerId: string) {
+    const player = await getPlayerById(playerId);
+    return !player.isBanned && (!player || !player.lastClaimDate || moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour')));
+}
+
+export async function getTimeLeftBeforeClaim(playerId: string) {
+    const player = await getPlayerById(playerId);
+    
+    const now = moment().unix();
+    const claimableDate = moment(player.lastClaimDate).add(3, 'hours').unix();
+    const timeLeft = claimableDate - now;
+    return moment.duration(timeLeft * 1000, 'milliseconds');
 }

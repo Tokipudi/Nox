@@ -91,10 +91,9 @@ model SkinsObtainability {
 }
 
 model Players {
-    id           String    @id
-    skins        Skins[]   @relation(name: "PlayerSkins")
-    wishedSkins  Skins[]   @relation(name: "PlayersWishes")
-    lastSkinDate DateTime?
-    isNew        Boolean   @default(true)
-    isBanned     Boolean   @default(false)
+    id            String    @id
+    skins         Skins[]   @relation(name: "PlayerSkins")
+    wishedSkins   Skins[]   @relation(name: "PlayersWishes")
+    lastClaimDate DateTime?
+    isBanned      Boolean   @default(false)
 }

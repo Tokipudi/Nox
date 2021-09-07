@@ -1,8 +1,8 @@
-import { getPlayerById } from '@lib/database/utils/PlayersUtils';
+import { canPlayerClaimRoll, getPlayerById, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
+import { connectSkinById } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
-import moment from 'moment';
 
 @ApplyOptions<CommandOptions>({
     name: 'roll',
@@ -55,40 +55,25 @@ export class Roll extends Command {
         await msg.edit('React with any emoji to claim.');
         await msg.edit({ embeds: [embed] });
 
-        const filter = async (reaction, user) => {
-            let player = await this.container.prisma.players.findUnique({
-                where: {
-                    id: user.id
-                }
-            });
-            if (!player) {
-                player = await this.container.prisma.players.create({
-                    data: {
-                        id: user.id
-                    }
-                });
-            }
-            return (player.isNew || moment.utc().isSameOrAfter(moment(player.lastSkinDate).add(3, 'hour'))) && !player.isBanned;
-        };
-        const collector = msg.createReactionCollector({ filter, time: 45000 });
+        const collector = msg.createReactionCollector({ time: 45000 });
 
         collector.on('collect', async (reaction, user) => {
-            await this.container.prisma.players.update({
-                data: {
-                    isNew: false,
-                    lastSkinDate: moment.utc().toDate(),
-                    skins: {
-                        connect: {
-                            id: skin.id
-                        }
-                    }
-                },
-                where: {
-                    id: user.id
-                }
-            });
-            msg.reply(`${user} has added *${skin.godName}* **${skin.name}** to their collection.`);
-            this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`);
+            const player = await getPlayerById(user.id);
+            const canClaim = await canPlayerClaimRoll(user.id);
+            if (player.isBanned) {
+                message.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
+            } else if (!canClaim) {
+                const duration = await getTimeLeftBeforeClaim(user.id);
+
+                message.channel.send(`${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
+            } else {
+                collector.stop();
+
+                await connectSkinById(skin.id, user.id);
+
+                msg.reply(`${user} has added *${skin.godName}* **${skin.name}** to their collection.`);
+                this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`);
+            }
         });
 
         let wishedPlayers = await this.container.prisma.players.findMany({
