@@ -134,6 +134,8 @@ export class ImportDB extends Command {
                 });
                 if (!skinFromDb) {
                     let skinName = toTitleCase(skin.skin_name.trim());
+                    let godIconUrl = skin.godIcon_URL;
+                    let godCardURL = skin.godSkin_URL;
 
                     // Handle specific cases
                     if (skinName.endsWith('.')) {
@@ -148,13 +150,30 @@ export class ImportDB extends Command {
                     if (skinName === 'Blitz Athena') {
                         skinName = 'Blitz';
                     }
+                    if (['Diamond', 'Legendary'].includes(skinName)) {
+                        for (let j in data) {
+                            let otherSkin = data[j];
+                            if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Golden')) {
+                                godIconUrl = otherSkin.godIcon_URL;
+                                godCardURL = otherSkin.godSkin_URL;
+                            }
+                        }
+                    } else if (skinName.startsWith('Shadow')) {
+                        for (let j in data) {
+                            let otherSkin = data[j];
+                            if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Standard')) {
+                                godIconUrl = otherSkin.godIcon_URL;
+                                godCardURL = otherSkin.godSkin_URL;
+                            }
+                        }                        
+                    }
 
                     await this.container.prisma.skins.create({
                         data: {
                             id: skin.skin_id1,
                             name: skinName,
-                            godIconUrl: skin.godIcon_URL,
-                            godSkinUrl: skin.godSkin_URL,
+                            godIconUrl: godIconUrl,
+                            godSkinUrl: godCardURL,
                             priceFavor: skin.price_favor,
                             priceGems: skin.price_gems,
                             god: {
