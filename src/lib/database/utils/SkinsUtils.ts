@@ -135,7 +135,7 @@ export async function getSkinsByGodName(name: string) {
             }
         },
         orderBy: {
-            name: 'asc'
+            releaseDate: 'desc'
         }
     });
 }
