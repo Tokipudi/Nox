@@ -4,7 +4,7 @@ import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    description: 'Releases either half or all of a player\'s skins.',
+    description: 'Releases either half or all of a player\'s cards.',
     requiredUserPermissions: 'ADMINISTRATOR'
 })
 export class Strife extends Command {
@@ -18,8 +18,8 @@ export class Strife extends Command {
         if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the command.')
 
         const skins = await getSkinsByUserId(user.id);
-        if (!skins || !skins.length) return message.reply(`${user} does not have any skins!`);
-
+        if (!skins || !skins.length) return message.reply(`${user} does not have any cards!`);
+        
         let skinsToRelease = 0;
         switch (amount) {
             case 'half':
@@ -36,18 +36,18 @@ export class Strife extends Command {
             let skin = skins[randomSkinIndex];
 
             await disconnectSkinById(skin.id);
-            this.container.logger.info(`The skin ${skin.name}<${skin.id}> was released from player ${user.username}#${user.discriminator}<${user.id}>.`);
+            this.container.logger.info(`The card ${skin.name}<${skin.id}> was released from player ${user.username}#${user.discriminator}<${user.id}>.`);
 
             skinsReleased.push(skin.name);
             skins.splice(randomSkinIndex, 1);
             skinsToRelease--;
         }
 
-        let msg = `The following ${skinsReleased.length} skins were release from player ${user}:\n`;
+        let msg = `The following ${skinsReleased.length} cards were release from player ${user}:\n`;
         for (let i in skinsReleased) {
             msg += `- **${skinsReleased[i]}**\n`
         }
-        msg += `They have ${skins.length} skins left in their team.`
+        msg += `They have ${skins.length} cards left in their team.`
 
         message.reply(msg);
     }

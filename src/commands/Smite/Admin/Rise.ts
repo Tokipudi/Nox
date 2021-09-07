@@ -14,10 +14,10 @@ export class Rise extends Command {
         if (!user) return message.reply('The first argument **must** be a user.');
 
         const player = await getPlayerById(user.id);
-        if (!player) return message.reply(`${user} has not rolled any skin yet.`);
+        if (!player) return message.reply(`${user} has not rolled any card yet.`);
 
         await resetLastClaimDate(user.id);
 
-        message.reply(`${user} can claim a skin again.`);
+        message.reply(`${user} can claim a card again.`);
     }
 }

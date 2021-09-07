@@ -19,14 +19,14 @@ export class Wish extends Command {
 
         let skinName: string = await args.rest('string');
         skinName = toTitleCase(skinName.trim());
-        if (!skinName) return message.reply('The second argument needs to be a valid skin name!');
+        if (!skinName) return message.reply('The second argument needs to be a valid card name!');
 
         const skin = await getSkinByGodName(godName, skinName);
-        if (!skin) return message.reply('The skin **' + skinName + '** does not exist for the god ' + godName + '!');
+        if (!skin) return message.reply('The card **' + skinName + '** does not exist for the god ' + godName + '!');
 
         await addSkinToWishlistByUserId(author.id, skin.id);
 
-        this.container.logger.info(`The skin ${skin.name}<${skin.id}> was added to the wishlist of ${author.username}#${author.discriminator}<${author.id}>!`)
-        return message.reply(`The skin **${skinName}** was successfully added to your wishlist!`);
+        this.container.logger.info(`The card ${skin.name}<${skin.id}> was added to the wishlist of ${author.username}#${author.discriminator}<${author.id}>!`)
+        return message.reply(`The card **${skinName}** was successfully added to your wishlist!`);
     }
 }

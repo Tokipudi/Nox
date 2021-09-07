@@ -28,7 +28,7 @@ export class GodSkins extends Command {
 
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
-            content: `Here are the skins for ${godName}.`,
+            content: `Here are the cards for ${godName}.`,
             embeds: [generateSkinEmbed(skins, 0)],
             components: [
                 new MessageActionRow({
@@ -84,7 +84,7 @@ export class GodSkins extends Command {
                 }
 
                 let skin = await addSkinToWishlistByUserId(author.id, skinId);
-                this.container.logger.info(`The skin ${skinName}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
+                this.container.logger.info(`The card ${skinName}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
 
                 // Disable the wish button
                 selectButton.disabled = true;

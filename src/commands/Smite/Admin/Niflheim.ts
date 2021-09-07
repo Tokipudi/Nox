@@ -15,6 +15,6 @@ export class Rise extends Command {
 
         await setPlayerAsBannedById(user.id);
 
-        message.reply(`${user} is banned from claiming any skin.`);
+        message.reply(`${user} is banned from claiming any card.`);
     }
 }

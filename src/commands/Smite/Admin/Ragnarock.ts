@@ -14,6 +14,6 @@ export class Ragnarock extends Command {
         await resetAllSkins();
         await deleteAllPlayers();
 
-        message.reply('All skins have been reset to their default state and are available for grab again.');
+        message.reply('All cards have been reset to their default state and are available for grab again.');
     }
 }

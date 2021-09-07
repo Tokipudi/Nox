@@ -7,7 +7,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'exchange',
-    description: 'Exchanges a skin you own to a user of your choice. The specified user will have to validate the exchange with the same command.'
+    description: 'Exchanges a card you own to a user of your choice. The specified user will have to validate the exchange with the same command.'
 })
 export class Exchange extends Command {
 
@@ -16,8 +16,8 @@ export class Exchange extends Command {
         const user: User = await args.rest('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
-        if (user.id === author.id) return message.reply('You cannot exchange a skin with yourself!');
-        if (user.bot) return message.reply('You cannot exchange a skin with a bot!');
+        if (user.id === author.id) return message.reply('You cannot exchange a card with yourself!');
+        if (user.bot) return message.reply('You cannot exchange a card with a bot!');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -25,11 +25,11 @@ export class Exchange extends Command {
 
         const skins1 = await getSkinsByUserId(author.id);
         if (!skins1 || skins1.length === 0) {
-            return message.reply('You currently don\'t own any skin!');
+            return message.reply('You currently don\'t own any card!');
         }
         const skins2 = await getSkinsByUserId(user.id);
         if (!skins2 || skins2.length === 0) {
-            return message.reply(`${user} does not own any skin!`);
+            return message.reply(`${user} does not own any card!`);
         }
 
         // Send the embed with the first skin
@@ -38,7 +38,7 @@ export class Exchange extends Command {
             ? forwardButton.setDisabled(true)
             : forwardButton.setDisabled(false);
         const embedMessage1 = await message.reply({
-            content: 'Select the skin you wish to exchange.',
+            content: 'Select the card you wish to exchange.',
             embeds: [generateSkinEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
@@ -93,7 +93,7 @@ export class Exchange extends Command {
 
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                message.reply('You did not select a skin. The exchange is canceled.');
+                message.reply('You did not select a card. The exchange is canceled.');
             } else {
                 currentIndex = 0
                 backButton.setDisabled(true);
@@ -101,7 +101,7 @@ export class Exchange extends Command {
                     ? forwardButton.setDisabled(true)
                     : forwardButton.setDisabled(false);
                 const embedMessage2 = await message.reply({
-                    content: `Select the skin you wish to get from ${user}.`,
+                    content: `Select the card you wish to get from ${user}.`,
                     embeds: [generateSkinEmbed(skins2, currentIndex)],
                     components: [
                         new MessageActionRow({
@@ -155,7 +155,7 @@ export class Exchange extends Command {
 
                 collector2.on('end', async collected => {
                     if (skinName2 === '') {
-                        message.reply(`You did not select a skin. The exchange is canceled.`);
+                        message.reply(`You did not select a card. The exchange is canceled.`);
                     } else {
                         const prefix = this.container.client.options.defaultPrefix;
                         const filter = (m: Message) => {
@@ -190,8 +190,8 @@ export class Exchange extends Command {
                                     await giveSkinByUserId(user.id, skinId1)
                                     await giveSkinByUserId(author.id, skinId2);
 
-                                    this.container.logger.info(`The skin ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the skin ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
-                                    message.reply(`${author} The skin **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
+                                    this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
+                                    message.reply(`${author} The card **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
                                     isValidated = true;
                                     collector3.stop();
                                 }

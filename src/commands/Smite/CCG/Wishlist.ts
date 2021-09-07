@@ -7,7 +7,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'wishlist',
-    description: 'List the skins in your wishlist.'
+    description: 'List the cards in your wishlist.'
 })
 export class Wishlist extends Command {
 
@@ -94,7 +94,7 @@ export class Wishlist extends Command {
                 }
 
                 let skin = await disconnectWishlistSkinByUserId(player.id, skinId);
-                this.container.logger.info(`The skin ${skinName}<${skin.id}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
+                this.container.logger.info(`The card ${skinName}<${skin.id}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
                 skins = await getSkinWishlistByUserId(player.id);
 
                 if (skins == null || skins.length === 0) {

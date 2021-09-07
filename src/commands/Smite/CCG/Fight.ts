@@ -29,7 +29,7 @@ export class Fight extends Command {
 
         const skins1 = await getSkinsByUserId(author.id);
         if (!skins1 || skins1.length === 0) {
-            return message.reply('You currently don\'t own any skin!');
+            return message.reply('You currently don\'t own any cards!');
         }
         let allExhausted = true;
         for (let i in skins1) {
@@ -39,12 +39,12 @@ export class Fight extends Command {
             }
         }
         if (allExhausted) {
-            return message.reply('All of your skins are currently exhausted!');
+            return message.reply('All of your fighters are currently exhausted!');
         }
 
         const skins2 = await getSkinsByUserId(player.id);
         if (!skins2 || skins2.length === 0) {
-            return message.reply(`${player} does not own any skin!`);
+            return message.reply(`${player} does not own any cards!`);
         }
         allExhausted = true;
         for (let i in skins2) {
@@ -54,7 +54,7 @@ export class Fight extends Command {
             }
         }
         if (allExhausted) {
-            return message.reply(`All of ${player}'s skins are currently exhausted!`);
+            return message.reply(`All of ${player}'s cards are currently exhausted!`);
         }
 
         // Send the embed with the first skin
@@ -274,11 +274,11 @@ export class Fight extends Command {
                                 if (god1Health > 0) {
                                     await exhaustSkinById(skinId2);
                                     await message.channel.send(`${author}'s **${skinName1}** won the fight!`);
-                                    await message.channel.send(`${player} your skin **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                    await message.channel.send(`${player} your card **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 } else {
                                     await exhaustSkinById(skinId1);
                                     await message.channel.send(`${player}'s **${skinName2}** won the fight!`);
-                                    await message.channel.send(`${author} your skin **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                    await message.channel.send(`${author} your card **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }
                             }
                         });

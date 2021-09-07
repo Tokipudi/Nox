@@ -7,7 +7,7 @@ import { Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'myteam',
-    description: 'List the skins you currently own.'
+    description: 'List the cards you currently own.'
 })
 export class MyTeam extends Command {
 
@@ -20,7 +20,7 @@ export class MyTeam extends Command {
 
         const skins = await getSkinsByUserId(author.id);
         if (!skins || skins.length === 0) {
-            return message.reply('You currently don\'t own any skin!');
+            return message.reply('You currently don\'t own any card!');
         }
 
         let uniqueSkin = skins.length <= 1;
@@ -86,9 +86,9 @@ export class MyTeam extends Command {
                 }
                 let skin = await disconnectSkinById(skinId);
 
-                this.container.logger.info(`The skin ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
+                this.container.logger.info(`The card ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({
-                    content: `The skin **${skinName}** was successfully fired from your team!`,
+                    content: `The card **${skinName}** was successfully fired from your team!`,
                     embeds: [],
                     components: []
                 });

@@ -1,11 +1,10 @@
+import { disconnectSkinById } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message } from 'discord.js';
-import { toTitleCase } from '@sapphire/utilities';
-import { disconnectSkinById } from '@lib/database/utils/SkinsUtils';
 
 @ApplyOptions<CommandOptions>({
-    description: 'Fire a skin from your team.'
+    description: 'Fire a card from your collection.'
 })
 export class Fire extends Command {
 
@@ -18,7 +17,7 @@ export class Fire extends Command {
 
         let skinName: string = await args.rest('string');
         skinName = skinName.trim();
-        if (!skinName) return message.reply('The second argument needs to be a valid skin name!');
+        if (!skinName) return message.reply('The second argument needs to be a valid card name!');
 
         const skin = await this.container.prisma.skins.findFirst({
             where: {
@@ -33,11 +32,11 @@ export class Fire extends Command {
                 name: true
             }
         });
-        if (!skin) return message.reply('The skin **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
+        if (!skin) return message.reply('The card **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
 
         await disconnectSkinById(skin.id);
 
-        this.container.logger.info(`The skin ${skin.name}<${skin.id}> was removed from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
-        return message.reply(`The skin **${skinName}** was successfully removed from your team!`);
+        this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
+        return message.reply(`The card **${skinName}** was successfully removed from your team!`);
     }
 }

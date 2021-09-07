@@ -7,7 +7,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'give',
-    description: 'Gives a skin you own to a user of your choice.'
+    description: 'Gives a card you own to a user of your choice.'
 })
 export class Give extends Command {
 
@@ -16,8 +16,8 @@ export class Give extends Command {
         const user: User = await args.pick('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
-        if (user.id === author.id) return message.reply('You cannot give yourself a skin!');
-        if (user.bot) return message.reply('You cannot give a skin to a bot!');
+        if (user.id === author.id) return message.reply('You cannot give yourself a card!');
+        if (user.bot) return message.reply('You cannot give a card to a bot!');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -25,12 +25,12 @@ export class Give extends Command {
 
         const skins = await getSkinsByUserId(author.id);
         if (!skins || skins.length === 0) {
-            return message.reply('You currently don\'t own any skin!');
+            return message.reply('You currently don\'t own any card!');
         }
 
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
-            content: 'Select the skin you wish to give.',
+            content: 'Select the card you wish to give.',
             embeds: [generateSkinEmbed(skins, 0)],
             components: [
                 new MessageActionRow({
@@ -82,7 +82,7 @@ export class Give extends Command {
 
         collector.on('end', async collected => {
             if (skinName === '') {
-                message.reply('You did not select a skin.');
+                message.reply('You did not select a card.');
             } else {
                 let skinId = 0;
                 for (let i = 0; i < skins.length; i++) {
@@ -93,9 +93,9 @@ export class Give extends Command {
                 }
                 let skin = await giveSkinByUserId(user.id, skinId);
 
-                this.container.logger.info(`The skin ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
+                this.container.logger.info(`The card ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({
-                    content: `The skin **${skinName}** was successfully given to ${user}!`,
+                    content: `The card **${skinName}** was successfully given to ${user}!`,
                     embeds: [],
                     components: []
                 });

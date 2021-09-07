@@ -6,7 +6,7 @@ import { Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     name: 'roll',
-    description: 'Roll a skin and react with an emoji to claim it.',
+    description: 'Roll a card and react with an emoji to claim it.',
     cooldownLimit: 3,
     cooldownDelay: 3600000,
     cooldownScope: 3
@@ -33,7 +33,7 @@ export class Roll extends Command {
             .setAuthor(skin.godName, skin.godIconUrl)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setImage(skin.godSkinUrl)
-            .setFooter(`${skin.obtainabilityName} skin`);
+            .setFooter(`${skin.obtainabilityName} card`);
 
         switch (skin.obtainabilityName) {
             case 'Clan Reward':
@@ -92,7 +92,7 @@ export class Roll extends Command {
                 let player = wishedPlayers[k];
 
                 let user = this.container.client.users.cache.get(player.id);
-                user.send('A skin in your wishlist is available for grab! ' + msg.url);
+                user.send('A card in your wishlist is available for grab! ' + msg.url);
             }
         }
     }
