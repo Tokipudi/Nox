@@ -5,7 +5,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     description: 'Releases half of a player\'s skins.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class Rise extends Command {
 

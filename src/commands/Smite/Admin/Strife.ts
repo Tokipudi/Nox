@@ -5,7 +5,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     description: 'Releases either half or all of a player\'s cards.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class Strife extends Command {
 

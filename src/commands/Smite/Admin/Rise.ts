@@ -5,7 +5,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     description: 'Lets a player claim rolls again.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class Rise extends Command {
 

@@ -5,7 +5,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     description: 'Empty the wishlist of a user.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class ClearWishes extends Command {
 

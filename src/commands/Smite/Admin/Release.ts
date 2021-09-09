@@ -6,7 +6,7 @@ import { Message } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
     description: 'Releases a card from a user\'s collection.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class Release extends Command {
 
