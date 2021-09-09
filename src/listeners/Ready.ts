@@ -1,15 +1,13 @@
 import { unexhaustSkinById } from '@lib/database/utils/SkinsUtils';
-import { Listener } from '@sapphire/framework';
-import { PieceContext } from "@sapphire/pieces";
+import { ApplyOptions } from '@sapphire/decorators';
+import { Listener, ListenerOptions } from '@sapphire/framework';
 import moment from 'moment';
 
+@ApplyOptions<ListenerOptions>({
+    once: true,
+    name: 'ready'
+})
 export class Ready extends Listener {
-    constructor(context: PieceContext) {
-        super(context, {
-            once: true,
-            name: 'ready'
-        });
-    }
 
     public async run() {
         // Start message

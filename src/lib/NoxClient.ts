@@ -1,7 +1,7 @@
-import { container, SapphireClient } from '@sapphire/framework';
-import { ClientOptions } from "discord.js";
 import { PrismaClient } from '@prisma/client';
+import { container, SapphireClient } from '@sapphire/framework';
 import '@sapphire/plugin-logger/register';
+import { ClientOptions } from "discord.js";
 
 export class NoxClient extends SapphireClient {
 
