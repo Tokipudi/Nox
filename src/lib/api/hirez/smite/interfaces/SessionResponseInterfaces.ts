@@ -13,7 +13,7 @@ export interface ServerStatus {
     status: string,
     version: string
 }
-export interface ServerStatusResponse extends Array<ServerStatus> {}
+export interface ServerStatusResponse extends Array<ServerStatus> { }
 
 export interface PatchInfoResponse {
     ret_msg: string,

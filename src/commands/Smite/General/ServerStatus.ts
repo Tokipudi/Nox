@@ -23,6 +23,7 @@ export class ServerStatus extends Command {
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setTimestamp();
 
+        let warning = false;
         for (let i = 0; i < data.length; i++) {
             if (i % 2 === 0) {
                 embed.addField('\u200B', '\u200B');
@@ -32,7 +33,14 @@ export class ServerStatus extends Command {
                 `\`\`\`\n${data[i].status}\n\`\`\``,
                 true
             );
+            if (!warning && data[i].status.toLowerCase().trim() !== 'up') {
+                warning = true;
+            }
         }
+
+        warning
+            ? embed.setColor('YELLOW')
+            : embed.setColor('GREEN');
 
         return msg.edit({ embeds: [embed] });
     }
