@@ -52,7 +52,10 @@ export async function deleteAllPlayers() {
 
 export async function canPlayerClaimRoll(playerId: string) {
     const player = await getPlayerById(playerId);
-    return !player.isBanned && (!player || !player.lastClaimDate || moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour')));
+    if (player) {
+        return (!player || !player.lastClaimDate || moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour'))) && !player.isBanned;
+    }
+    return true;
 }
 
 export async function getTimeLeftBeforeClaim(playerId: string) {

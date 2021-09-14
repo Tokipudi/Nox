@@ -60,7 +60,7 @@ export class Roll extends Command {
         collector.on('collect', async (reaction, user) => {
             const player = await getPlayerById(user.id);
             const canClaim = await canPlayerClaimRoll(user.id);
-            if (player.isBanned) {
+            if (player && player.isBanned) {
                 message.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
             } else if (!canClaim) {
                 const duration = await getTimeLeftBeforeClaim(user.id);
