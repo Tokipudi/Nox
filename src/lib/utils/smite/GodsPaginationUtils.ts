@@ -12,6 +12,7 @@ export const ability5CustomId = 'ability5CustomId';
 export function generateGodDetailsEmbed(god: Gods | any) {
     let embed = new MessageEmbed()
         .setAuthor(god.name, god.godIconUrl)
+        .setColor('BLUE')
         .addField('Class', god.roles, true)
         .addField('Type', god.type, true)
         .addField('Pros', god.pros, false)
@@ -35,6 +36,7 @@ export function generateGodDetailsEmbed(god: Gods | any) {
 export function generateGodLoreEmbed(god: Gods | any) {
     return new MessageEmbed()
         .setAuthor(god.name, god.godIconUrl)
+        .setColor('BLUE')
         .setTitle(god.title)
         .setDescription(god.lore.replaceAll('\\n', '\n'))
         .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -44,6 +46,7 @@ export function generateGodLoreEmbed(god: Gods | any) {
 export function generateGodAbilityEmbed(title, god: Gods | any, ability) {
     const embed = new MessageEmbed()
         .setAuthor(god.name, god.godIconUrl)
+        .setColor('BLUE')
         .setTitle(title)
         .setDescription(ability.Description.itemDescription.description.replaceAll('\\n', '\n'))
         .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
