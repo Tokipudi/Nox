@@ -4,7 +4,7 @@
   "description": "A simple Sapphire-based bot",
   "main": "build/src/index.js",
   "scripts": {
-    "build": "npx prisma migrate deploy && npx ttsc --build --clean && npx ttsc",
+    "build": "npx prisma migrate deploy && npm ddp && npx ttsc --build --clean && npx ttsc",
     "start": "node build/src/index.js"
   },
   "engines": {
