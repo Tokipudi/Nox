@@ -7,6 +7,9 @@
     "build": "npx ttsc --build --clean && npx ttsc",
     "start": "node build/src/index.js"
   },
+  "engines": {
+      "node": "^16.7.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Tokipudi/nox.git"
