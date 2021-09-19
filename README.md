@@ -7,6 +7,7 @@ A Smite bot made with [Sapphire](https://github.com/sapphiredev/framework)
 
 ## Pre-requisites
 * Node >= 16
+* Hirez developer API credentials (you can request them [here](https://fs12.formsite.com/HiRez/form48/secure_index.html))
 
 ## Installation
 * Rename `.env.example` to `.env` and configure it properly
