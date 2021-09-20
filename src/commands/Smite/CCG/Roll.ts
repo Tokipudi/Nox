@@ -16,13 +16,12 @@ export class Roll extends Command {
     public async run(message: Message) {
         const msg = await message.reply('Fetching data...');
 
-        const skins = await this.container.prisma.$queryRaw(
-            'SELECT Skins.*, Gods.name as godName, SkinsObtainability.name as obtainabilityName ' +
-            'FROM Skins, Gods, SkinsObtainability ' +
-            'WHERE Skins.godId = Gods.id ' +
-            'AND Skins.obtainabilityId = SkinsObtainability.id ' +
-            'AND Skins.godSkinUrl != "" ' +
-            'AND Skins.playerId IS NULL ' +
+        const skins = await this.container.prisma.$queryRawUnsafe(
+            'SELECT "Skins".*, "Gods".name as godname, "SkinsObtainability".name as obtainabilityname ' +
+            'FROM "Skins", "Gods", "SkinsObtainability" ' +
+            'WHERE "Skins"."godId" = "Gods"."id" ' +
+            'AND "Skins"."obtainabilityId" = "SkinsObtainability"."id" ' +
+            'AND "Skins"."playerId" IS null ' +
             'ORDER BY RANDOM() LIMIT 1;'
         );
 
@@ -30,10 +29,10 @@ export class Roll extends Command {
 
         let embed = new MessageEmbed()
             .setTitle(skin.name)
-            .setAuthor(skin.godName, skin.godIconUrl)
+            .setAuthor(skin.godname, skin.godIconUrl)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setImage(skin.godSkinUrl)
-            .setFooter(`${skin.obtainabilityName} card`);
+            .setFooter(`${skin.obtainabilityname} card`);
 
         switch (skin.obtainabilityName) {
             case 'Clan Reward':
