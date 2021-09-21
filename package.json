@@ -4,12 +4,13 @@
     "description": "A simple Sapphire-based bot",
     "main": "build/src/index.js",
     "scripts": {
+        "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
+        "start-dev": "node build/src/index.js",
         "prisma-migrate-prod": "npx prisma migrate deploy",
         "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
-        "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
         "start": "systemctl start nox",
-        "start-dev": "node build/src/index.js",
-        "stop": "systemctl stop nox"
+        "stop": "systemctl stop nox",
+        "logs": "journalctl -u nox -f"
     },
     "repository": {
         "type": "git",
