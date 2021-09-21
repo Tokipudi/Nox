@@ -5,9 +5,10 @@
     "main": "build/src/index.js",
     "scripts": {
         "prisma-migrate-prod": "npx prisma migrate deploy",
-        "build": "rm -rf build/* && npx ttsc --build --verbose",
+        "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
         "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
-        "start": "node build/src/index.js"
+        "start": "systemctl start nox",
+        "start-dev": "node build/src/index.js"
     },
     "repository": {
         "type": "git",

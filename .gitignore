@@ -114,3 +114,6 @@ package-lock.json
 *.db-journal
 # *.sql
 package-lock.bak.json
+
+# Service
+nox.service
