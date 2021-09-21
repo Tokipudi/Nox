@@ -4,8 +4,7 @@
     "description": "A simple Sapphire-based bot",
     "main": "build/src/index.js",
     "scripts": {
-        "heroku-cleanup": "npx ttsc --build --verbose",
-        "heroku-postbuild": "npx prisma migrate deploy",
+        "heroku-postbuild": "npx prisma migrate deploy && npx ttsc --build --verbose",
         "build": "npx ttsc --build --clean && npx ttsc --build --verbose",
         "start": "node build/src/index.js"
     },
