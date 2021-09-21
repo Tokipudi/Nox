@@ -1,33 +1,44 @@
 {
-	"compilerOptions": {
-		"lib": ["ES2019.Array"],
-		"target": "es6",
-		"module": "commonjs",
-		"sourceMap": false,
-		"alwaysStrict": true,
-		"declaration": false,
-		"listEmittedFiles": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"strictPropertyInitialization": false,
-		"outDir": "build",
-		"types": ["node"],
-		"emitDecoratorMetadata": false,
-		"downlevelIteration": true,
-		"experimentalDecorators": true,
-		"paths": {
-			"@lib/*": ["src/lib/*"],
-			"@commands/*": ["src/commands/*"]
-		},
-		"plugins": [
-			{
-				"transform": "@zerollup/ts-transform-paths"
-			}
-		],
-		"baseUrl": ".",
-		"rootDir": "."
-	},
-	"include": ["src/**/*"]
-  }
+    "compilerOptions": {
+        "lib": [
+            "ES2019.Array"
+        ],
+        "target": "es6",
+        "module": "commonjs",
+        "sourceMap": false,
+        "alwaysStrict": true,
+        "declaration": false,
+        "listEmittedFiles": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "strictPropertyInitialization": false,
+        "outDir": "build",
+        "types": [
+            "node"
+        ],
+        "emitDecoratorMetadata": false,
+        "downlevelIteration": true,
+        "experimentalDecorators": true,
+        "paths": {
+            "@lib/*": [
+                "src/lib/*"
+            ],
+            "@commands/*": [
+                "src/commands/*"
+            ]
+        },
+        "plugins": [
+            {
+                "transform": "@zerollup/ts-transform-paths"
+            }
+        ],
+        "baseUrl": ".",
+        "rootDir": "."
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "ignoreBuildErrors": true
+}
