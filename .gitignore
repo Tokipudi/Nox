@@ -112,4 +112,4 @@ package-lock.json
 # Prisma tools
 *.db
 *.db-journal
-*.sql
+# *.sql
