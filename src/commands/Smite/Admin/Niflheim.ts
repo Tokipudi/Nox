@@ -1,4 +1,4 @@
-import { setPlayerAsBannedById } from '@lib/database/utils/PlayersUtils';
+import { setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
@@ -13,7 +13,7 @@ export class Rise extends Command {
         const user: User = await args.pick('user');
         if (!user) return message.reply('The first argument **must** be a user.');
 
-        await setPlayerAsBannedById(user.id);
+        await setPlayerAsBanned(user.id, message.guildId);
 
         message.reply(`${user} is banned from claiming any card.`);
     }

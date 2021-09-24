@@ -65,22 +65,19 @@ model Pantheons {
 }
 
 model Skins {
-    id                Int                 @id
-    god               Gods                @relation(fields: [godId], references: [id])
-    godId             Int
-    name              String
-    godIconUrl        String
-    godSkinUrl        String
-    obtainability     SkinsObtainability? @relation(fields: [obtainabilityId], references: [id])
-    obtainabilityId   Int?
-    priceFavor        Int                 @default(0)
-    priceGems         Int                 @default(0)
-    player            Players?            @relation(name: "PlayerSkins", fields: [playerId], references: [id])
-    playerId          String?
-    wishedByPlayer    Players[]           @relation("PlayersWishes")
-    isExhausted       Boolean?            @default(false)
-    exhaustChangeDate DateTime?
-    releaseDate       DateTime?
+    id              Int                  @id
+    god             Gods                 @relation(fields: [godId], references: [id])
+    godId           Int
+    name            String
+    godIconUrl      String
+    godSkinUrl      String
+    obtainability   SkinsObtainability?  @relation(fields: [obtainabilityId], references: [id])
+    obtainabilityId Int?
+    priceFavor      Int                  @default(0)
+    priceGems       Int                  @default(0)
+    releaseDate     DateTime?
+    playersSkins    PlayersSkins[]
+    playersWishes   PlayersWishedSkins[]
 }
 
 model SkinsObtainability {
@@ -90,9 +87,40 @@ model SkinsObtainability {
 }
 
 model Players {
-    id            String    @id
-    skins         Skins[]   @relation(name: "PlayerSkins")
-    wishedSkins   Skins[]   @relation(name: "PlayersWishes")
+    userId        String
+    guild         Guilds               @relation(fields: [guildId], references: [id])
+    guildId       String
     lastClaimDate DateTime?
-    isBanned      Boolean   @default(false)
+    isBanned      Boolean              @default(false)
+    playersSkins  PlayersSkins[]
+    wishedSkins   PlayersWishedSkins[]
+
+    @@id([userId, guildId])
+}
+
+model Guilds {
+    id      String    @id
+    players Players[]
+}
+
+model PlayersSkins {
+    guildId           String
+    skin              Skins     @relation(fields: [skinId], references: [id])
+    skinId            Int
+    player            Players   @relation(fields: [userId, guildId], references: [userId, guildId])
+    userId            String
+    isExhausted       Boolean?  @default(false)
+    exhaustChangeDate DateTime?
+
+    @@id([guildId, skinId])
+}
+
+model PlayersWishedSkins {
+    player  Players @relation(fields: [userId, guildId], references: [userId, guildId])
+    userId  String
+    guildId String
+    skin    Skins   @relation(fields: [skinId], references: [id])
+    skinId  Int
+
+    @@id([userId, guildId, skinId])
 }

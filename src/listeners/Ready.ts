@@ -1,4 +1,4 @@
-import { unexhaustSkinById } from '@lib/database/utils/SkinsUtils';
+import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
 import moment from 'moment';
@@ -26,26 +26,20 @@ export class Ready extends Listener {
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('preconditions').size + ' preconditions.');
 
         // Update exhaust
-        setInterval(async () => {
-            const skins = await this.container.prisma.skins.findMany({
-                where: {
-                    isExhausted: true
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    exhaustChangeDate: true,
-                    isExhausted: true
-                }
-            })
+        // setInterval(async () => {
+        //     const skins = await this.container.prisma.playersSkins.findMany({
+        //         where: {
+        //             isExhausted: true
+        //         }
+        //     })
 
-            for (let i in skins) {
-                let skin = skins[i];
-                if (moment.utc().isSameOrAfter(moment(skin.exhaustChangeDate).add(6, 'hour'))) {
-                    await unexhaustSkinById(skin.id);
-                    this.container.logger.info(`The skin ${skin.name}<${skin.id}> has been unexhausted.`);
-                }
-            }
-        }, 60000);
+        //     for (let i in skins) {
+        //         let skin = skins[i];
+        //         if (moment.utc().isSameOrAfter(moment(skin.exhaustChangeDate).add(6, 'hour'))) {
+        //             await unexhaustSkin(skin.id, );
+        //             this.container.logger.info(`The skin ${skin.name}<${skin.id}> has been unexhausted.`);
+        //         }
+        //     }
+        // }, 60000);
     }
 };

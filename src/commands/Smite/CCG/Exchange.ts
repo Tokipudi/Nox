@@ -1,4 +1,4 @@
-import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
+import { getSkinsByUser, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -12,7 +12,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 export class Exchange extends Command {
 
     public async run(message: Message, args: Args) {
-        const { author } = message
+        const { author, guildId } = message
         const user: User = await args.rest('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
@@ -23,11 +23,11 @@ export class Exchange extends Command {
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Select', 'SUCCESS');
 
-        const skins1 = await getSkinsByUserId(author.id);
+        const skins1 = await getSkinsByUser(author.id, guildId);
         if (!skins1 || skins1.length === 0) {
             return message.reply('You currently don\'t own any card!');
         }
-        const skins2 = await getSkinsByUserId(user.id);
+        const skins2 = await getSkinsByUser(user.id, guildId);
         if (!skins2 || skins2.length === 0) {
             return message.reply(`${user} does not own any card!`);
         }
@@ -187,8 +187,8 @@ export class Exchange extends Command {
                                 }
 
                                 if (skinId1 && skinId2) {
-                                    await giveSkinByUserId(user.id, skinId1)
-                                    await giveSkinByUserId(author.id, skinId2);
+                                    await giveSkin(user.id, guildId, skinId1)
+                                    await giveSkin(author.id, guildId, skinId2);
 
                                     this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
                                     message.reply(`${author} The card **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);

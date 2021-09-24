@@ -1,4 +1,4 @@
-import { disconnectSkinById, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -12,13 +12,13 @@ import { Message, MessageActionRow } from 'discord.js';
 export class MyTeam extends Command {
 
     public async run(message: Message) {
-        const { author } = message
+        const { author, guildId } = message
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
 
-        const skins = await getSkinsByUserId(author.id);
+        const skins = await getSkinsByUser(author.id, guildId);
         if (!skins || skins.length === 0) {
             return message.reply('You currently don\'t own any card!');
         }
@@ -84,7 +84,7 @@ export class MyTeam extends Command {
                         break;
                     }
                 }
-                let skin = await disconnectSkinById(skinId);
+                let skin = await disconnectSkin(skinId, guildId);
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

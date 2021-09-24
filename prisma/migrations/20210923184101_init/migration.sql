@@ -65,9 +65,6 @@ CREATE TABLE "Skins" (
     "obtainabilityId" INTEGER,
     "priceFavor" INTEGER NOT NULL DEFAULT 0,
     "priceGems" INTEGER NOT NULL DEFAULT 0,
-    "playerId" TEXT,
-    "isExhausted" BOOLEAN DEFAULT false,
-    "exhaustChangeDate" TIMESTAMP(3),
     "releaseDate" TIMESTAMP(3),
 
     CONSTRAINT "Skins_pkey" PRIMARY KEY ("id")
@@ -83,17 +80,39 @@ CREATE TABLE "SkinsObtainability" (
 
 -- CreateTable
 CREATE TABLE "Players" (
-    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "guildId" TEXT NOT NULL,
     "lastClaimDate" TIMESTAMP(3),
     "isBanned" BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT "Players_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Players_pkey" PRIMARY KEY ("userId","guildId")
 );
 
 -- CreateTable
-CREATE TABLE "_PlayersWishes" (
-    "A" TEXT NOT NULL,
-    "B" INTEGER NOT NULL
+CREATE TABLE "Guilds" (
+    "id" TEXT NOT NULL,
+
+    CONSTRAINT "Guilds_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PlayersSkins" (
+    "guildId" TEXT NOT NULL,
+    "skinId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
+    "isExhausted" BOOLEAN DEFAULT false,
+    "exhaustChangeDate" TIMESTAMP(3),
+
+    CONSTRAINT "PlayersSkins_pkey" PRIMARY KEY ("guildId","skinId")
+);
+
+-- CreateTable
+CREATE TABLE "PlayersWishedSkins" (
+    "userId" TEXT NOT NULL,
+    "guildId" TEXT NOT NULL,
+    "skinId" INTEGER NOT NULL,
+
+    CONSTRAINT "PlayersWishedSkins_pkey" PRIMARY KEY ("userId","guildId","skinId")
 );
 
 -- CreateIndex
@@ -105,12 +124,6 @@ CREATE UNIQUE INDEX "Pantheons_name_key" ON "Pantheons"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "SkinsObtainability_name_key" ON "SkinsObtainability"("name");
 
--- CreateIndex
-CREATE UNIQUE INDEX "_PlayersWishes_AB_unique" ON "_PlayersWishes"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_PlayersWishes_B_index" ON "_PlayersWishes"("B");
-
 -- AddForeignKey
 ALTER TABLE "Gods" ADD CONSTRAINT "Gods_pantheonId_fkey" FOREIGN KEY ("pantheonId") REFERENCES "Pantheons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -121,10 +134,16 @@ ALTER TABLE "Skins" ADD CONSTRAINT "Skins_godId_fkey" FOREIGN KEY ("godId") REFE
 ALTER TABLE "Skins" ADD CONSTRAINT "Skins_obtainabilityId_fkey" FOREIGN KEY ("obtainabilityId") REFERENCES "SkinsObtainability"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Skins" ADD CONSTRAINT "Skins_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Players"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Players" ADD CONSTRAINT "Players_guildId_fkey" FOREIGN KEY ("guildId") REFERENCES "Guilds"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_PlayersWishes" ADD FOREIGN KEY ("A") REFERENCES "Players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayersSkins" ADD CONSTRAINT "PlayersSkins_skinId_fkey" FOREIGN KEY ("skinId") REFERENCES "Skins"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_PlayersWishes" ADD FOREIGN KEY ("B") REFERENCES "Skins"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayersSkins" ADD CONSTRAINT "PlayersSkins_userId_guildId_fkey" FOREIGN KEY ("userId", "guildId") REFERENCES "Players"("userId", "guildId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayersWishedSkins" ADD CONSTRAINT "PlayersWishedSkins_userId_guildId_fkey" FOREIGN KEY ("userId", "guildId") REFERENCES "Players"("userId", "guildId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlayersWishedSkins" ADD CONSTRAINT "PlayersWishedSkins_skinId_fkey" FOREIGN KEY ("skinId") REFERENCES "Skins"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

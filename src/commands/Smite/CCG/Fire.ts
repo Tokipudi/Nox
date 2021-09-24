@@ -1,4 +1,4 @@
-import { disconnectSkinById } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message } from 'discord.js';
@@ -9,7 +9,7 @@ import { Message } from 'discord.js';
 export class Fire extends Command {
 
     public async run(message: Message, args: Args) {
-        const { author } = message;
+        const { author, guildId } = message;
 
         let godName: string = await args.pick('string');
         godName = godName.trim();
@@ -25,7 +25,12 @@ export class Fire extends Command {
                     name: godName
                 },
                 name: skinName,
-                playerId: author.id
+                playersSkins: {
+                    every: {
+                        userId: author.id,
+                        guildId: guildId
+                    }
+                }
             },
             select: {
                 id: true,
@@ -34,7 +39,7 @@ export class Fire extends Command {
         });
         if (!skin) return message.reply('The card **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
 
-        await disconnectSkinById(skin.id);
+        await disconnectSkin(skin.id, guildId);
 
         this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
         return message.reply(`The card **${skinName}** was successfully removed from your team!`);

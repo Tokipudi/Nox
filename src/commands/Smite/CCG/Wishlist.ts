@@ -1,4 +1,4 @@
-import { disconnectWishlistSkinByUserId, getSkinWishlistByUserId } from '@lib/database/utils/SkinsUtils';
+import { disconnectWishlistSkin, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -12,7 +12,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 export class Wishlist extends Command {
 
     public async run(message: Message, args: Args) {
-        const { author } = message
+        const { author, guildId } = message
         const player: User = await args.pick('user').catch(() => message.author);
 
         if (player) {
@@ -23,7 +23,7 @@ export class Wishlist extends Command {
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Remove', 'DANGER');
 
-        let skins = await getSkinWishlistByUserId(player.id);
+        let skins = await getSkinWishlist(player.id, guildId);
         if (!skins || skins.length === 0) {
             return player.id === author.id
                 ? message.reply('Your wishlist is empty!')
@@ -93,9 +93,9 @@ export class Wishlist extends Command {
                     }
                 }
 
-                let skin = await disconnectWishlistSkinByUserId(player.id, skinId);
-                this.container.logger.info(`The card ${skinName}<${skin.id}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
-                skins = await getSkinWishlistByUserId(player.id);
+                let playerWishedSkin = await disconnectWishlistSkin(skinId, player.id, guildId);
+                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
+                skins = await getSkinWishlist(player.id, guildId);
 
                 if (skins == null || skins.length === 0) {
                     collector.stop();

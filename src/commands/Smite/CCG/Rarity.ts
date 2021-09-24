@@ -1,5 +1,5 @@
 import { getObtainabilities } from '@lib/database/utils/ObtainabilityUtils';
-import { getSkinByObtainability, getSkins } from '@lib/database/utils/SkinsUtils';
+import { getSkinsByObtainability, getSkins } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
@@ -10,6 +10,8 @@ import { Message, MessageEmbed } from 'discord.js';
 export class Rarity extends Command {
 
     public async run(message: Message) {
+        const { guildId } = message;
+
         const msg = await message.reply('Fetching data from Smite\'s servers...');
 
         const skins = await getSkins();
@@ -19,18 +21,27 @@ export class Rarity extends Command {
 
         const embed = new MessageEmbed()
             .setTitle('Smite Skins by Rarity')
-            .addField('All skins', `\`\`\`\n${skinsTotal}\n\`\`\``)
+            .addField('All Skins', `\`\`\`\n${skinsTotal}\n\`\`\``)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setTimestamp();
 
-        for (let i in obtainabilities) {
+        let totalClaimedSkins = 0;
+        for (let i = 0; i < obtainabilities.length; i++) {
             const obtainability = obtainabilities[i].name;
-            const skinsByObtainability = await getSkinByObtainability(obtainability);
+            const skinsByObtainability = await getSkinsByObtainability(obtainability, guildId);
 
-            const percentage = ((skinsByObtainability.length / skinsTotal) * 100).toFixed(1);
+            const claimedSkins = [];
+            for (let j = 0; j < skinsByObtainability.length; j++) {
+                if (skinsByObtainability[j].playersSkins.length > 0) {
+                    claimedSkins.push(skinsByObtainability[j].id);
+                    totalClaimedSkins++;
+                }
+            }
+
+            const percentageTotal = ((skinsByObtainability.length / skinsTotal) * 100).toFixed(1);
             embed.addField(
                 obtainability,
-                `\`\`\`\n${skinsByObtainability.length} (${percentage}%)\n\`\`\``,
+                `\`\`\`\n${skinsByObtainability.length} (${percentageTotal}%)\n\`\`\``,
                 true
             );
         }

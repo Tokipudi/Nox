@@ -1,4 +1,4 @@
-import { disconnectSkinById, getSkinsByUserId } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
@@ -17,9 +17,9 @@ export class Strife extends Command {
         amount = amount.trim();
         if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the command.')
 
-        const skins = await getSkinsByUserId(user.id);
+        const skins = await getSkinsByUser(user.id, message.guildId);
         if (!skins || !skins.length) return message.reply(`${user} does not have any cards!`);
-        
+
         let skinsToRelease = 0;
         switch (amount) {
             case 'half':
@@ -35,7 +35,7 @@ export class Strife extends Command {
             let randomSkinIndex = Math.floor(Math.random() * skinsToRelease);
             let skin = skins[randomSkinIndex];
 
-            await disconnectSkinById(skin.id);
+            await disconnectSkin(skin.id, message.guildId);
             this.container.logger.info(`The card ${skin.name}<${skin.id}> was released from player ${user.username}#${user.discriminator}<${user.id}>.`);
 
             skinsReleased.push(skin.name);

@@ -1,4 +1,4 @@
-import { getSkinsByUserId, giveSkinByUserId } from '@lib/database/utils/SkinsUtils';
+import { getSkinsByUser, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -12,7 +12,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 export class Give extends Command {
 
     public async run(message: Message, args: Args) {
-        const { author } = message
+        const { author, guildId } = message
         const user: User = await args.pick('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
@@ -23,7 +23,7 @@ export class Give extends Command {
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Give', 'DANGER');
 
-        const skins = await getSkinsByUserId(author.id);
+        const skins = await getSkinsByUser(author.id, guildId);
         if (!skins || skins.length === 0) {
             return message.reply('You currently don\'t own any card!');
         }
@@ -91,7 +91,7 @@ export class Give extends Command {
                         break;
                     }
                 }
-                let skin = await giveSkinByUserId(user.id, skinId);
+                let skin = await giveSkin(user.id, guildId, skinId);
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

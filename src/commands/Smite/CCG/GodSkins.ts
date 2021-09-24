@@ -1,4 +1,4 @@
-import { addSkinToWishlistByUserId, getSkinsByGodName, getSkinWishlistByUserId } from '@lib/database/utils/SkinsUtils';
+import { addSkinToWishlist, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { Skins } from '@prisma/client';
@@ -15,7 +15,7 @@ import { Message, MessageActionRow } from 'discord.js';
 export class GodSkins extends Command {
 
     public async run(message: Message, args: Args) {
-        const { author } = message
+        const { author, guildId } = message
 
         let godName: string = await args.rest('string');
         godName = toTitleCase(godName);
@@ -61,7 +61,7 @@ export class GodSkins extends Command {
                 // Disable the buttons if they cannot be used
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
-                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlistByUserId(author.id));
+                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(author.id, guildId));
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
@@ -83,8 +83,8 @@ export class GodSkins extends Command {
                     }
                 }
 
-                let skin = await addSkinToWishlistByUserId(author.id, skinId);
-                this.container.logger.info(`The card ${skinName}<${skin.id}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
+                let playerWishedSkin = await addSkinToWishlist(author.id, guildId, skinId);
+                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
 
                 // Disable the wish button
                 selectButton.disabled = true;

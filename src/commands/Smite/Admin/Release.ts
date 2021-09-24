@@ -1,5 +1,4 @@
-import { getPlayerById } from '@lib/database/utils/PlayersUtils';
-import { disconnectSkinById, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message } from 'discord.js';
@@ -20,9 +19,9 @@ export class Release extends Command {
         if (!skinName) return message.reply('The second argument needs to be a valid card name!');
 
         const skin = await getSkinByGodName(godName, skinName);
-        if (!skin) return message.reply(`${skinName} is not a valid card name!`);
+        if (!skin) return message.reply(`**${skinName}** is not a valid card name!`);
 
-        await disconnectSkinById(skin.id);
+        await disconnectSkin(skin.id, message.guildId);
 
         message.reply(`The card **${skinName} ${godName}** was released.`);
     }
