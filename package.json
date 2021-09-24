@@ -10,7 +10,7 @@
         "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
         "start": "systemctl start nox",
         "stop": "systemctl stop nox",
-        "logs": "journalctl -u nox -f"
+        "logs": "journalctl -u nox -f | sed 's/.*]: //'"
     },
     "repository": {
         "type": "git",
