@@ -4,7 +4,7 @@ import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
-    description: 'Releases half of a player\'s skins.',
+    description: 'Bans a player.',
     requiredUserPermissions: 'KICK_MEMBERS'
 })
 export class Rise extends Command {
