@@ -92,6 +92,9 @@ model Players {
     guildId       String
     lastClaimDate DateTime?
     isBanned      Boolean              @default(false)
+    banStartDate  DateTime?
+    banEndDate    DateTime?
+    banCount      Int?                 @default(0)
     playersSkins  PlayersSkins[]
     wishedSkins   PlayersWishedSkins[]
 

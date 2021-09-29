@@ -1,3 +1,5 @@
+import { getGuilds } from '@lib/database/utils/GuildsUtils';
+import { getBannedPlayersByGuildId, getPlayer, getPlayers, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
@@ -25,21 +27,49 @@ export class Ready extends Listener {
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('listeners').size + ' listeners.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('preconditions').size + ' preconditions.');
 
-        // Update exhaust
-        // setInterval(async () => {
-        //     const skins = await this.container.prisma.playersSkins.findMany({
-        //         where: {
-        //             isExhausted: true
-        //         }
-        //     })
+        const guilds = await getGuilds();
+        for (let i in guilds) {
+            const guild = guilds[i];
 
-        //     for (let i in skins) {
-        //         let skin = skins[i];
-        //         if (moment.utc().isSameOrAfter(moment(skin.exhaustChangeDate).add(6, 'hour'))) {
-        //             await unexhaustSkin(skin.id, );
-        //             this.container.logger.info(`The skin ${skin.name}<${skin.id}> has been unexhausted.`);
-        //         }
-        //     }
-        // }, 60000);
+            // Update exhaust
+            setInterval(async () => {
+                const playersSkins = await this.container.prisma.playersSkins.findMany({
+                    where: {
+                        isExhausted: true,
+                        guildId: guild.id
+                    },
+                    select: {
+                        skin: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        },
+                        exhaustChangeDate: true
+                    }
+                })
+
+                for (let i in playersSkins) {
+                    let playerSkin = playersSkins[i];
+                    if (moment.utc().isSameOrAfter(moment(playerSkin.exhaustChangeDate).add(6, 'hour'))) {
+                        await unexhaustSkin(playerSkin.skin.id, guild.id);
+                        this.container.logger.info(`The skin ${playerSkin.skin.name}<${playerSkin.skin.id}> has been unexhausted.`);
+                    }
+                }
+            }, 60000);
+
+            // Update banned players
+            setInterval(async () => {
+                const bannedPlayers = await getBannedPlayersByGuildId(guild.id);
+
+                for (let i in bannedPlayers) {
+                    let player = bannedPlayers[i];
+                    if (moment.utc().isSameOrAfter(moment(player.banEndDate))) {
+                        await setPlayerAsUnbanned(player.userId, guild.id);
+                        this.container.logger.info(`The player ${player.userId} in guild ${guild.id} has been unbanned.`);
+                    }
+                }
+            }, 60000);
+        }
     }
 };

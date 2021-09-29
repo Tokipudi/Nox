@@ -2,6 +2,10 @@ import { container } from '@sapphire/framework';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
 
+export async function getPlayers() {
+    return await container.prisma.players.findMany();
+}
+
 export async function getPlayer(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.findUnique({
         where: {
@@ -27,10 +31,43 @@ export async function resetLastClaimDate(userId: Snowflake, guildId: Snowflake) 
     });
 }
 
-export async function setPlayerAsBanned(userId: Snowflake, guildId: Snowflake) {
-    return await container.prisma.players.update({
-        data: {
-            isBanned: true
+/**
+ * 
+ * @param userId 
+ * @param guildId 
+ * @param duration in minutes 
+ * @returns 
+ */
+export async function setPlayerAsBanned(userId: Snowflake, guildId: Snowflake, duration: number = 0) {
+    let banEndDate = null;
+    if (duration > 0) {
+        banEndDate = moment.utc().add(duration, 'minutes').toDate();
+    }
+    return await container.prisma.players.upsert({
+        update: {
+            isBanned: true,
+            banStartDate: moment.utc().toDate(),
+            banEndDate: banEndDate,
+            banCount: {
+                increment: 1
+            }
+        },
+        create: {
+            userId: userId,
+            guild: {
+                connectOrCreate: {
+                    create: {
+                        id: guildId
+                    },
+                    where: {
+                        id: guildId
+                    }
+                }
+            },
+            banCount: 1,
+            isBanned: true,
+            banStartDate: moment.utc().toDate(),
+            banEndDate: banEndDate
         },
         where: {
             userId_guildId: {
@@ -44,12 +81,28 @@ export async function setPlayerAsBanned(userId: Snowflake, guildId: Snowflake) {
 export async function setPlayerAsUnbanned(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.update({
         data: {
-            isBanned: false
+            isBanned: false,
+            banStartDate: null,
+            banEndDate: null
         },
         where: {
             userId_guildId: {
                 userId: userId,
                 guildId: guildId
+            }
+        }
+    });
+}
+
+export async function getBannedPlayersByGuildId(guildId: Snowflake) {
+    return await container.prisma.players.findMany({
+        where: {
+            isBanned: true,
+            banEndDate: {
+                not: null
+            },
+            guild: {
+                id: guildId
             }
         }
     });
