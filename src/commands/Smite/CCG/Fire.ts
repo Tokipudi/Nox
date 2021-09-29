@@ -11,13 +11,13 @@ export class Fire extends Command {
     public async run(message: Message, args: Args) {
         const { author, guildId } = message;
 
-        let godName: string = await args.pick('string');
-        godName = godName.trim();
-        if (!godName) return message.reply('The first argument needs to be a valid god name!');
-
-        let skinName: string = await args.rest('string');
+        let skinName: string = await args.pick('string');
         skinName = skinName.trim();
-        if (!skinName) return message.reply('The second argument needs to be a valid card name!');
+        if (!skinName) return message.reply('The first argument needs to be a valid card name!');
+
+        let godName: string = await args.rest('string');
+        godName = godName.trim();
+        if (!godName) return message.reply('The second argument needs to be a valid god name!');
 
         const skin = await this.container.prisma.skins.findFirst({
             where: {
