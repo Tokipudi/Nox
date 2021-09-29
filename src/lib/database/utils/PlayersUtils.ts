@@ -41,6 +41,20 @@ export async function setPlayerAsBanned(userId: Snowflake, guildId: Snowflake) {
     });
 }
 
+export async function setPlayerAsUnbanned(userId: Snowflake, guildId: Snowflake) {
+    return await container.prisma.players.update({
+        data: {
+            isBanned: false
+        },
+        where: {
+            userId_guildId: {
+                userId: userId,
+                guildId: guildId
+            }
+        }
+    });
+}
+
 export async function deleteAllPlayersByGuildId(guildId: Snowflake) {
     return await container.prisma.players.deleteMany({
         where: {

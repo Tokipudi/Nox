@@ -1,4 +1,4 @@
-import { getPlayer, resetLastClaimDate } from '@lib/database/utils/PlayersUtils';
+import { getPlayer, resetLastClaimDate, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args, Command, CommandOptions } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
@@ -17,6 +17,7 @@ export class Rise extends Command {
         if (!player) return message.reply(`${user} has not rolled any card yet.`);
 
         await resetLastClaimDate(user.id, message.guildId);
+        await setPlayerAsUnbanned(user.id, message.guildId);
 
         message.reply(`${user} can claim a card again.`);
     }
