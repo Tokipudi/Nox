@@ -1,4 +1,4 @@
-import { disconnectSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -26,7 +26,7 @@ export class MyTeam extends Command {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: 'Here is your team.',
-            embeds: [generateSkinEmbed(skins, 0)],
+            embeds: [await this.generateEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -62,7 +62,7 @@ export class MyTeam extends Command {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateSkinEmbed(skins, currentIndex)],
+                    embeds: [await this.generateEmbed(skins, currentIndex, message.guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -94,5 +94,16 @@ export class MyTeam extends Command {
                 });
             }
         });
+    }
+
+    protected async generateEmbed(skins, index, guildId) {
+        const embed = generateSkinEmbed(skins, index);
+
+        if (skins[0].playersSkins[0].isExhausted) {
+            const duration = await getTimeLeftBeforeExhaustEnd(skins[index].id, guildId);
+            embed.addField('Exhausted', `Available in \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\`.`);
+        }
+
+        return embed;
     }
 }

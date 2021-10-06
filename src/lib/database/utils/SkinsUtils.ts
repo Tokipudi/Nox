@@ -15,6 +15,23 @@ export async function getSkins() {
     });
 }
 
+export async function getSkinById(skinId: number, guildId: Snowflake) {
+    return await container.prisma.skins.findFirst({
+        where: {
+            id: skinId,
+            playersSkins: {
+                some: {
+                    guildId: guildId
+                }
+            }
+        },
+        include: {
+            playersSkins: true,
+            playersWishes: true
+        }
+    });
+}
+
 export async function getSkinsByObtainability(obtainability: string, guildId: Snowflake) {
     return await container.prisma.skins.findMany({
         include: {
@@ -353,4 +370,13 @@ export async function resetAllSkinsByGuildId(guildId: Snowflake) {
             guildId: guildId
         }
     });
+}
+
+export async function getTimeLeftBeforeExhaustEnd(skinId: number, guildId: Snowflake) {
+    const skin = await getSkinById(skinId, guildId);
+
+    const now = moment().unix();
+    const exhausteEndDate = moment(skin.playersSkins[0].exhaustChangeDate).add(6, 'hours').unix();
+    const timeLeft = exhausteEndDate - now;
+    return moment.duration(timeLeft * 1000, 'milliseconds');
 }
