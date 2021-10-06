@@ -1,4 +1,5 @@
 import { container } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
 
@@ -168,9 +169,9 @@ export async function getSkinByGodName(godName: string, skinName: string) {
     return await container.prisma.skins.findFirst({
         where: {
             god: {
-                name: godName
+                name: toTitleCase(godName)
             },
-            name: skinName
+            name: toTitleCase(skinName)
         },
         include: {
             god: {

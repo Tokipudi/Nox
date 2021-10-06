@@ -1,13 +1,14 @@
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions, PieceContext } from '@sapphire/framework';
 import type { Message } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     aliases: ['pong'],
     requiredUserPermissions: 'ADMINISTRATOR'
 })
-export class Ping extends Command {
-    
+export class Ping extends NoxCommand {
+
     public async run(message: Message) {
         const msg = await message.channel.send('Ping?');
 

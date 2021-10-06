@@ -1,13 +1,20 @@
 import { disconnectSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Releases either half or all of a player\'s cards.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<@user> <half|all>',
+    examples: [
+        '@User#1234 half',
+        '@User#1234 all'
+    ]
 })
-export class Strife extends Command {
+export class Strife extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const user: User = await args.pick('user');
@@ -15,7 +22,7 @@ export class Strife extends Command {
 
         let amount: string = await args.rest('string');
         amount = amount.trim();
-        if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the command.')
+        if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the NoxCommand.')
 
         const skins = await getSkinsByUser(user.id, message.guildId);
         if (!skins || !skins.length) return message.reply(`${user} does not have any cards!`);

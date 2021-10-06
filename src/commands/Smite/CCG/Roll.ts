@@ -1,17 +1,17 @@
 import { canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
 import { connectSkin } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    name: 'roll',
+@ApplyOptions<NoxCommandOptions>({
     description: 'Roll a card and react with an emoji to claim it.',
     cooldownLimit: 3,
     cooldownDelay: 3600000,
     cooldownScope: 3
 })
-export class Roll extends Command {
+export class Roll extends NoxCommand {
 
     public async run(message: Message) {
         const { guildId } = message

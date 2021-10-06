@@ -1,13 +1,20 @@
 import { getPlayer, resetLastClaimDate, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Lets a player claim rolls again.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Unbans a player.',
+    detailedDescription: 'Unbans a player, and/or let\'s a player claim another card again.',
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<@user>',
+    examples: [
+        '@User#1234'
+    ]
 })
-export class Rise extends Command {
+export class Rise extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const user: User = await args.pick('user').catch(() => message.author);

@@ -1,16 +1,22 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { exhaustSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { getRandomIntInclusive } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Fight against another player.'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Fight against another player.',
+    usage: '<@user>',
+    examples: [
+        '@User#1234'
+    ]
 })
-export class Fight extends Command {
+export class Fight extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message

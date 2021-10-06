@@ -1,13 +1,14 @@
 import { getObtainabilities } from '@lib/database/utils/ObtainabilityUtils';
-import { getSkinsByObtainability, getSkins } from '@lib/database/utils/SkinsUtils';
+import { getSkins, getSkinsByObtainability } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Shows all of the different skins rarity.'
 })
-export class Rarity extends Command {
+export class Rarity extends NoxCommand {
 
     public async run(message: Message) {
         const { guildId } = message;

@@ -1,15 +1,15 @@
 import { disconnectSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageActionRow } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    name: 'myteam',
+@ApplyOptions<NoxCommandOptions>({
     description: 'List the cards you currently own.'
 })
-export class MyTeam extends Command {
+export class MyTeam extends NoxCommand {
 
     public async run(message: Message) {
         const { author, guildId } = message

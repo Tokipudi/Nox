@@ -1,15 +1,22 @@
 import { disconnectWishlistSkin, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, MessageActionRow, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     name: 'wishlist',
-    description: 'List the cards in your wishlist.'
+    description: 'List the cards in your wishlist.',
+    usage: '[@user]',
+    examples: [
+        '',
+        '@User#1234'
+    ]
 })
-export class Wishlist extends Command {
+export class Wishlist extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message

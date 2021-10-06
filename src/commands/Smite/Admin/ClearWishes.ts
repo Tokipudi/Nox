@@ -1,13 +1,20 @@
 import { disconnectWishlistSkin, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Empty the wishlist of a user.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+    detailedDescription: 'Empties the wishlist of a user for the current guild.',
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<@user>',
+    examples: [
+        '@User#1234'
+    ]
 })
-export class ClearWishes extends Command {
+export class ClearWishes extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const user: User = await args.pick('user');

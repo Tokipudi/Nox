@@ -1,13 +1,16 @@
 import { setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Bans a player for 24h.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<@user>'
 })
-export class Yawn extends Command {
+export class Yawn extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const user: User = await args.pick('user');

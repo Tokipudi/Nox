@@ -1,14 +1,16 @@
 import { deleteAllPlayersByGuildId } from '@lib/database/utils/PlayersUtils';
 import { resetAllSkinsByGuildId } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { Message } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Resets every skins and every player.',
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Resets the game.',
+    detailedDescription: 'Resets every skins and every player in the current guild.',
     requiredUserPermissions: 'ADMINISTRATOR'
 })
-export class Ragnarock extends Command {
+export class Ragnarock extends NoxCommand {
 
     public async run(message: Message) {
         const { author } = message;
@@ -23,7 +25,7 @@ export class Ragnarock extends Command {
 
         collector.on('collect', async (m: Message) => {
             if (m.content === `${prefix}no`) {
-                await message.reply('Command aborted.');
+                await message.reply('NoxCommand aborted.');
                 collector.stop();
             } else if (m.content === `${prefix}yes`) {
                 await resetAllSkinsByGuildId(message.guildId);

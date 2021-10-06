@@ -1,15 +1,22 @@
 import { SmiteMatchesApi } from '@lib/api/hirez/smite/SmiteMatchesApi';
 import { getGodById } from '@lib/database/utils/GodsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getFromBetween } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
 import moment from 'moment';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Returns the MOTD for the given date (default today).'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Returns the MOTD for the given date (default today).',
+    usage: '[MM/DD/YYYY]',
+    examples: [
+        '',
+        moment().format('MM/DD/YYYY')
+    ]
 })
-export class MOTD extends Command {
+export class MOTD extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const date: string = await args.rest('string').catch(() => moment(new Date()).utc().format('MM/DD/YYYY'));

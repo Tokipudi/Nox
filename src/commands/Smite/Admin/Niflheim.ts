@@ -1,13 +1,20 @@
 import { setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Bans a player.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+    detailedDescription: 'Bans a player in the current guild. They will not be able to roll or claim skins anymore.',
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<@user>',
+    examples: [
+        '@User#1234'
+    ]
 })
-export class Rise extends Command {
+export class Niflheim extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const user: User = await args.pick('user');

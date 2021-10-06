@@ -1,22 +1,31 @@
 import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Fire a card from your collection.'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Fire a card from your collection.',
+    usage: '<skin name> <god name>',
+    examples: [
+        'Snuggly Artemis',
+        '"Nuclear Winter" Ymir',
+        '"Playful Bunny" "Nu Wa"'
+    ]
 })
-export class Fire extends Command {
+export class Fire extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message;
 
         let skinName: string = await args.pick('string');
-        skinName = skinName.trim();
+        skinName = toTitleCase(skinName.trim());
         if (!skinName) return message.reply('The first argument needs to be a valid card name!');
 
         let godName: string = await args.rest('string');
-        godName = godName.trim();
+        godName = toTitleCase(godName.trim());
         if (!godName) return message.reply('The second argument needs to be a valid god name!');
 
         const skin = await this.container.prisma.skins.findFirst({

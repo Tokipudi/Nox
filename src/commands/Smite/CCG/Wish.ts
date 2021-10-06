@@ -1,14 +1,21 @@
+import { addSkinToWishlist, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
-import { addSkinToWishlist, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
 
-@ApplyOptions<CommandOptions>({
-    name: 'wish',
-    description: 'Add a skin to your wishlist and get notified when it is rolled.'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Add a skin to your wishlist and get notified when it is rolled.',
+    usage: '<skin name> <god name>',
+    examples: [
+        'Snuggly Artemis',
+        '"Nuclear Winter" Ymir',
+        '"Playful Bunny" "Nu Wa"'
+    ]
 })
-export class Wish extends Command {
+export class Wish extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message;

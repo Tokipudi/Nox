@@ -1,18 +1,24 @@
 import { addSkinToWishlist, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
 import { Message, MessageActionRow } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    name: 'godskins',
+@ApplyOptions<NoxCommandOptions>({
     aliases: ['skins'],
-    description: 'List the skins of a given god.'
+    description: 'List the skins of a given god.',
+    usage: '<god name>',
+    examples: [
+        'Ymir',
+        'Nu Wa'
+    ]
 })
-export class GodSkins extends Command {
+export class GodSkins extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message

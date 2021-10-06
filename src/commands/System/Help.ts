@@ -1,11 +1,13 @@
 /*  
- * Based of the help command of the Skyra Project https://github.com/skyra-project/skyra/blob/main/src/commands/General/help.ts
+ * Based of the help NoxCommand of the Skyra Project https://github.com/skyra-project/skyra/blob/main/src/commands/General/help.ts
  * Used under Apache License 2.0
  */
 
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { UserOrMemberMentionRegex } from '@sapphire/discord.js-utilities';
-import { Args, Command, CommandContext, CommandOptions } from '@sapphire/framework';
+import { Args, CommandContext } from '@sapphire/framework';
 import { Collection, Message, MessageEmbed } from 'discord.js';
 
 /**
@@ -16,18 +18,22 @@ import { Collection, Message, MessageEmbed } from 'discord.js';
  * @param firstCategory Key of the first element for comparison
  * @param secondCategory Key of the second element for comparison
  */
-function sortCommandsAlphabetically(_: Command[], __: Command[], firstCategory: string, secondCategory: string): 1 | -1 | 0 {
+function sortCommandsAlphabetically(_: NoxCommand[], __: NoxCommand[], firstCategory: string, secondCategory: string): 1 | -1 | 0 {
     if (firstCategory > secondCategory) return 1;
     if (secondCategory > firstCategory) return -1;
     return 0;
 }
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     aliases: ['commands', 'cmds'],
-    description: 'This command.',
-    detailedDescription: 'Lists all of the commands available for this user.'
+    description: 'This NoxCommand.',
+    detailedDescription: 'Lists all of the commands available for this user.',
+    examples: [
+        'help',
+        'help roll'
+    ]
 })
-export class Help extends Command {
+export class Help extends NoxCommand {
 
     public async run(message: Message, args: Args, context: CommandContext) {
         const commandName: string = await args.rest('string').catch(() => '');
@@ -37,7 +43,7 @@ export class Help extends Command {
         const prefix = this.getCommandPrefix(context);
 
         if (commandName.length > 0) {
-            commandsByCategories.forEach(async (commands: Command[], category: string) => {
+            commandsByCategories.forEach(async (commands: NoxCommand[], category: string) => {
                 const embed = new MessageEmbed()
                     .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
                     .setTitle(prefix + commandName)
@@ -60,17 +66,25 @@ export class Help extends Command {
                                 : commandDescription
                         )
 
+                        const commandStart = this.container.client.options.defaultPrefix + command.name + ' ';
+                        if (command.usage.length > 0) {
+                            embed.addField('Usage', `\`\`\`\n${commandStart}${command.usage}\n\`\`\``)
+                        }
+                        if (command.examples.length > 0) {
+                            embed.addField('Examples', `\`\`\`\n${commandStart}${command.examples.join(`\n${commandStart}`)}\n\`\`\``);
+                        }
+
                         if (command.aliases.length > 0) {
                             embed.addField('Aliases', `\`${command.aliases.join('`, `')}\``)
                         }
 
-                        return message.author.send({ embeds: [embed] });
+                        return message.reply({ embeds: [embed] });
                     }
                 }
 
             })
         } else {
-            commandsByCategories.forEach(async (commands: Command[], category: string) => {
+            commandsByCategories.forEach(async (commands: NoxCommand[], category: string) => {
                 const embed = new MessageEmbed()
                     .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
                     .setTitle(category)
@@ -93,17 +107,17 @@ export class Help extends Command {
 
     private async fetchCommands(message: Message) {
         const commands = this.container.stores.get('commands');
-        const filtered = new Collection<string, Command[]>();
+        const filtered = new Collection<string, NoxCommand[]>();
         await Promise.all(
             commands.map(async (cmd) => {
-                const command = cmd as Command;
+                const command = cmd as NoxCommand;
 
                 const result = await cmd.preconditions.run(message, command, { command: null! });
                 if (!result.success) return;
 
                 const category = filtered.get(command.fullCategory!.join(' → '));
                 if (category) category.push(command);
-                else filtered.set(command.fullCategory!.join(' → '), [command as Command]);
+                else filtered.set(command.fullCategory!.join(' → '), [command as NoxCommand]);
             })
         );
 

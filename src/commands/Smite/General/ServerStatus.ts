@@ -1,14 +1,14 @@
 import { SmiteServerApi } from '@lib/api/hirez/smite/SmiteServerApi';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { Message, MessageEmbed } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    name: 'serverstatus',
+@ApplyOptions<NoxCommandOptions>({
     aliases: ['status'],
     description: 'Returns Smite\'s server status.'
 })
-export class ServerStatus extends Command {
+export class ServerStatus extends NoxCommand {
 
     public async run(message: Message) {
         const msg = await message.reply('Fetching data from Smite\'s servers...');
@@ -16,7 +16,7 @@ export class ServerStatus extends Command {
         const api = new SmiteServerApi();
         const data = await api.getServerStatus();
 
-        // inside a command, event listener, etc.
+        // inside a NoxCommand, event listener, etc.
         const embed = new MessageEmbed()
             .setTitle('Smite Servers Status')
             .setURL('https://status.hirezstudios.com/')

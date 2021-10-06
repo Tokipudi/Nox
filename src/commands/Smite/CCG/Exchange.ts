@@ -1,15 +1,20 @@
 import { getSkinsByUser, giveSkin } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message, MessageActionRow, User } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
-    name: 'exchange',
-    description: 'Exchanges a card you own to a user of your choice. The specified user will have to validate the exchange with the same command.'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Exchanges a card you own to a user of your choice. The specified user will have to validate the exchange with the same NoxCommand.',
+    usage: '<@user>',
+    examples: [
+        '@User#1234'
+    ]
 })
-export class Exchange extends Command {
+export class Exchange extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author, guildId } = message

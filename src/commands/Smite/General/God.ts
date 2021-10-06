@@ -1,15 +1,22 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { getBackButton, getForwardButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
 import { Message, MessageActionRow } from 'discord.js';
 import { generateGodDetailsEmbed, generateGodLoreEmbed, generateGodAbilityEmbed, godCustomId, loreCustomId, ability1CustomId, ability2CustomId, ability3CustomId, ability4CustomId, ability5CustomId } from '@lib/utils/smite/GodsPaginationUtils';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { NoxCommand } from '@lib/structures/NoxCommand';
 
-@ApplyOptions<CommandOptions>({
-    description: 'Get more information about a god.'
+@ApplyOptions<NoxCommandOptions>({
+    description: 'Get more information about a god.',
+    usage: '<god name>',
+    examples: [
+        'Ymir',
+        'Nu Wa'
+    ]
 })
-export class God extends Command {
+export class God extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         const { author } = message

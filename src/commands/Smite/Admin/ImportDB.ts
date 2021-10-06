@@ -1,20 +1,23 @@
 import { SmiteGodsApi } from '@lib/api/hirez/smite/SmiteGodsApi';
 import { getGods } from '@lib/database/utils/GodsUtils';
 import { getSkinByGodName } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getGodSkinMissingData } from '@lib/utils/smite/fandom/SmiteFandomUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Command, CommandOptions } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
 import moment from 'moment';
 
-@ApplyOptions<CommandOptions>({
+
+@ApplyOptions<NoxCommandOptions>({
     name: 'importdb',
     aliases: ['idb'],
     description: 'Import data to the database.',
+    detailedDescription: 'Import data to the database. First the gods, then the skins, and finally the fandom data unavailable via the official API.',
     requiredUserPermissions: 'ADMINISTRATOR'
 })
-export class ImportDB extends Command {
+export class ImportDB extends NoxCommand {
 
     public async run(message: Message) {
         const msg = await message.reply('Importing gods from Smite\'s servers...');
@@ -165,7 +168,7 @@ export class ImportDB extends Command {
                                 godIconUrl = otherSkin.godIcon_URL;
                                 godCardURL = otherSkin.godSkin_URL;
                             }
-                        }                        
+                        }
                     }
 
                     await this.container.prisma.skins.create({

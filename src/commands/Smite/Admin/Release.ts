@@ -1,13 +1,22 @@
 import { disconnectSkin, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
+import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, Command, CommandOptions } from '@sapphire/framework';
+import { Args } from '@sapphire/framework';
 import { Message } from 'discord.js';
 
-@ApplyOptions<CommandOptions>({
+@ApplyOptions<NoxCommandOptions>({
     description: 'Releases a card from a user\'s collection.',
-    requiredUserPermissions: 'KICK_MEMBERS'
+    detailedDescription: 'Releases a card from a user\'s collection. It can then be rolled and claimed again.',
+    requiredUserPermissions: 'KICK_MEMBERS',
+    usage: '<skin name> <god name>',
+    examples: [
+        'Snuggly Artemis',
+        '"Nuclear Winter" Ymir',
+        '"Playful Bunny" "Nu Wa"'
+    ]
 })
-export class Release extends Command {
+export class Release extends NoxCommand {
 
     public async run(message: Message, args: Args) {
         let skinName: string = await args.pick('string');
