@@ -12,6 +12,14 @@ const client = new NoxClient({
         'DIRECT_MESSAGE_REACTIONS',
         'DIRECT_MESSAGE_TYPING'
     ],
+    presence: {
+        status: "online",
+        activities: [{
+            name: `Type ${process.env.COMMAND_PREFIX}help for more.`,
+            type: 'PLAYING',
+            url: 'https://github.com/Tokipudi/Nox'
+        }]
+    },
     defaultPrefix: process.env.COMMAND_PREFIX,
 });
 
