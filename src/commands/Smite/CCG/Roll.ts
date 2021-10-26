@@ -18,8 +18,8 @@ export class Roll extends NoxCommand {
 
         const msg = await message.reply('Fetching data...');
 
-        const skins = await this.container.prisma.$queryRawUnsafe(
-            `select "Skins".*, "Gods"."name" as godName, "SkinsObtainability"."name" as obtainabilityName ` +
+        const skins: any = await this.container.prisma.$queryRawUnsafe(
+            `select "Skins".*, "Gods"."name" as godname, "SkinsObtainability"."name" as obtainabilityname ` +
             `from "Skins", "Gods", "SkinsObtainability" ` +
             `where "Skins"."godId" = "Gods"."id" ` +
             `and "Skins"."obtainabilityId" = "SkinsObtainability"."id" ` +
@@ -27,6 +27,9 @@ export class Roll extends NoxCommand {
             `order by random() limit 1;`
         );
 
+        if (skins.length <= 0) {
+            return await msg.edit('No skin found in the database. Please contact an administrator.');
+        }
         let skin = skins[0];
 
         let embed = new MessageEmbed()
@@ -36,7 +39,7 @@ export class Roll extends NoxCommand {
             .setImage(skin.godSkinUrl)
             .setFooter(`${skin.obtainabilityname} card`);
 
-        switch (skin.obtainabilityName) {
+        switch (skin.obtainabilityname) {
             case 'Clan Reward':
             case 'Unlimited':
                 embed.setColor('GOLD');
