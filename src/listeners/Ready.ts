@@ -1,5 +1,6 @@
 import { getGuilds } from '@lib/database/utils/GuildsUtils';
-import { getBannedPlayersByGuildId, getPlayer, getPlayers, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
+import { getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
@@ -31,7 +32,7 @@ export class Ready extends Listener {
         for (let i in guilds) {
             const guild = guilds[i];
 
-            // Update exhaust
+            // Update exhaust every minute
             setInterval(async () => {
                 const playersSkins = await this.container.prisma.playersSkins.findMany({
                     where: {
@@ -58,7 +59,7 @@ export class Ready extends Listener {
                 }
             }, 60000);
 
-            // Update banned players
+            // Update banned players every minute
             setInterval(async () => {
                 const bannedPlayers = await getBannedPlayersByGuildId(guild.id);
 
@@ -70,6 +71,13 @@ export class Ready extends Listener {
                     }
                 }
             }, 60000);
+
+            // Import DB every 6 hours
+            setInterval(async () => {
+                await importGods();
+                await importSkins();
+                await importFandomMissingData();
+            }, 21600000);
         }
     }
 };
