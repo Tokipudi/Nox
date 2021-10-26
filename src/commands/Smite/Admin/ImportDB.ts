@@ -19,7 +19,7 @@ import moment from 'moment';
 })
 export class ImportDB extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const msg = await message.reply('Importing gods from Smite\'s servers...');
 
         this.container.logger.info('Importing gods from Smite\'s servers...');

@@ -18,7 +18,7 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 })
 export class God extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author } = message
 
         let godName: string = await args.rest('string');

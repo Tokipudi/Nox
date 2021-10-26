@@ -35,7 +35,7 @@ function sortCommandsAlphabetically(_: NoxCommand[], __: NoxCommand[], firstCate
 })
 export class Help extends NoxCommand {
 
-    public async run(message: Message, args: Args, context: CommandContext) {
+    public async messageRun(message: Message, args: Args, context: CommandContext) {
         const commandName: string = await args.rest('string').catch(() => '');
 
         const commandsByCategories = await this.fetchCommands(message);

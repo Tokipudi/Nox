@@ -10,7 +10,7 @@ import { Message, MessageEmbed } from 'discord.js';
 })
 export class ServerStatus extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const msg = await message.reply('Fetching data from Smite\'s servers...');
 
         const api = new SmiteServerApi();

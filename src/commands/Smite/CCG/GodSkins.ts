@@ -20,7 +20,7 @@ import { Message, MessageActionRow } from 'discord.js';
 })
 export class GodSkins extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
 
         let godName: string = await args.rest('string');

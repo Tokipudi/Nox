@@ -12,7 +12,7 @@ import { Message } from 'discord.js';
 })
 export class Ragnarock extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const { author } = message;
         const prefix = this.container.client.options.defaultPrefix;
         

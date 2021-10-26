@@ -18,7 +18,7 @@ import { Message } from 'discord.js';
 })
 export class Release extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         let skinName: string = await args.pick('string');
         skinName = skinName.trim();
         if (!skinName) return message.reply('The first argument needs to be a valid card name!');

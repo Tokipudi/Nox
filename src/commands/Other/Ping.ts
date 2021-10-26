@@ -9,7 +9,7 @@ import type { Message } from 'discord.js';
 })
 export class Ping extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const msg = await message.channel.send('Ping?');
 
         return msg.edit(

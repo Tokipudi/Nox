@@ -18,7 +18,7 @@ import moment from 'moment';
 })
 export class MOTD extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const date: string = await args.rest('string').catch(() => moment(new Date()).utc().format('MM/DD/YYYY'));
 
         const msg = await message.reply('Fetching data from Smite\'s servers...');

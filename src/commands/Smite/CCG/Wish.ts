@@ -17,7 +17,7 @@ import { Message } from 'discord.js';
 })
 export class Wish extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message;
 
         let skinName: string = await args.pick('string');

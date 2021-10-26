@@ -16,7 +16,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 })
 export class Give extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
         const user: User = await args.pick('user');
 

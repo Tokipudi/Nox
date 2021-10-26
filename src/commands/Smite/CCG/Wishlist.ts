@@ -18,7 +18,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
 })
 export class Wishlist extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
         const player: User = await args.pick('user').catch(() => message.author);
 

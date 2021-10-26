@@ -18,7 +18,7 @@ import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
 })
 export class Fight extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
         const player: User = await args.rest('user');
 

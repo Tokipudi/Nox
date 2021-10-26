@@ -10,7 +10,7 @@ import { Message, MessageEmbed } from 'discord.js';
 })
 export class Rarity extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const { guildId } = message;
 
         const msg = await message.reply('Fetching data from Smite\'s servers...');

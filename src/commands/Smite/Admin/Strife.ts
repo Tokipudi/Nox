@@ -16,7 +16,7 @@ import { Message, User } from 'discord.js';
 })
 export class Strife extends NoxCommand {
 
-    public async run(message: Message, args: Args) {
+    public async messageRun(message: Message, args: Args) {
         const user: User = await args.pick('user');
         if (!user) return message.reply('The first argument **must** be a user.');
 

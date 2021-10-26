@@ -11,7 +11,7 @@ import { Message, MessageActionRow } from 'discord.js';
 })
 export class MyTeam extends NoxCommand {
 
-    public async run(message: Message) {
+    public async messageRun(message: Message) {
         const { author, guildId } = message
 
         const backButton = getBackButton();
