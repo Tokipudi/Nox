@@ -7,7 +7,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Bans a player for 24h.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<@user>'
 })
 export class Yawn extends NoxCommand {

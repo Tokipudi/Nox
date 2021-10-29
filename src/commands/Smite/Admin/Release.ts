@@ -8,7 +8,7 @@ import { Message } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Releases a card from a user\'s collection.',
     detailedDescription: 'Releases a card from a user\'s collection. It can then be rolled and claimed again.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<skin name> <god name>',
     examples: [
         'Snuggly Artemis',

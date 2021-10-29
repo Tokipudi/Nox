@@ -8,7 +8,7 @@ import { Message, User } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Bans a player.',
     detailedDescription: 'Bans a player in the current guild. They will not be able to roll or claim skins anymore.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<@user>',
     examples: [
         '@User#1234'

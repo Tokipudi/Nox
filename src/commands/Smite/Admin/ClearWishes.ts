@@ -8,7 +8,7 @@ import { Message, User } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Empty the wishlist of a user.',
     detailedDescription: 'Empties the wishlist of a user for the current guild.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<@user>',
     examples: [
         '@User#1234'

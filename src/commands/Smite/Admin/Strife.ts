@@ -7,7 +7,7 @@ import { Message, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Releases either half or all of a player\'s cards.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<@user> <half|all>',
     examples: [
         '@User#1234 half',

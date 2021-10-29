@@ -8,7 +8,7 @@ import { Message, User } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Unbans a player.',
     detailedDescription: 'Unbans a player, and/or let\'s a player claim another card again.',
-    requiredUserPermissions: 'KICK_MEMBERS',
+    requiredUserPermissions: 'BAN_MEMBERS',
     usage: '<@user>',
     examples: [
         '@User#1234'
