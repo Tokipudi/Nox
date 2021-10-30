@@ -42,7 +42,7 @@ export class Left extends NoxCommand {
             }
             embed.addField(
                 obtainability,
-                `\`\`\`\n${claimedSkins.length} (${percentageClaimed}%)\n\`\`\``,
+                `\`\`\`\n${claimedSkins.length}/${skinsByObtainability.length} (${percentageClaimed}%)\n\`\`\``,
                 true
             );
         }
