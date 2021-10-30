@@ -12,7 +12,7 @@ export class CommandError extends Listener<typeof Events.CommandDenied> {
             switch (error.identifier) {
                 case 'preconditionCooldown':
                     const context = error.context as CommandContextWithCooldown;
-                    await payload.message.reply(`You already used all of your available rolls for the time being!\nWait **${this.getTimeLeftBeforeRoll(context.remaining)}** before rolling again.`)
+                    await payload.message.reply(`You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`)
                     break;
                 default:
                 // Do nothing
