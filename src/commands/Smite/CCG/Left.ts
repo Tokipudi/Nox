@@ -13,8 +13,6 @@ export class Left extends NoxCommand {
     public async messageRun(message: Message) {
         const { guildId } = message;
 
-        const msg = await message.reply('Fetching data from Smite\'s servers...');
-
         const skins = await getSkins();
         const skinsTotal = skins.length;
 
@@ -55,6 +53,6 @@ export class Left extends NoxCommand {
         }
         embed.setDescription(`There are a total of \`${skinsTotal}\` skins total, of which \`${totalClaimedSkins} (${percentageClaimed}%)\` are already claimed.`);
 
-        return msg.edit({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
     }
 }
