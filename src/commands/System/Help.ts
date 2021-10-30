@@ -100,7 +100,12 @@ export class Help extends NoxCommand {
 
                     embed.addField(`${prefix}${command.name}`, commandDescription);
                 }
-                message.author.send({ embeds: [embed] });
+                try {
+                    await message.author.send({ embeds: [embed] });
+                } catch (e) {
+                    this.container.logger.error(e);
+                    await message.reply('An error occured when trying to send you the command list. Make sure you allow direct messages from server members.\nIf the error persists, please contact an administrator.');
+                }
             })
         }
     }

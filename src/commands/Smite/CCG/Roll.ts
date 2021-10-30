@@ -91,7 +91,12 @@ export class Roll extends NoxCommand {
                 let player = wishedPlayers[k];
 
                 let user = this.container.client.users.cache.get(player.userId);
-                user.send('A card in your wishlist is available for grab! ' + msg.url);
+                try {
+                    await user.send('A card from your wishlist is available for grab! ' + msg.url);
+                } catch (e) {
+                    this.container.logger.error(e);
+                    await message.reply('An error occured when trying to warn you that a skin from your wishlist was available for grab. Make sure you allow direct messages from server members.\nIf the error persists, please contact an administrator.');
+                }
             }
         }
     }

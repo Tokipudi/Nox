@@ -152,8 +152,7 @@ export class Exchange extends NoxCommand {
                     } else if (interaction.customId === selectButton.customId) {
                         skinName2 = interaction.message.embeds[0].title;
                         await embedMessage2.delete();
-                        let msg = await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
-                        await user.send('A user started an exchange with you! ' + msg.url);
+                        await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`);
                         collector2.stop();
                     }
                 });
