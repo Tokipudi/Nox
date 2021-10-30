@@ -222,8 +222,29 @@ export async function getUnclaimedSkinsByGuildId(guildId: Snowflake) {
 }
 
 export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number) {
+    const skin = await getSkinById(skinId, guildId);
     await disconnectSkin(skinId, guildId);
-    return await connectSkin(skinId, userId, guildId);
+
+    const newSkin = await connectSkin(skinId, userId, guildId);
+
+    if (!skin.playersSkins[0].isExhausted) {
+        return newSkin;
+    }
+
+    await container.prisma.playersSkins.update({
+        data: {
+            isExhausted: true,
+            exhaustChangeDate: skin.playersSkins[0].exhaustChangeDate
+        },
+        where: {
+            guildId_skinId: {
+                guildId: guildId,
+                skinId: skinId
+            }
+        }
+    });
+
+    return await getSkinById(skinId, guildId);
 }
 
 export async function getSkinWishlist(userId: Snowflake, guildId: Snowflake) {
