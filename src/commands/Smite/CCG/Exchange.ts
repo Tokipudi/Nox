@@ -175,17 +175,21 @@ export class Exchange extends NoxCommand {
                                 collector3.stop();
                             } else if (m.content.startsWith(`${prefix}accept`)) {
                                 let skinId1 = 0;
+                                let godName1 = '';
                                 for (let i = 0; i < skins1.length; i++) {
                                     if (skins1[i].name === skinName1) {
                                         skinId1 = skins1[i].id;
+                                        godName1 = skins1[i].god.name;
                                         break;
                                     }
                                 }
 
                                 let skinId2 = 0;
+                                let godName2 = '';
                                 for (let i = 0; i < skins2.length; i++) {
                                     if (skins2[i].name === skinName2) {
                                         skinId2 = skins2[i].id;
+                                        godName2 = skins2[i].god.name;
                                         break;
                                     }
                                 }
@@ -195,7 +199,7 @@ export class Exchange extends NoxCommand {
                                     await giveSkin(author.id, guildId, skinId2);
 
                                     this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
-                                    message.reply(`${author} The card **${skinName1}** was successfully exchanged against **${skinName2}** with ${user}!`);
+                                    message.reply(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);
                                     isValidated = true;
                                     collector3.stop();
                                 }

@@ -278,12 +278,12 @@ export class Fight extends NoxCommand {
 
                                 if (god1Health > 0) {
                                     await exhaustSkin(skinId2, guildId);
-                                    await message.channel.send(`${author}'s **${skinName1}** won the fight!`);
-                                    await message.channel.send(`${player} your card **${skinName2}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                    await message.channel.send(`${author}'s **${skinName1} ${skin1.god.name}** won the fight!`);
+                                    await message.channel.send(`${player} your card **${skinName2} ${skin2.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 } else {
                                     await exhaustSkin(skinId1, guildId);
-                                    await message.channel.send(`${player}'s **${skinName2}** won the fight!`);
-                                    await message.channel.send(`${author} your card **${skinName1}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                    await message.channel.send(`${player}'s **${skinName2} ${skin2.god.name}** won the fight!`);
+                                    await message.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }
                             }
                         });
