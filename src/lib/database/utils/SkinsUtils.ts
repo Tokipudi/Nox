@@ -312,6 +312,17 @@ export async function addSkinToWishlist(userId: Snowflake, guildId: Snowflake, s
     });
 }
 
+export async function getSkinOwner(skinId: number, guildId: Snowflake) {
+    return await container.prisma.playersSkins.findUnique({
+        where: {
+            guildId_skinId: {
+                guildId: guildId,
+                skinId: skinId
+            }
+        }
+    })
+}
+
 export async function exhaustSkin(skinId: number, guildId: Snowflake) {
     return await container.prisma.skins.update({
         data: {

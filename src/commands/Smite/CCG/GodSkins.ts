@@ -1,4 +1,4 @@
-import { addSkinToWishlist, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { addSkinToWishlist, getSkinOwner, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -7,6 +7,7 @@ import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
+import { Snowflake } from 'discord-api-types';
 import { Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -35,7 +36,7 @@ export class GodSkins extends NoxCommand {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: `Here are the cards for ${godName}.`,
-            embeds: [generateSkinEmbed(skins, 0)],
+            embeds: [await this.generateGodSkinEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -71,7 +72,7 @@ export class GodSkins extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateSkinEmbed(skins, currentIndex)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -95,7 +96,7 @@ export class GodSkins extends NoxCommand {
                 // Disable the wish button
                 selectButton.disabled = true;
                 await interaction.update({
-                    embeds: [generateSkinEmbed(skins, currentIndex)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -104,6 +105,22 @@ export class GodSkins extends NoxCommand {
                 })
             }
         });
+    }
+
+    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
+        const embed = generateSkinEmbed(skins, index);
+
+        const owner = await getSkinOwner(skins[index].id, guildId);
+        if (owner !== null) {
+            const user = this.container.client.users.cache.find(user => user.id === owner.userId);
+            if (user === null) {
+                embed.addField('Owner', `${owner.userId}`);
+            } else {
+                embed.addField('Owner', `${user}`);
+            }
+        }
+
+        return embed;
     }
 
     protected isSkinInWishlist(skinName: string, wishlist: Skins[]) {
