@@ -50,7 +50,7 @@ export async function getSkinsByObtainability(obtainability: string, guildId: Sn
     });
 }
 
-export async function connectSkin(skinId: number, userId: Snowflake, guildId: Snowflake) {
+export async function connectSkin(skinId: number, userId: Snowflake, guildId: Snowflake, updateLastClaimDate: boolean = true) {
     const skin = await container.prisma.skins.update({
         data: {
             playersSkins: {
@@ -93,17 +93,20 @@ export async function connectSkin(skinId: number, userId: Snowflake, guildId: Sn
             id: skinId
         }
     });
-    await container.prisma.players.update({
-        data: {
-            lastClaimDate: moment.utc().toDate()
-        },
-        where: {
-            userId_guildId: {
-                userId: userId,
-                guildId: guildId
+
+    if (updateLastClaimDate) {
+        await container.prisma.players.update({
+            data: {
+                lastClaimDate: moment.utc().toDate()
+            },
+            where: {
+                userId_guildId: {
+                    userId: userId,
+                    guildId: guildId
+                }
             }
-        }
-    });
+        });
+    }
 
     return skin;
 }
@@ -221,11 +224,11 @@ export async function getUnclaimedSkinsByGuildId(guildId: Snowflake) {
     })
 }
 
-export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number) {
+export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number, updateLastClaimDate: boolean = true) {
     const skin = await getSkinById(skinId, guildId);
     await disconnectSkin(skinId, guildId);
 
-    const newSkin = await connectSkin(skinId, userId, guildId);
+    const newSkin = await connectSkin(skinId, userId, guildId, updateLastClaimDate);
 
     if (!skin.playersSkins[0].isExhausted) {
         return newSkin;

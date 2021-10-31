@@ -96,7 +96,7 @@ export class Give extends NoxCommand {
                         break;
                     }
                 }
-                let skin = await giveSkin(user.id, guildId, skinId);
+                let skin = await giveSkin(user.id, guildId, skinId, false);
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

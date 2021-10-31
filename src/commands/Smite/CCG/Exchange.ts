@@ -195,8 +195,8 @@ export class Exchange extends NoxCommand {
                                 }
 
                                 if (skinId1 && skinId2) {
-                                    await giveSkin(user.id, guildId, skinId1)
-                                    await giveSkin(author.id, guildId, skinId2);
+                                    await giveSkin(user.id, guildId, skinId1, false)
+                                    await giveSkin(author.id, guildId, skinId2, false);
 
                                     this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
                                     message.reply(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);
