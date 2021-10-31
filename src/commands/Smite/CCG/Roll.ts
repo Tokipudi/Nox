@@ -90,7 +90,7 @@ export class Roll extends NoxCommand {
             for (let k in wishedPlayers) {
                 let player = wishedPlayers[k];
 
-                let user = this.container.client.users.cache.get(player.userId);
+                let user = await this.container.client.users.fetch(player.userId);
                 try {
                     await user.send('A card from your wishlist is available for grab! ' + msg.url);
                 } catch (e) {

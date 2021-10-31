@@ -144,7 +144,7 @@ export class Wishlist extends NoxCommand {
 
         const owner = await getSkinOwner(skins[index].id, guildId);
         if (owner !== null) {
-            const user = this.container.client.users.cache.find(user => user.id === owner.userId);
+            const user = await this.container.client.users.fetch(owner.userId);
             if (user === null) {
                 embed.addField('Owner', `${owner.userId}`);
             } else {
