@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { exhaustSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
+import { exhaustSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -69,7 +69,7 @@ export class Fight extends NoxCommand {
 
         const embedMessage1 = await message.reply({
             content: 'Select your fighter.',
-            embeds: [generateSkinEmbed(skins1, currentIndex)],
+            embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
                     components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -113,7 +113,7 @@ export class Fight extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateSkinEmbed(skins1, currentIndex)],
+                    embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -165,7 +165,7 @@ export class Fight extends NoxCommand {
 
                         const embedMessage3 = await message.reply({
                             content: `Select your fighter.`,
-                            embeds: [generateSkinEmbed(skins2, currentIndex)],
+                            embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                             components: [
                                 new MessageActionRow({
                                     components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -201,7 +201,7 @@ export class Fight extends NoxCommand {
 
                                 // Respond to interaction by updating message with new embed
                                 await interaction.update({
-                                    embeds: [generateSkinEmbed(skins2, currentIndex)],
+                                    embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                                     components: [
                                         new MessageActionRow({
                                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -333,6 +333,17 @@ export class Fight extends NoxCommand {
         if (randomAbility !== null) {
             embed.setImage(randomAbility.URL)
                 .setTitle(randomAbility.Summary);
+        }
+
+        return embed;
+    }
+
+    protected async generateEmbed(skins, index, guildId) {
+        const embed = generateSkinEmbed(skins, index);
+
+        if (skins[index].playersSkins[0].isExhausted) {
+            const duration = await getTimeLeftBeforeExhaustEnd(skins[index].id, guildId);
+            embed.addField('Exhausted', `Available in \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\`.`);
         }
 
         return embed;
