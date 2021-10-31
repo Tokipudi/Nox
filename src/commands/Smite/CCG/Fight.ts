@@ -325,6 +325,7 @@ export class Fight extends NoxCommand {
             .addField(`${skinName1} ${godName1}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
             .addField(`${skinName2} ${godName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)
             .setFooter(`${player.username}#${player.discriminator}`)
+            .setColor('DARK_PURPLE')
             .setTimestamp();
         if (randomDamage !== null) {
             embed.setDescription(`*${god.name}* dealt \`${randomDamage}\` damage.`)

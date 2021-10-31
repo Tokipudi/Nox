@@ -47,7 +47,7 @@ export class Help extends NoxCommand {
                 const embed = new MessageEmbed()
                     .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
                     .setTitle(prefix + commandName)
-                    .setColor('PURPLE')
+                    .setColor('DARK_PURPLE')
                     .setTimestamp();
 
                 for (let i in commands) {
@@ -88,7 +88,7 @@ export class Help extends NoxCommand {
                 const embed = new MessageEmbed()
                     .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
                     .setTitle(category)
-                    .setColor('PURPLE')
+                    .setColor('DARK_PURPLE')
                     .setTimestamp();
 
                 for (let i in commands) {

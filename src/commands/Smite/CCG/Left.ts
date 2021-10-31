@@ -21,6 +21,7 @@ export class Left extends NoxCommand {
         const embed = new MessageEmbed()
             .setTitle('Smite Skins by Rarity')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
+            .setColor('DARK_PURPLE')
             .setTimestamp();
 
         let totalClaimedSkins = 0;
