@@ -99,7 +99,7 @@ export class MyTeam extends NoxCommand {
     protected async generateEmbed(skins, index, guildId) {
         const embed = generateSkinEmbed(skins, index);
 
-        if (skins[0].playersSkins[0].isExhausted) {
+        if (skins[index].playersSkins[0].isExhausted) {
             const duration = await getTimeLeftBeforeExhaustEnd(skins[index].id, guildId);
             embed.addField('Exhausted', `Available in \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\`.`);
         }
