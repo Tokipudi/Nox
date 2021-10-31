@@ -5,7 +5,7 @@ export function generateSkinEmbed(skins, index) {
 
     const embed = new MessageEmbed()
         .setTitle(skin.name)
-        .setDescription(`${skin.obtainability.name} skin`)
+        .setDescription(`*${skin.obtainability.name}*`)
         .setAuthor(skin.god.name, skin.godIconUrl)
         .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
         .setImage(skin.godSkinUrl)

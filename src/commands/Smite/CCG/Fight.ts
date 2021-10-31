@@ -87,6 +87,8 @@ export class Fight extends NoxCommand {
         let skinName2 = '';
         let godName1 = '';
         let godName2 = '';
+        let rarity1 = '';
+        let rarity2 = '';
         let god1, god2, skin1, skin2;
         collector1.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
@@ -121,6 +123,7 @@ export class Fight extends NoxCommand {
             } else if (interaction.customId === selectButton.customId) {
                 skinName1 = interaction.message.embeds[0].title;
                 godName1 = interaction.message.embeds[0].author.name;
+                rarity1 = interaction.message.embeds[0].description.replace(/^\*+|\*+$/g, '');
                 await embedMessage1.delete();
                 collector1.stop();
             }
@@ -130,7 +133,7 @@ export class Fight extends NoxCommand {
             if (skinName1 === '') {
                 message.reply('You did not select a fighter in the given time. The fight is canceled.');
             } else {
-                const reply = await message.reply(`${player} You have been challenged to a fight!\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
+                const reply = await message.reply(`${player} You have been challenged to fight against **${skinName1} ${godName1} *(${rarity1})***!\nType \`${this.container.client.options.defaultPrefix}accept\` to select your fighter, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
 
                 const prefix = this.container.client.options.defaultPrefix;
                 const filter = (m: Message) => {
@@ -208,11 +211,12 @@ export class Fight extends NoxCommand {
                             } else if (interaction.customId === selectButton.customId) {
                                 skinName2 = interaction.message.embeds[0].title;
                                 godName2 = interaction.message.embeds[0].author.name;
+                                rarity2 = interaction.message.embeds[0].description.replace(/^\*+|\*+$/g, '');
                                 god1 = await getGodByName(godName1);
                                 god2 = await getGodByName(godName2);
                                 await embedMessage3.delete();
                                 const embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, godName1, godName2, god1.health, god2.health, author);
-                                await message.channel.send(`A fight was started between ${author}'s **${godName1} ${skinName1}** and ${player}'s **${godName2} ${skinName2}**!`);
+                                await message.channel.send(`A fight was started between ${author}'s **${skinName1} ${godName1} *(${rarity1})*** and ${player}'s **${skinName2} ${godName2} *(${rarity2})***!`);
                                 await message.channel.send({ embeds: [embed] });
                                 collector3.stop();
                             }
