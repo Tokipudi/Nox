@@ -104,63 +104,72 @@ export async function importSkins() {
                     id: skin.skin_id1
                 }
             });
+
+            let skinName = toTitleCase(skin.skin_name.trim());
+            let godIconUrl = skin.godIcon_URL;
+            let godCardURL = skin.godSkin_URL;
+
+            // Handle specific cases
+            if (skinName.endsWith('.')) {
+                skinName = skinName.slice(0, -1);
+            }
+            if (skinName.startsWith('Standard')) {
+                skinName = 'Default';
+            }
+            if (skinName === 'Triumphandagni') {
+                skinName = 'Triumph & Agni';
+            }
+            if (skinName === 'Blitz Athena') {
+                skinName = 'Blitz';
+            }
+            if (['Diamond', 'Legendary'].includes(skinName)) {
+                for (let j in data) {
+                    let otherSkin = data[j];
+                    if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Golden')) {
+                        godIconUrl = otherSkin.godIcon_URL;
+                        godCardURL = otherSkin.godSkin_URL;
+                    }
+                }
+            } else if (skinName === 'Shadow') {
+                for (let j in data) {
+                    let otherSkin = data[j];
+                    if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Standard')) {
+                        godIconUrl = otherSkin.godIcon_URL;
+                        godCardURL = otherSkin.godSkin_URL;
+                    }
+                }
+            }
+
+            await container.prisma.skins.upsert({
+                create: {
+                    id: skin.skin_id1,
+                    name: skinName,
+                    godIconUrl: godIconUrl,
+                    godSkinUrl: godCardURL,
+                    priceFavor: skin.price_favor,
+                    priceGems: skin.price_gems,
+                    god: {
+                        connect: {
+                            id: godId
+                        }
+                    }
+                },
+                update: {
+                    godIconUrl: godIconUrl,
+                    godSkinUrl: godCardURL,
+                },
+                where: {
+                    id: skin.skin_id1
+                }
+            });
+
             if (!skinFromDb) {
-                let skinName = toTitleCase(skin.skin_name.trim());
-                let godIconUrl = skin.godIcon_URL;
-                let godCardURL = skin.godSkin_URL;
-
-                // Handle specific cases
-                if (skinName.endsWith('.')) {
-                    skinName = skinName.slice(0, -1);
-                }
-                if (skinName.startsWith('Standard')) {
-                    skinName = 'Default';
-                }
-                if (skinName === 'Triumphandagni') {
-                    skinName = 'Triumph & Agni';
-                }
-                if (skinName === 'Blitz Athena') {
-                    skinName = 'Blitz';
-                }
-                if (['Diamond', 'Legendary'].includes(skinName)) {
-                    for (let j in data) {
-                        let otherSkin = data[j];
-                        if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Golden')) {
-                            godIconUrl = otherSkin.godIcon_URL;
-                            godCardURL = otherSkin.godSkin_URL;
-                        }
-                    }
-                } else if (skinName.startsWith('Shadow')) {
-                    for (let j in data) {
-                        let otherSkin = data[j];
-                        if (toTitleCase(otherSkin.skin_name.trim()).startsWith('Standard')) {
-                            godIconUrl = otherSkin.godIcon_URL;
-                            godCardURL = otherSkin.godSkin_URL;
-                        }
-                    }
-                }
-
-                await container.prisma.skins.create({
-                    data: {
-                        id: skin.skin_id1,
-                        name: skinName,
-                        godIconUrl: godIconUrl,
-                        godSkinUrl: godCardURL,
-                        priceFavor: skin.price_favor,
-                        priceGems: skin.price_gems,
-                        god: {
-                            connect: {
-                                id: godId
-                            }
-                        }
-                    }
-                });
-
                 container.logger.info('Skin ' + skinName + ' (godId<' + godId + '>) has been added to the database.');
+            } else {
+                container.logger.info('Skin ' + skinName + ' (godId<' + godId + '>) has been updated.');
             }
         }
     }
-
 }
 
 export async function importFandomMissingData() {
