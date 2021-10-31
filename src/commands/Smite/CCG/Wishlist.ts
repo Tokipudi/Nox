@@ -1,10 +1,11 @@
-import { disconnectWishlistSkin, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { disconnectWishlistSkin, getSkinOwner, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
+import { Snowflake } from 'discord-api-types';
 import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -43,7 +44,7 @@ export class Wishlist extends NoxCommand {
 
         const reply = await message.reply({
             content: 'Here is your wishlist.',
-            embeds: [generateSkinEmbed(skins, 0)],
+            embeds: [await this.generateGodSkinEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
                     components: player.id === author.id
@@ -80,7 +81,7 @@ export class Wishlist extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [generateSkinEmbed(skins, currentIndex)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: player.id === author.id
@@ -116,7 +117,7 @@ export class Wishlist extends NoxCommand {
                     backButton.disabled = currentIndex === 0;
 
                     await interaction.update({
-                        embeds: [generateSkinEmbed(skins, currentIndex)],
+                        embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                         components: [
                             new MessageActionRow({
                                 components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -136,5 +137,21 @@ export class Wishlist extends NoxCommand {
                 });
             }
         });
+    }
+
+    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
+        const embed = generateSkinEmbed(skins, index);
+
+        const owner = await getSkinOwner(skins[index].id, guildId);
+        if (owner !== null) {
+            const user = this.container.client.users.cache.find(user => user.id === owner.userId);
+            if (user === null) {
+                embed.addField('Owner', `${owner.userId}`);
+            } else {
+                embed.addField('Owner', `${user}`);
+            }
+        }
+
+        return embed;
     }
 }
