@@ -196,6 +196,9 @@ export async function getSkinsByGodName(name: string) {
         where: {
             god: {
                 name: name
+            },
+            obtainability: {
+                isNot: null
             }
         },
         include: {
