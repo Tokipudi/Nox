@@ -231,7 +231,7 @@ export class Fight extends NoxCommand {
 
                                 let skinId1 = 0;
                                 for (let i = 0; i < skins1.length; i++) {
-                                    if (skins1[i].name === skinName1) {
+                                    if (skins1[i].name === skinName1 && skins1[i].god.name === godName1) {
                                         skinId1 = skins1[i].id;
                                         skin1 = skins1[i];
                                         break;
@@ -240,7 +240,7 @@ export class Fight extends NoxCommand {
 
                                 let skinId2 = 0;
                                 for (let i = 0; i < skins2.length; i++) {
-                                    if (skins2[i].name === skinName2) {
+                                    if (skins2[i].name === skinName2 && skins2[i].god.name === godName2) {
                                         skinId2 = skins2[i].id;
                                         skin2 = skins2[i];
                                         break;
