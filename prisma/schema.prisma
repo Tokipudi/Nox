@@ -97,6 +97,7 @@ model Players {
     banCount      Int?                 @default(0)
     playersSkins  PlayersSkins[]
     wishedSkins   PlayersWishedSkins[]
+    joinDate      DateTime             @default(now())
 
     @@id([userId, guildId])
 }

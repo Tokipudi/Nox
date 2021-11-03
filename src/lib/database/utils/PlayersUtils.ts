@@ -9,7 +9,11 @@ export async function getPlayers() {
 export async function getPlayer(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.findUnique({
         include: {
-            playersSkins: true,
+            playersSkins: {
+                include: {
+                    skin: true
+                }
+            },
             wishedSkins: true
         },
         where: {
