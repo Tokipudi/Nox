@@ -354,7 +354,7 @@ export class Fight extends NoxCommand {
             
             embed.addField('Wins', `\`${win}\``, true);
             embed.addField('Loss', `\`${loss}\``, true);
-            embed.addField('Success rate', `\`${ratio}%\``, true);
+            embed.addField('Win rate', `\`${ratio}%\``, true);
         }
 
         if (skin.playersSkins[0].isExhausted) {
