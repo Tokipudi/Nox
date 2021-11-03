@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { exhaustSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
+import { addLoss, addWin, exhaustSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -282,10 +282,14 @@ export class Fight extends NoxCommand {
 
                                 if (god1Health > 0) {
                                     await exhaustSkin(skinId2, guildId);
+                                    await addLoss(skinId2, guildId);
+                                    await addWin(skinId1, guildId);
                                     await message.channel.send(`${author}'s **${skinName1} ${skin1.god.name}** won the fight!`);
                                     await message.channel.send(`${player} your card **${skinName2} ${skin2.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 } else {
                                     await exhaustSkin(skinId1, guildId);
+                                    await addLoss(skinId1, guildId);
+                                    await addWin(skinId2, guildId);
                                     await message.channel.send(`${player}'s **${skinName2} ${skin2.god.name}** won the fight!`);
                                     await message.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }
@@ -341,8 +345,20 @@ export class Fight extends NoxCommand {
     protected async generateEmbed(skins, index, guildId) {
         const embed = generateSkinEmbed(skins, index);
 
-        if (skins[index].playersSkins[0].isExhausted) {
-            const duration = await getTimeLeftBeforeExhaustEnd(skins[index].id, guildId);
+        const skin = skins[index];
+
+        if (skin.playersSkins[0].win || skin.playersSkins[0].loss) {
+            const win = skin.playersSkins[0].win;
+            const loss = skin.playersSkins[0].loss;
+            const ratio = (win / (win + loss)) * 100;
+            
+            embed.addField('Wins', `\`${win}\``, true);
+            embed.addField('Loss', `\`${loss}\``, true);
+            embed.addField('Success rate', `\`${ratio}%\``, true);
+        }
+
+        if (skin.playersSkins[0].isExhausted) {
+            const duration = await getTimeLeftBeforeExhaustEnd(skin.id, guildId);
             embed.addField('Exhausted', `Available in \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\`.`);
         }
 

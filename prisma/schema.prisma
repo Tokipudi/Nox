@@ -114,6 +114,8 @@ model PlayersSkins {
     userId            String
     isExhausted       Boolean?  @default(false)
     exhaustChangeDate DateTime?
+    win               Int       @default(0)
+    loss              Int       @default(0)
 
     @@id([guildId, skinId])
 }

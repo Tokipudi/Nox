@@ -99,8 +99,20 @@ export class MyTeam extends NoxCommand {
     protected async generateEmbed(skins, index, guildId) {
         const embed = generateSkinEmbed(skins, index);
 
-        if (skins[index].playersSkins[0].isExhausted) {
-            const duration = await getTimeLeftBeforeExhaustEnd(skins[index].id, guildId);
+        const skin = skins[index];
+
+        if (skin.playersSkins[0].win || skin.playersSkins[0].loss) {
+            const win = skin.playersSkins[0].win;
+            const loss = skin.playersSkins[0].loss;
+            const ratio = (win / (win + loss)) * 100;
+            
+            embed.addField('Wins', `\`${win}\``, true);
+            embed.addField('Loss', `\`${loss}\``, true);
+            embed.addField('Success rate', `\`${ratio}%\``, true);
+        }
+
+        if (skin.playersSkins[0].isExhausted) {
+            const duration = await getTimeLeftBeforeExhaustEnd(skin.id, guildId);
             embed.addField('Exhausted', `Available in \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\`.`);
         }
 
