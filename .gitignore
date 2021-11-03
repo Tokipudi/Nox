@@ -117,3 +117,6 @@ package-lock.bak.json
 
 # Service
 nox.service
+
+# vscode
+.vscode
