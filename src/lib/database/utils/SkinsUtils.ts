@@ -130,7 +130,7 @@ export async function disconnectSkin(skinId: number, guildId: Snowflake) {
 }
 
 export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
-    return await container.prisma.skins.findMany({
+    const skins = await container.prisma.skins.findMany({
         where: {
             playersSkins: {
                 some: {
@@ -153,6 +153,7 @@ export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
             playersSkins: {
                 select: {
                     isExhausted: true,
+                    isFavorite: true,
                     win: true,
                     loss: true
                 },
@@ -168,6 +169,15 @@ export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
             }
         }
     });
+    for (let i = 0; i < skins.length; i++) {
+        const skin = skins[i];
+        if (skin.playersSkins[0].isFavorite) {
+            skins.splice(i, 1);
+            skins.unshift(skin);
+            break;
+        }
+    }
+    return skins;
 }
 
 export async function getSkinByGodName(godName: string, skinName: string) {

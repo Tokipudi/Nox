@@ -8,10 +8,41 @@ export async function getPlayers() {
 
 export async function getPlayer(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.findUnique({
+        include: {
+            playersSkins: true,
+            wishedSkins: true
+        },
         where: {
             userId_guildId: {
                 userId: userId,
                 guildId: guildId
+            }
+        }
+    });
+}
+
+export async function SetFavoriteSkin(skinId: number, userId: Snowflake, guildId: Snowflake) {
+    await container.prisma.playersSkins.updateMany({
+        data: {
+            isFavorite: false
+        },
+        where: {
+            player: {
+                userId: userId,
+                guild: {
+                    id: guildId
+                }
+            }
+        }
+    });
+    return await container.prisma.playersSkins.update({
+        data: {
+            isFavorite: true
+        },
+        where: {
+            guildId_skinId: {
+                guildId: guildId,
+                skinId: skinId
             }
         }
     });

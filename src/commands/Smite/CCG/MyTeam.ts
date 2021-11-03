@@ -1,7 +1,8 @@
+import { SetFavoriteSkin } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Message, MessageActionRow } from 'discord.js';
@@ -16,11 +17,19 @@ export class MyTeam extends NoxCommand {
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
+        const favoriteButton = getFavoriteButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
 
         const skins = await getSkinsByUser(author.id, guildId);
         if (!skins || skins.length === 0) {
             return message.reply('You currently don\'t own any card!');
+        }
+
+
+        if (skins[0].playersSkins[0].isFavorite) {
+            favoriteButton.setEmoji('💔');
+        } else {
+            favoriteButton.setEmoji('❤️');
         }
 
         let uniqueSkin = skins.length <= 1;
@@ -29,7 +38,7 @@ export class MyTeam extends NoxCommand {
             embeds: [await this.generateEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
-                    components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                    components: uniqueSkin ? [...([selectButton]), ...([favoriteButton])] : [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
                 })
             ]
         })
@@ -39,6 +48,7 @@ export class MyTeam extends NoxCommand {
         })
 
         let skinName = '';
+        let godName = '';
         let currentIndex = 0
         collector.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
@@ -60,17 +70,49 @@ export class MyTeam extends NoxCommand {
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
 
-                // Respond to interaction by updating message with new embed
+                const embed = await this.generateEmbed(skins, currentIndex, message.guildId);
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
+                        if (skins[i].playersSkins[0].isFavorite) {
+                            favoriteButton.setEmoji('💔');
+                        } else {
+                            favoriteButton.setEmoji('❤️');
+                        }
+                        break;
+                    }
+                }
+
                 await interaction.update({
-                    embeds: [await this.generateEmbed(skins, currentIndex, message.guildId)],
+                    embeds: [embed],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                            components: [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
                         })
                     ]
-                })
+                });
+            } else if (interaction.customId === favoriteButton.customId) {
+                const embed = await this.generateEmbed(skins, currentIndex, message.guildId);
+
+                for (let i = 0; i < skins.length; i++) {
+                    if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
+                        await SetFavoriteSkin(skins[i].id, author.id, guildId);
+                        skins[i].playersSkins[0].isFavorite = true;
+                        favoriteButton.setEmoji('💔');
+                    } else {
+                        skins[i].playersSkins[0].isFavorite = false;
+                    }
+                }
+                await interaction.update({
+                    embeds: [embed],
+                    components: [
+                        new MessageActionRow({
+                            components: [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                        })
+                    ]
+                });
             } else if (interaction.customId === selectButton.customId) {
                 skinName = interaction.message.embeds[0].title;
+                godName = interaction.message.embeds[0].author.name;
                 collector.stop();
             }
         });
@@ -79,7 +121,7 @@ export class MyTeam extends NoxCommand {
             if (skinName) {
                 let skinId = 0;
                 for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === skinName) {
+                    if (skins[i].name === skinName && skins[i].god.name === godName) {
                         skinId = skins[i].id;
                         break;
                     }
@@ -105,7 +147,7 @@ export class MyTeam extends NoxCommand {
             const win = skin.playersSkins[0].win;
             const loss = skin.playersSkins[0].loss;
             const ratio = (win / (win + loss)) * 100;
-            
+
             embed.addField('Wins', `\`${win}\``, true);
             embed.addField('Loss', `\`${loss}\``, true);
             embed.addField('Success rate', `\`${ratio}%\``, true);

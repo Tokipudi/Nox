@@ -116,6 +116,7 @@ model PlayersSkins {
     exhaustChangeDate DateTime?
     win               Int       @default(0)
     loss              Int       @default(0)
+    isFavorite        Boolean   @default(false)
 
     @@id([guildId, skinId])
 }

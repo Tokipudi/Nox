@@ -14,6 +14,13 @@ export function getForwardButton(
 ) {
     return getButton(customId, label, style, '➡️');
 }
+export function getFavoriteButton(
+    label: string = '',
+    customId: string = 'favorite',
+    style: MessageButtonStyle | null = 'SUCCESS'
+) {
+    return getButton(customId, label, style, '🤍');
+}
 export function getSelectButton(
     label: string | null = null,
     style: MessageButtonStyle | null = null,
