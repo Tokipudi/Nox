@@ -5,24 +5,32 @@ import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageActionRow } from 'discord.js';
+import { Args } from '@sapphire/framework';
+import { Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'List the cards you currently own.'
+    description: 'Lists the cards for the given user.',
+    detailedDescription: 'Lists the cards for the given user. Defaults to the message\'s author if none specified.',
+    usage: '<@user>',
+    examples: [
+        '',
+        '@User#1234'
+    ]
 })
-export class MyTeam extends NoxCommand {
+export class Team extends NoxCommand {
 
-    public async messageRun(message: Message) {
+    public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
+        const user: User = await args.pick('user').catch(() => author);
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const favoriteButton = getFavoriteButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
 
-        const skins = await getSkinsByUser(author.id, guildId);
+        const skins = await getSkinsByUser(user.id, guildId);
         if (!skins || skins.length === 0) {
-            return message.reply('You currently don\'t own any card!');
+            return message.reply(`${user} currently does not own any card!`);
         }
 
 
@@ -38,7 +46,13 @@ export class MyTeam extends NoxCommand {
             embeds: [await this.generateEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
-                    components: uniqueSkin ? [...([selectButton]), ...([favoriteButton])] : [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                    components: uniqueSkin
+                        ? user.id === author.id
+                            ? [...([selectButton]), ...([favoriteButton])]
+                            : []
+                        : user.id === author.id
+                            ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                            : [...([backButton]), ...([forwardButton])]
                 })
             ]
         })
@@ -86,7 +100,9 @@ export class MyTeam extends NoxCommand {
                     embeds: [embed],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                            components: user.id === author.id
+                                ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                                : [...([backButton]), ...([forwardButton])]
                         })
                     ]
                 });
@@ -106,7 +122,9 @@ export class MyTeam extends NoxCommand {
                     embeds: [embed],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                            components: user.id === author.id
+                                ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
+                                : [...([backButton]), ...([forwardButton])]
                         })
                     ]
                 });
