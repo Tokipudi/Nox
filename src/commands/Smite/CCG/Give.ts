@@ -49,6 +49,7 @@ export class Give extends NoxCommand {
         });
 
         let skinName = '';
+        let godName = '';
         let currentIndex = 0;
         collector.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
@@ -81,17 +82,18 @@ export class Give extends NoxCommand {
                 })
             } else if (interaction.customId === selectButton.customId) {
                 skinName = interaction.message.embeds[0].title;
+                godName = interaction.message.embeds[0].author.name;
                 collector.stop();
             }
         });
 
         collector.on('end', async collected => {
-            if (skinName === '') {
+            if (skinName === '' || godName === '') {
                 message.reply('You did not select a card.');
             } else {
                 let skinId = 0;
                 for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === skinName) {
+                    if (skins[i].name === skinName && skins[i].god.name === godName) {
                         skinId = skins[i].id;
                         break;
                     }
@@ -100,7 +102,7 @@ export class Give extends NoxCommand {
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({
-                    content: `The card **${skinName}** was successfully given to ${user}!`,
+                    content: `The card **${skinName} ${godName}** was successfully given to ${user}!`,
                     embeds: [],
                     components: []
                 });
