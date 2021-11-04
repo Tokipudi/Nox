@@ -155,7 +155,11 @@ export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
                     isExhausted: true,
                     isFavorite: true,
                     win: true,
-                    loss: true
+                    loss: true,
+                    winningStreak: true,
+                    highestWinningStreak: true,
+                    losingStreak: true,
+                    highestLosingStreak: true
                 },
                 where: {
                     userId: userId,
@@ -363,11 +367,18 @@ export async function getSkinOwner(skinId: number, guildId: Snowflake) {
 }
 
 export async function addWin(skinId: number, guildId: Snowflake) {
-    return await container.prisma.playersSkins.update({
+    let playersSkin = await container.prisma.playersSkins.update({
         data: {
             win: {
                 increment: 1
-            }
+            },
+            winningStreak: {
+                increment: 1
+            },
+            losingStreak: 0
+        },
+        include: {
+            player: true
         },
         where: {
             guildId_skinId: {
@@ -376,22 +387,123 @@ export async function addWin(skinId: number, guildId: Snowflake) {
             }
         }
     });
-}
 
-export async function addLoss(skinId: number, guildId: Snowflake) {
-    return await container.prisma.playersSkins.update({
+    if (playersSkin.winningStreak > playersSkin.highestWinningStreak) {
+        playersSkin = await container.prisma.playersSkins.update({
+            data: {
+                highestWinningStreak: playersSkin.winningStreak
+            },
+            include: {
+                player: true
+            },
+            where: {
+                guildId_skinId: {
+                    guildId: guildId,
+                    skinId: skinId
+                }
+            }
+        });
+    }
+
+    const player = await container.prisma.players.update({
         data: {
-            loss: {
+            winningStreak: {
                 increment: 1
             }
         },
         where: {
+            userId_guildId: {
+                guildId: guildId,
+                userId: playersSkin.player.userId
+            }
+        }
+    });
+
+    if (player.losingStreak > player.highestLosingStreak) {
+        await container.prisma.players.update({
+            data: {
+                highestWinningStreak: player.winningStreak
+            },
+            where: {
+                userId_guildId: {
+                    guildId: guildId,
+                    userId: playersSkin.player.userId
+                }
+            }
+        });
+    }
+
+    return playersSkin;
+}
+
+export async function addLoss(skinId: number, guildId: Snowflake) {
+    let playersSkin = await container.prisma.playersSkins.update({
+        data: {
+            loss: {
+                increment: 1
+            },
+            losingStreak: {
+                increment: 1
+            },
+            winningStreak: 0
+        },
+        include: {
+            player: true
+        },
+        where: {
             guildId_skinId: {
                 guildId: guildId,
                 skinId: skinId
             }
         }
     });
+
+    if (playersSkin.losingStreak > playersSkin.highestLosingStreak) {
+        playersSkin = await container.prisma.playersSkins.update({
+            data: {
+                highestLosingStreak: playersSkin.losingStreak
+            },
+            include: {
+                player: true
+            },
+            where: {
+                guildId_skinId: {
+                    guildId: guildId,
+                    skinId: skinId
+                }
+            }
+        });
+    }
+
+    const player = await container.prisma.players.update({
+        data: {
+            losingStreak: {
+                increment: 1
+            }
+        },
+        where: {
+            userId_guildId: {
+                guildId: guildId,
+                userId: playersSkin.player.userId
+            }
+        }
+    });
+
+    if (player.losingStreak > player.highestLosingStreak) {
+        await container.prisma.players.update({
+            data: {
+                highestLosingStreak: player.losingStreak
+            },
+            where: {
+                userId_guildId: {
+                    guildId: guildId,
+                    userId: playersSkin.player.userId
+                }
+            }
+        });
+    }
+
+    return playersSkin;
 }
 
 export async function exhaustSkin(skinId: number, guildId: Snowflake) {

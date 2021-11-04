@@ -87,17 +87,21 @@ model SkinsObtainability {
 }
 
 model Players {
-    userId        String
-    guild         Guilds               @relation(fields: [guildId], references: [id])
-    guildId       String
-    lastClaimDate DateTime?
-    isBanned      Boolean              @default(false)
-    banStartDate  DateTime?
-    banEndDate    DateTime?
-    banCount      Int?                 @default(0)
-    playersSkins  PlayersSkins[]
-    wishedSkins   PlayersWishedSkins[]
-    joinDate      DateTime             @default(now())
+    userId               String
+    guild                Guilds               @relation(fields: [guildId], references: [id])
+    guildId              String
+    lastClaimDate        DateTime?
+    isBanned             Boolean              @default(false)
+    banStartDate         DateTime?
+    banEndDate           DateTime?
+    banCount             Int?                 @default(0)
+    playersSkins         PlayersSkins[]
+    wishedSkins          PlayersWishedSkins[]
+    joinDate             DateTime             @default(now())
+    winningStreak        Int                  @default(0)
+    losingStreak         Int                  @default(0)
+    highestWinningStreak Int                  @default(0)
+    highestLosingStreak  Int                  @default(0)
 
     @@id([userId, guildId])
 }
@@ -108,16 +112,20 @@ model Guilds {
 }
 
 model PlayersSkins {
-    guildId           String
-    skin              Skins     @relation(fields: [skinId], references: [id])
-    skinId            Int
-    player            Players   @relation(fields: [userId, guildId], references: [userId, guildId])
-    userId            String
-    isExhausted       Boolean?  @default(false)
-    exhaustChangeDate DateTime?
-    win               Int       @default(0)
-    loss              Int       @default(0)
-    isFavorite        Boolean   @default(false)
+    guildId              String
+    skin                 Skins     @relation(fields: [skinId], references: [id])
+    skinId               Int
+    player               Players   @relation(fields: [userId, guildId], references: [userId, guildId])
+    userId               String
+    isExhausted          Boolean?  @default(false)
+    exhaustChangeDate    DateTime?
+    win                  Int       @default(0)
+    loss                 Int       @default(0)
+    winningStreak        Int       @default(0)
+    losingStreak         Int       @default(0)
+    highestWinningStreak Int       @default(0)
+    highestLosingStreak  Int       @default(0)
+    isFavorite           Boolean   @default(false)
 
     @@id([guildId, skinId])
 }

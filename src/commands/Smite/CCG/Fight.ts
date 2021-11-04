@@ -346,15 +346,28 @@ export class Fight extends NoxCommand {
         const embed = generateSkinEmbed(skins, index);
 
         const skin = skins[index];
+        const playerSkin = skin.playersSkins[0];
 
-        if (skin.playersSkins[0].win || skin.playersSkins[0].loss) {
-            const win = skin.playersSkins[0].win;
-            const loss = skin.playersSkins[0].loss;
-            const ratio = (win / (win + loss)) * 100;
-            
-            embed.addField('Wins', `\`${win}\``, true);
-            embed.addField('Loss', `\`${loss}\``, true);
-            embed.addField('Win rate', `\`${ratio}%\``, true);
+        if (playerSkin.win || playerSkin.loss) {
+            const win = playerSkin.win;
+            const loss = playerSkin.loss;
+            const ratio = Math.round((win / (win + loss)) * 100);
+
+            if (playerSkin.losingStreak > 0) {
+                embed.addField('Current Losing Streak', `\`${playerSkin.losingStreak}\``);
+            }
+            if (playerSkin.winningStreak > 0) {
+                embed.addField('Current Winning Streak', `\`${playerSkin.winningStreak}\``);
+            }
+
+            embed.addField('Wins', `\`${win}\``, true)
+                .addField('Loss', `\`${loss}\``, true)
+                .addField('Win rate', `\`${ratio}%\``, true);
+
+            if (playerSkin.highestWinningStreak || playerSkin.highestLosingStreak) {
+                embed.addField('Highest Winning Streak', `\`${playerSkin.highestWinningStreak}\``, true)
+                    .addField('Highest Losing Streak', `\`${playerSkin.highestLosingStreak}\``, true);
+            }
         }
 
         if (skin.playersSkins[0].isExhausted) {
