@@ -18,6 +18,8 @@ import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
 })
 export class Fight extends NoxCommand {
 
+    private _channelIds = [];
+
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
         const player: User = await args.rest('user');
@@ -60,6 +62,14 @@ export class Fight extends NoxCommand {
             return message.reply(`All of ${player}'s cards are currently exhausted!`);
         }
 
+        // Add channel ID to prevent multiple fights at the same time
+        const runningInIndex = this._channelIds.indexOf(message.channel.id);
+        if (runningInIndex >= 0) {
+            return message.reply(`There is already an ongoing fight in this channel. Please try again once it is over.`);
+        }
+
+        this._channelIds.push(message.channel.id);
+
         // Send the embed with the first skin
         let currentIndex = 0;
         skins1.length <= 1
@@ -80,7 +90,8 @@ export class Fight extends NoxCommand {
         // Collect button interactions (when a user clicks a button),
         // but only when the button as clicked by the original message author
         const collector1 = embedMessage1.createMessageComponentCollector({
-            filter: ({ user }) => user.id === author.id
+            filter: ({ user }) => user.id === author.id,
+            time: 45000
         })
 
         let skinName1 = '';
@@ -132,6 +143,8 @@ export class Fight extends NoxCommand {
         collector1.on('end', async collected => {
             if (skinName1 === '') {
                 message.reply('You did not select a fighter in the given time. The fight is canceled.');
+
+                this._channelIds.splice(runningInIndex, 1);
             } else {
                 const reply = await message.reply(`${player} You have been challenged to fight against **${skinName1} ${godName1} *(${rarity1})***!\nType \`${this.container.client.options.defaultPrefix}accept\` to select your fighter, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`)
 
@@ -144,7 +157,6 @@ export class Fight extends NoxCommand {
                 let isAboutToFight = false;
                 collector2.on('collect', async (m: Message) => {
                     if (m.content.startsWith(`${prefix}deny`)) {
-                        await reply.channel.send(`${player} does not want to fight you.`)
                         collector2.stop();
                     } else if (m.content.startsWith(`${prefix}accept`)) {
                         isAboutToFight = true;
@@ -154,7 +166,9 @@ export class Fight extends NoxCommand {
 
                 collector2.on('end', async collected => {
                     if (!isAboutToFight) {
-                        message.reply(`${player} did not answer in time. The fight is canceled.`);
+                        message.reply(`${player} does not want to fight you or did not answer in time.`);
+
+                        this._channelIds.splice(runningInIndex, 1);
                     } else {
                         currentIndex = 0
                         backButton.setDisabled(true);
@@ -176,7 +190,8 @@ export class Fight extends NoxCommand {
                         // Collect button interactions (when a user clicks a button),
                         // but only when the button as clicked by the original message author
                         const collector3 = await embedMessage3.createMessageComponentCollector({
-                            filter: ({ user }) => user.id === player.id
+                            filter: ({ user }) => user.id === player.id,
+                            time: 45000
                         });
                         collector3.on('collect', async interaction => {
                             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
@@ -294,6 +309,8 @@ export class Fight extends NoxCommand {
                                     await message.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }
                             }
+
+                            this._channelIds.splice(runningInIndex, 1);
                         });
                     }
                 });
