@@ -1,9 +1,15 @@
 import { container } from '@sapphire/framework';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
+import { resetAllSkinsByGuildId } from './SkinsUtils';
 
 export async function getPlayers() {
-    return await container.prisma.players.findMany();
+    return await container.prisma.players.findMany({
+        include: {
+            guild: true,
+            playersSkins: true
+        }
+    });
 }
 
 export async function getPlayer(userId: Snowflake, guildId: Snowflake) {
@@ -47,6 +53,22 @@ export async function SetFavoriteSkin(skinId: number, userId: Snowflake, guildId
             guildId_skinId: {
                 guildId: guildId,
                 skinId: skinId
+            }
+        }
+    });
+}
+
+export async function addRoll(userId: Snowflake, guildId: Snowflake) {
+    return await container.prisma.players.update({
+        data: {
+            rolls: {
+                increment: 1
+            }
+        },
+        where: {
+            userId_guildId: {
+                userId: userId,
+                guildId: guildId
             }
         }
     });
@@ -141,6 +163,68 @@ export async function getBannedPlayersByGuildId(guildId: Snowflake) {
             }
         }
     });
+}
+
+export async function archivePlayersByGuildId(guildId: Snowflake) {
+    const players = await getPlayers();
+    if (players !== null && players.length >= 0) {
+        const data = [];
+        const playerIds = [];
+        for (let i in players) {
+            const player = players[i];
+
+            playerIds.push(player.userId);
+
+            let wins = 0;
+            let losses = 0;
+            let favoriteSkinId = null;
+            for (let j in player.playersSkins) {
+                const playerSkin = player.playersSkins[j];
+                wins += playerSkin.win;
+                losses += playerSkin.loss;
+                if (playerSkin.isFavorite) {
+                    favoriteSkinId = playerSkin.skinId;
+                }
+            }
+
+            data.push({
+                userId: player.userId,
+                guildId: player.guild.id,
+                season: player.guild.season,
+                claimedCards: player.playersSkins.length,
+                highestLosingStreak: player.highestLosingStreak,
+                highestWinningStreak: player.highestWinningStreak,
+                rolls: player.rolls,
+                loss: losses,
+                win: wins,
+                favoriteSkinId: favoriteSkinId
+            });
+        }
+
+        await container.prisma.playersSeasonsArchive.createMany({ data: data });
+
+        await resetAllSkinsByGuildId(guildId);
+
+        await container.prisma.players.updateMany({
+            data: {
+                highestLosingStreak: 0,
+                highestWinningStreak: 0,
+                losingStreak: 0,
+                winningStreak: 0,
+                rolls: 0,
+                lastClaimDate: null
+            },
+            where: {
+                userId: {
+                    in: playerIds
+                },
+                guild: {
+                    id: guildId
+                }
+            }
+        });
+
+    }
 }
 
 export async function deleteAllPlayersByGuildId(guildId: Snowflake) {

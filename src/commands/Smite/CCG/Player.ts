@@ -42,10 +42,11 @@ export class Player extends NoxCommand {
             .setAuthor(`${user.username}#${user.discriminator}`, user.avatarURL())
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .setTimestamp(player.joinDate)
-            .setImage(favoriteSkin.godSkinUrl);
+            .setTimestamp(player.joinDate);
 
-
+        if (favoriteSkin !== null) {
+            embed.setImage(favoriteSkin.godSkinUrl);
+        }
         if (player.losingStreak > 0) {
             embed.addField('Current Losing Streak', `\`${player.losingStreak}\``);
         }
@@ -53,12 +54,17 @@ export class Player extends NoxCommand {
             embed.addField('Current Winning Streak', `\`${player.losingStreak}\``);
         }
 
-        embed.addField('Highest Winning Streak', `\`${player.highestWinningStreak}\``, true)
+
+        embed.addField('Claimed Cards', `\`${player.playersSkins.length}\``)
+            .addField('Rolls', `\`${player.rolls}\``)
+            .addField('Highest Winning Streak', `\`${player.highestWinningStreak}\``, true)
             .addField('Highest Losing Streak', `\`${player.highestLosingStreak}\``, true)
-            .addField('Claimed Cards', `\`${player.playersSkins.length}\``)
             .addField('Wins', `\`${wins}\``, true)
-            .addField('Losses', `\`${losses}\``, true)
-            .addField('Win rate', `\`${(wins / (wins + losses)) * 100}%\``, true)
+            .addField('Losses', `\`${losses}\``, true);
+
+        if (wins > 0 || losses > 0) {
+            embed.addField('Win rate', `\`${(wins / (wins + losses)) * 100}%\``, true);
+        }
 
         return message.reply({ embeds: [embed] });
     }

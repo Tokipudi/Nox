@@ -65,50 +65,91 @@ model Pantheons {
 }
 
 model Skins {
-    id              Int                  @id
-    god             Gods                 @relation(fields: [godId], references: [id])
-    godId           Int
-    name            String
-    godIconUrl      String
-    godSkinUrl      String
-    obtainability   SkinsObtainability?  @relation(fields: [obtainabilityId], references: [id])
-    obtainabilityId Int?
-    priceFavor      Int                  @default(0)
-    priceGems       Int                  @default(0)
-    releaseDate     DateTime?
-    playersSkins    PlayersSkins[]
-    playersWishes   PlayersWishedSkins[]
+    id                    Int                     @id
+    god                   Gods                    @relation(fields: [godId], references: [id])
+    godId                 Int
+    name                  String
+    godIconUrl            String
+    godSkinUrl            String
+    obtainability         SkinsObtainability?     @relation(fields: [obtainabilityId], references: [id])
+    obtainabilityId       Int?
+    priceFavor            Int                     @default(0)
+    priceGems             Int                     @default(0)
+    releaseDate           DateTime?
+    playersSkins          PlayersSkins[]
+    playersWishes         PlayersWishedSkins[]
+    playersSeasonsArchive PlayersSeasonsArchive[]
 }
 
 model SkinsObtainability {
     id    Int     @id @default(autoincrement())
     name  String  @unique
-    Skins Skins[]
+    skins Skins[]
 }
 
 model Players {
-    userId               String
-    guild                Guilds               @relation(fields: [guildId], references: [id])
-    guildId              String
-    lastClaimDate        DateTime?
-    isBanned             Boolean              @default(false)
-    banStartDate         DateTime?
-    banEndDate           DateTime?
-    banCount             Int?                 @default(0)
-    playersSkins         PlayersSkins[]
-    wishedSkins          PlayersWishedSkins[]
-    joinDate             DateTime             @default(now())
-    winningStreak        Int                  @default(0)
-    losingStreak         Int                  @default(0)
-    highestWinningStreak Int                  @default(0)
-    highestLosingStreak  Int                  @default(0)
+    userId                String
+    guild                 Guilds                  @relation(fields: [guildId], references: [id])
+    guildId               String
+    lastClaimDate         DateTime?
+    isBanned              Boolean                 @default(false)
+    banStartDate          DateTime?
+    banEndDate            DateTime?
+    banCount              Int?                    @default(0)
+    playersSkins          PlayersSkins[]
+    wishedSkins           PlayersWishedSkins[]
+    joinDate              DateTime                @default(now())
+    winningStreak         Int                     @default(0)
+    losingStreak          Int                     @default(0)
+    highestWinningStreak  Int                     @default(0)
+    highestLosingStreak   Int                     @default(0)
+    rolls                 Int                     @default(0)
+    playersSeasonsArchive PlayersSeasonsArchive[]
 
     @@id([userId, guildId])
 }
 
 model Guilds {
     id      String    @id
+    season  Int       @default(0)
     players Players[]
+}
+
+model PlayersSeasonsArchive {
+    player                    Players                     @relation(fields: [userId, guildId], references: [userId, guildId])
+    userId                    String
+    guildId                   String
+    season                    Int
+    claimedCards              Int                         @default(0)
+    win                       Int                         @default(0)
+    loss                      Int                         @default(0)
+    highestWinningStreak      Int                         @default(0)
+    highestLosingStreak       Int                         @default(0)
+    favoriteSkin              Skins?                      @relation(fields: [favoriteSkinId], references: [id])
+    favoriteSkinId            Int?
+    rolls                     Int                         @default(0)
+    playerSeasonsAchievements PlayerSeasonsAchievements[]
+
+    @@id([userId, guildId, season])
+}
+
+model Achievements {
+    id                        Int                         @id @default(autoincrement())
+    name                      String
+    description               String
+    tokens                    Int                         @default(0)
+    playerSeasonsAchievements PlayerSeasonsAchievements[]
+}
+
+model PlayerSeasonsAchievements {
+    playersSeasonsArchive PlayersSeasonsArchive @relation(references: [userId, guildId, season], fields: [userId, guildId, season])
+    userId                String
+    guildId               String
+    season                Int
+    achievements          Achievements          @relation(references: [id], fields: [achievementId])
+    achievementId         Int
+
+    @@id([userId, guildId, season, achievementId])
 }
 
 model PlayersSkins {

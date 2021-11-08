@@ -1,4 +1,4 @@
-import { canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
+import { addRoll, canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
 import { connectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -14,7 +14,7 @@ import { Message, MessageEmbed } from 'discord.js';
 export class Roll extends NoxCommand {
 
     public async messageRun(message: Message) {
-        const { guildId } = message
+        const { author, guildId } = message
 
         const msg = await message.reply('Fetching data...');
 
@@ -56,6 +56,7 @@ export class Roll extends NoxCommand {
                 break;
         }
 
+        await addRoll(author.id, guildId);
         await msg.edit('React with any emoji to claim.');
         await msg.edit({ embeds: [embed] });
 
