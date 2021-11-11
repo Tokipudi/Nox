@@ -75,6 +75,38 @@ export class Roll extends NoxCommand {
                 collector.stop();
 
                 await connectSkin(skin.id, user.id, guildId);
+                if (user.id !== author.id) {
+                    await this.container.prisma.players.update({
+                        data: {
+                            cardsStolen: {
+                                increment: 1
+                            },
+                            claimedCards: {
+                                increment : 1
+                            }
+                        },
+                        where: {
+                            userId_guildId: {
+                                userId: user.id,
+                                guildId: guildId
+                            }
+                        }
+                    });
+                } else {
+                    await this.container.prisma.players.update({
+                        data: {
+                            claimedCards: {
+                                increment : 1
+                            }
+                        },
+                        where: {
+                            userId_guildId: {
+                                userId: user.id,
+                                guildId: guildId
+                            }
+                        }
+                    });
+                }
 
                 msg.reply(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
                 this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`);
@@ -96,7 +128,6 @@ export class Roll extends NoxCommand {
                     await user.send('A card from your wishlist is available for grab! ' + msg.url);
                 } catch (e) {
                     this.container.logger.error(e);
-                    await message.reply('An error occured when trying to warn you that a skin from your wishlist was available for grab. Make sure you allow direct messages from server members.\nIf the error persists, please contact an administrator.');
                 }
             }
         }

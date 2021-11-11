@@ -3,12 +3,16 @@
     "version": "0.0.1",
     "description": "A simple Sapphire-based bot",
     "main": "build/src/index.js",
+    "prisma": {
+        "seed": "ts-node prisma/seed.ts"
+    },
     "scripts": {
         "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
         "start-dev": "node build/src/index.js",
         "prisma-migrate-prod": "npx prisma migrate deploy",
         "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
         "start": "systemctl start nox",
+        "seed": "npx prisma db seed",
         "stop": "systemctl stop nox",
         "logs": "journalctl -u nox -f | sed 's/.*]: //'"
     },
@@ -31,12 +35,13 @@
         "@sapphire/framework": "^2.1.3",
         "@sapphire/plugin-logger": "1.0.13",
         "@sapphire/utilities": "^2.0.1",
+        "@types/require-dir": "^1.0.2",
         "cheerio": "1.0.0-rc.10",
         "discord.js": "13.1.0",
         "got": "11.8.2",
         "md5": "2.3.0",
         "moment": "2.29.1",
-        "prisma": "3.0.2",
+        "require-dir": "^1.2.0",
         "sprintf-js": "1.1.2"
     },
     "devDependencies": {
@@ -51,6 +56,8 @@
         "dotenv": "10.0.0",
         "eslint": "7.32.0",
         "esprima": "4.0.1",
+        "prisma": "^3.4.2",
+        "tsconfig-paths": "^3.11.0",
         "ttypescript": "1.5.12",
         "typescript": "4.4.2"
     }

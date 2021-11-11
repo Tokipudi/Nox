@@ -99,11 +99,18 @@ model Players {
     playersSkins          PlayersSkins[]
     wishedSkins           PlayersWishedSkins[]
     joinDate              DateTime                @default(now())
+    win                   Int                     @default(0)
+    loss                  Int                     @default(0)
     winningStreak         Int                     @default(0)
     losingStreak          Int                     @default(0)
     highestWinningStreak  Int                     @default(0)
     highestLosingStreak   Int                     @default(0)
     rolls                 Int                     @default(0)
+    claimedCards          Int                     @default(0)
+    cardsGiven            Int                     @default(0)
+    cardsExchanged        Int                     @default(0)
+    cardsStolen           Int                     @default(0)
+    cardsReceived         Int                     @default(0)
     playersSeasonsArchive PlayersSeasonsArchive[]
 
     @@id([userId, guildId])
@@ -128,6 +135,10 @@ model PlayersSeasonsArchive {
     favoriteSkin              Skins?                      @relation(fields: [favoriteSkinId], references: [id])
     favoriteSkinId            Int?
     rolls                     Int                         @default(0)
+    cardsGiven                Int                         @default(0)
+    cardsExchanged            Int                         @default(0)
+    cardsStolen               Int                         @default(0)
+    cardsReceived             Int                         @default(0)
     playerSeasonsAchievements PlayerSeasonsAchievements[]
 
     @@id([userId, guildId, season])
@@ -135,7 +146,7 @@ model PlayersSeasonsArchive {
 
 model Achievements {
     id                        Int                         @id @default(autoincrement())
-    name                      String
+    name                      String                      @unique
     description               String
     tokens                    Int                         @default(0)
     playerSeasonsAchievements PlayerSeasonsAchievements[]

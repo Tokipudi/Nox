@@ -26,15 +26,12 @@ export class Player extends NoxCommand {
             return await message.reply(`${user} is not registered as a player yet!`);
         }
 
-        let wins = 0;
-        let losses = 0;
         let favoriteSkin = null;
         for (const i in player.playersSkins) {
             const playerSkin = player.playersSkins[i];
-            wins += playerSkin.win;
-            losses += playerSkin.loss;
             if (playerSkin.isFavorite) {
                 favoriteSkin = playerSkin.skin;
+                break;
             }
         }
 
@@ -47,23 +44,26 @@ export class Player extends NoxCommand {
         if (favoriteSkin !== null) {
             embed.setImage(favoriteSkin.godSkinUrl);
         }
+
+        embed.addField('Rolls', `\`${player.rolls}\``, true)
+            .addField('Claimed Cards', `\`${player.claimedCards}\``, true)
+            .addField('Cards Stolen', `\`${player.cardsStolen}\``, true)
+            .addField('Cards Given', `\`${player.cardsGiven}\``, true)
+            .addField('Cards Received', `\`${player.cardsReceived}\``, true)
+            .addField('Cards Exchanged', `\`${player.cardsExchanged}\``, true)
+            .addField('Wins', `\`${player.win}\``, true)
+            .addField('Losses', `\`${player.loss}\``, true)
+            .addField('Highest Winning Streak', `\`${player.highestWinningStreak}\``, true)
+            .addField('Highest Losing Streak', `\`${player.highestLosingStreak}\``, true);
+
+        if (player.win > 0 || player.loss > 0) {
+            embed.addField('Win rate', `\`${(player.win / (player.win + player.loss)) * 100}%\``, true);
+        }
         if (player.losingStreak > 0) {
             embed.addField('Current Losing Streak', `\`${player.losingStreak}\``);
         }
         if (player.winningStreak > 0) {
             embed.addField('Current Winning Streak', `\`${player.losingStreak}\``);
-        }
-
-
-        embed.addField('Claimed Cards', `\`${player.playersSkins.length}\``)
-            .addField('Rolls', `\`${player.rolls}\``)
-            .addField('Highest Winning Streak', `\`${player.highestWinningStreak}\``, true)
-            .addField('Highest Losing Streak', `\`${player.highestLosingStreak}\``, true)
-            .addField('Wins', `\`${wins}\``, true)
-            .addField('Losses', `\`${losses}\``, true);
-
-        if (wins > 0 || losses > 0) {
-            embed.addField('Win rate', `\`${(wins / (wins + losses)) * 100}%\``, true);
         }
 
         return message.reply({ embeds: [embed] });
