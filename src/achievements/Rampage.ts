@@ -1,18 +1,14 @@
+import { Achievement } from "@lib/achievements/Achievement";
+import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
-import { Achievement } from "../Achievement";
-import { AchievementOptions } from "../interfaces/AchievementInterface";
 
-export class RampageAchievement extends Achievement {
-
-    public constructor(options?: AchievementOptions) {
-        super({
-            ...options,
-            achievementName: 'Rampage',
-            description: 'At least 5 different gods in the deck.',
-            tokens: 2
-        });
-    }
+@ApplyOptions<AchievementOptions>({
+    description: 'At least 5 different gods in the deck.',
+    tokens: 2
+})
+export class Rampage extends Achievement {
 
     async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
         const players: any = await container.prisma.$queryRaw`select * from godsamountbyplayers g where "guildId" = ${guildId} and count >= ${10} order by count desc;`;

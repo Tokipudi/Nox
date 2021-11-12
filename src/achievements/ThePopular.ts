@@ -1,18 +1,14 @@
+import { Achievement } from "@lib/achievements/Achievement";
+import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
-import { Achievement } from "../Achievement";
-import { AchievementOptions } from "../interfaces/AchievementInterface";
 
-export class ThePopularAchievement extends Achievement {
-
-    public constructor(options?: AchievementOptions) {
-        super({
-            ...options,
-            achievementName: 'The Popular',
-            description: 'Most cards received.',
-            tokens: 5
-        });
-    }
+@ApplyOptions<AchievementOptions>({
+    description: 'Most cards received.',
+    tokens: 5
+})
+export class ThePopular extends Achievement {
 
     async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
 

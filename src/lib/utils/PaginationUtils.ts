@@ -1,5 +1,12 @@
 import { EmojiIdentifierResolvable, MessageButton, MessageButtonStyle } from 'discord.js';
 
+export function getStartButton(
+    label: string = '',
+    customId: string = 'start',
+    style: MessageButtonStyle | null = 'SECONDARY'
+) {
+    return getButton(customId, label, style, '⏪', true);
+}
 export function getBackButton(
     label: string = '',
     customId: string = 'back',
@@ -13,6 +20,13 @@ export function getForwardButton(
     style: MessageButtonStyle | null = 'SECONDARY'
 ) {
     return getButton(customId, label, style, '➡️');
+}
+export function getEndButton(
+    label: string = '',
+    customId: string = 'end',
+    style: MessageButtonStyle | null = 'SECONDARY'
+) {
+    return getButton(customId, label, style, '⏩');
 }
 export function getFavoriteButton(
     label: string = '',

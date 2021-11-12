@@ -1,25 +1,21 @@
+import { Achievement } from "@lib/achievements/Achievement";
+import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
-import { Achievement } from "../Achievement";
-import { AchievementOptions } from "../interfaces/AchievementInterface";
 
-export class TheFighterAchievement extends Achievement {
-
-    public constructor(options?: AchievementOptions) {
-        super({
-            ...options,
-            achievementName: 'The Fighter',
-            description: 'Most fights won.',
-            tokens: 5
-        });
-    }
+@ApplyOptions<AchievementOptions>({
+    description: 'Most cards stolen.',
+    tokens: 5
+})
+export class TheThief extends Achievement {
 
     async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
 
         const players = await container.prisma.players.findMany({
             select: {
                 userId: true,
-                win: true
+                cardsStolen: true
             },
             where: {
                 guild: {
@@ -27,7 +23,7 @@ export class TheFighterAchievement extends Achievement {
                 }
             },
             orderBy: {
-                win: 'desc'
+                cardsStolen: 'desc'
             }
         });
 
@@ -36,11 +32,11 @@ export class TheFighterAchievement extends Achievement {
         for (let i in players) {
             const player = players[i];
 
-            if (max === 0 && player.win > 0) {
-                max = player.win;
+            if (max === 0 && player.cardsStolen > 0) {
+                max = player.cardsStolen;
             }
 
-            if (max !== 0 && player.win === max) {
+            if (max !== 0 && player.cardsStolen === max) {
                 userIds.push(player.userId);
             } else {
                 break;

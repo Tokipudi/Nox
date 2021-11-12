@@ -1,4 +1,5 @@
 import { Snowflake } from "discord-api-types";
+import { PieceOptions } from '@sapphire/pieces';
 
 export interface AchievementInterface {
 
@@ -17,8 +18,7 @@ export interface AchievementInterface {
     deliverAchievement(guildId: Snowflake): Promise<void>;
 }
 
-export interface AchievementOptions {
-    achievementName?: string,
+export interface AchievementOptions extends PieceOptions {
     description?: string,
     tokens?: number
 }

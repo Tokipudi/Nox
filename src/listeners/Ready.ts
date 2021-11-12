@@ -1,3 +1,4 @@
+import { Achievement } from '@lib/achievements/Achievement';
 import { getGuilds } from '@lib/database/utils/GuildsUtils';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
 import { getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
@@ -23,10 +24,19 @@ export class Ready extends Listener {
         console.log('_______\\/\\\\\\__\\//\\\\\\\\\\\\_\\//\\\\\\__/\\\\\\_____/\\\\\\/\\\\\\___________');
         console.log('________\\/\\\\\\___\\//\\\\\\\\\\__\\///\\\\\\\\\\/____/\\\\\\/\\///\\\\\\_________');
         console.log('_________\\///_____\\/////_____\\/////_____\\///____\\///__________');
+        this.container.logger.info('|_ Loaded ' + this.container.stores.get('achievements').size + ' achievements.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('arguments').size + ' arguments.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('commands').size + ' commands.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('listeners').size + ' listeners.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('preconditions').size + ' preconditions.');
+
+        // Prisma seeds
+        this.container.logger.info('Starting seeding of achievements...');
+        this.seedAchievements().finally(() => {
+            this.container.logger.info('Achievements successfully imported into the database.');
+        }).catch(e => {
+            this.container.logger.error(e);
+        });
 
         const guilds = await getGuilds();
         for (let i in guilds) {
@@ -79,5 +89,32 @@ export class Ready extends Listener {
                 await importFandomMissingData();
             }, 21600000);
         }
+    }
+
+    async seedAchievements() {
+        const achievements = this.container.stores.get('achievements');
+        await Promise.all(
+            achievements.map(async (cmd) => {
+                const achievement = cmd as Achievement;
+
+                this.container.prisma.achievements.upsert({
+                    create: {
+                        name: achievement.label,
+                        description: achievement.description,
+                        tokens: achievement.tokens
+                    },
+                    update: {
+                        name: achievement.label,
+                        description: achievement.description,
+                        tokens: achievement.tokens
+                    },
+                    where: {
+                        name: achievement.label
+                    }
+                }).catch((error) => {
+                    console.error(error);
+                });
+            })
+        )
     }
 };

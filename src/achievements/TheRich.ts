@@ -1,18 +1,14 @@
+import { Achievement } from "@lib/achievements/Achievement";
+import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
-import { Achievement } from "../Achievement";
-import { AchievementOptions } from "../interfaces/AchievementInterface";
 
-export class ThePoorAchievement extends Achievement {
-
-    public constructor(options?: AchievementOptions) {
-        super({
-            ...options,
-            achievementName: 'The Poor',
-            description: 'Most standard cards.',
-            tokens: 5
-        });
-    }
+@ApplyOptions<AchievementOptions>({
+    description: 'Most unlimited cards.',
+    tokens: 5
+})
+export class TheRich extends Achievement {
 
     async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
         const players = await container.prisma.players.findMany({
@@ -21,7 +17,7 @@ export class ThePoorAchievement extends Achievement {
                     where: {
                         skin: {
                             obtainability: {
-                                name: 'Standard'
+                                name: 'Unlimited'
                             }
                         }
                     }

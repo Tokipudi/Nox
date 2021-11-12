@@ -1,15 +1,17 @@
 import { container } from '@sapphire/framework';
+import { Piece, PieceContext } from '@sapphire/pieces';
 import { Snowflake } from 'discord-api-types';
 import { AchievementInterface, AchievementOptions } from './interfaces/AchievementInterface';
 
-export abstract class Achievement implements AchievementInterface {
+export abstract class Achievement extends Piece implements AchievementInterface {
 
-    public achievementName: string;
-    public description: string;
-    public tokens: number;
+    public label: string;
+    public description?: string;
+    public tokens?: number;
 
-    constructor(options?: AchievementOptions) {
-        this.achievementName = options.achievementName;
+    constructor(context: PieceContext, options?: AchievementOptions) {
+        super(context, options);
+        this.label = options.name.replace(/([A-Z])/g, " $1").trim();
         this.description = options.description;
         this.tokens = options.tokens;
     }
@@ -30,11 +32,11 @@ export abstract class Achievement implements AchievementInterface {
     async addAchievementRoleByUserIds(userIds: Snowflake[], guildId: Snowflake): Promise<void> {
         try {
             const guild = await container.client.guilds.fetch(guildId);
-            let role = (await guild.roles.fetch()).find(role => role.name === this.achievementName);
+            let role = (await guild.roles.fetch()).find(role => role.name === this.label);
 
             if (role == null) {
-                role = await guild.roles.create({ name: this.achievementName, color: 'DARK_PURPLE', reason: 'Role created automatically as a reward for Smite\s CCG.' });
-                container.logger.info(`Role ${this.achievementName} created.`);
+                role = await guild.roles.create({ name: this.label, color: 'DARK_PURPLE', reason: 'Role created automatically as a reward for Smite\s CCG.' });
+                container.logger.info(`Role ${this.label} created.`);
             }
 
             for (let i in userIds) {
@@ -43,7 +45,7 @@ export abstract class Achievement implements AchievementInterface {
                 const user = await guild.members.fetch(userId);
                 await user.roles.add(role);
 
-                container.logger.info(`User <${userId}> was added the role ${this.achievementName}.`);
+                container.logger.info(`User <${userId}> was added the role ${this.label}.`);
             }
         } catch (e) {
             container.logger.error(e);

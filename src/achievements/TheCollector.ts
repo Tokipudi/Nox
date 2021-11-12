@@ -1,18 +1,14 @@
+import { Achievement } from "@lib/achievements/Achievement";
+import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
-import { Achievement } from "../Achievement";
-import { AchievementOptions } from "../interfaces/AchievementInterface";
 
-export class TheHermitAchievement extends Achievement {
-
-    public constructor(options?: AchievementOptions) {
-        super({
-            ...options,
-            achievementName: 'The Hermit',
-            description: 'Smallest card collection.',
-            tokens: 5
-        });
-    }
+@ApplyOptions<AchievementOptions>({
+    description: 'Biggest card collections this season.',
+    tokens: 5
+})
+export class TheCollector extends Achievement {
 
     async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
         const players = await container.prisma.playersSkins.groupBy({
@@ -22,7 +18,7 @@ export class TheHermitAchievement extends Achievement {
             },
             orderBy: {
                 _count: {
-                    skinId: 'asc'
+                    skinId: 'desc'
                 }
             },
             where: {
