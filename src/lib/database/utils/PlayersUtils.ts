@@ -1,7 +1,6 @@
 import { container } from '@sapphire/framework';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
-import { resetAllSkinsByGuildId } from './SkinsUtils';
 
 export async function getPlayers() {
     return await container.prisma.players.findMany({
@@ -175,12 +174,85 @@ export async function deleteAllPlayersByGuildId(guildId: Snowflake) {
     });
 }
 
+export async function substractAvailableRolls(userId: Snowflake, guildId: Snowflake, rollsToSubstract: number = 1) {
+    let player = await container.prisma.players.update({
+        data: {
+            rollsAvailable: {
+                decrement: rollsToSubstract
+            }
+        },
+        where: {
+            userId_guildId: {
+                userId: userId,
+                guildId: guildId
+            }
+        }
+    });
+
+    if (player.lastRollChangeDate == null || moment.utc().isAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
+        player = await container.prisma.players.update({
+            data: {
+                lastRollChangeDate: moment.utc().toDate()
+            },
+            where: {
+                userId_guildId: {
+                    userId: userId,
+                    guildId: guildId
+                }
+            }
+        });
+    }
+
+    return player;
+}
+
+export async function addAvailableRolls(userId: Snowflake, guildId: Snowflake, rollsToAdd: number = 1) {
+    let player = await container.prisma.players.update({
+        data: {
+            rollsAvailable: {
+                increment: rollsToAdd
+            }
+        },
+        where: {
+            userId_guildId: {
+                userId: userId,
+                guildId: guildId
+            }
+        }
+    });
+
+    if (player.lastRollChangeDate == null || moment.utc().isAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
+        player = await container.prisma.players.update({
+            data: {
+                lastRollChangeDate: moment.utc().toDate()
+            },
+            where: {
+                userId_guildId: {
+                    userId: userId,
+                    guildId: guildId
+                }
+            }
+        });
+    }
+
+    return player;
+}
+
 export async function canPlayerClaimRoll(userId: Snowflake, guildId: Snowflake) {
     const player = await getPlayer(userId, guildId);
     if (player) {
         return (!player || !player.lastClaimDate || moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour'))) && !player.isBanned;
     }
     return true;
+}
+
+export async function getTimeLeftBeforeRoll(userId: Snowflake, guildId: Snowflake) {
+    const player = await getPlayer(userId, guildId);
+
+    const now = moment().unix();
+    const rollDate = moment(player.lastRollChangeDate).add(1, 'hour').unix();
+    const timeLeft = rollDate - now;
+    return moment.duration(timeLeft * 1000, 'milliseconds');
 }
 
 export async function getTimeLeftBeforeClaim(userId: Snowflake, guildId: Snowflake) {

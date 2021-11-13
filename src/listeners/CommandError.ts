@@ -12,8 +12,9 @@ export class CommandError extends Listener<typeof Events.CommandDenied> {
             switch (error.identifier) {
                 case 'preconditionCooldown':
                     const context = error.context as CommandContextWithCooldown;
-                    await payload.message.reply(`You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`)
-                    break;
+                    return await payload.message.reply(`You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`);
+                case 'CanPlayerRoll':
+                    return payload.message.reply(error.message);
                 default:
                 // Do nothing
             }
@@ -24,6 +25,6 @@ export class CommandError extends Listener<typeof Events.CommandDenied> {
         const date = new Date(0);
         date.setMilliseconds(milliseconds);
         const isoString = date.toISOString();
-        return `${isoString.substr(14, 2)} minutes and ${isoString.substr(17, 2)} seconds`;
+        return `${isoString.substr(17, 2)} seconds`;
     }
 };

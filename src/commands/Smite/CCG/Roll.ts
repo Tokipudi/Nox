@@ -1,4 +1,4 @@
-import { addRoll, canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
+import { addRoll, canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim, substractAvailableRolls } from '@lib/database/utils/PlayersUtils';
 import { connectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -7,9 +7,10 @@ import { Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Roll a card and react with an emoji to claim it.',
-    cooldownLimit: 3,
-    cooldownDelay: 3600000,
-    cooldownScope: 3
+    cooldownLimit: 1,
+    cooldownDelay: 5000,
+    cooldownScope: 0,
+    preconditions: ['CanPlayerRoll']
 })
 export class Roll extends NoxCommand {
 
@@ -28,8 +29,11 @@ export class Roll extends NoxCommand {
         );
 
         if (skins.length <= 0) {
-            return await msg.edit('No skin found in the database. Please contact an administrator.');
+            return await msg.edit('No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.');
         }
+
+        await substractAvailableRolls(author.id, guildId);
+
         let skin = skins[0];
 
         let embed = new MessageEmbed()
@@ -82,7 +86,7 @@ export class Roll extends NoxCommand {
                                 increment: 1
                             },
                             claimedCards: {
-                                increment : 1
+                                increment: 1
                             }
                         },
                         where: {
@@ -96,7 +100,7 @@ export class Roll extends NoxCommand {
                     await this.container.prisma.players.update({
                         data: {
                             claimedCards: {
-                                increment : 1
+                                increment: 1
                             }
                         },
                         where: {

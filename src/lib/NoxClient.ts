@@ -21,3 +21,9 @@ declare module '@sapphire/pieces' {
         achievements: AchievementStore
     }
 }
+
+declare module '@sapphire/framework' {
+    interface Preconditions {
+        CanPlayerRoll: never
+    }
+}

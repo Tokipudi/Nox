@@ -1,7 +1,7 @@
 import { Achievement } from '@lib/achievements/Achievement';
 import { getGuilds } from '@lib/database/utils/GuildsUtils';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
-import { getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { addAvailableRolls, getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
@@ -42,6 +42,29 @@ export class Ready extends Listener {
         for (let i in guilds) {
             const guild = guilds[i];
 
+            // Update player rolls every minute
+            setInterval(async () => {
+                const players = await this.container.prisma.players.findMany({
+                    where: {
+                        rollsAvailable: {
+                            lt: 3
+                        },
+                        guildId: guild.id
+                    },
+                    select: {
+                        userId: true,
+                        lastRollChangeDate: true
+                    }
+                })
+
+                for (let player of players) {
+                    if (moment.utc().isSameOrAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
+                        await addAvailableRolls(player.userId, guild.id);
+                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added a roll.`);
+                    }
+                }
+            }, 60000);
+
             // Update exhaust every minute
             setInterval(async () => {
                 const playersSkins = await this.container.prisma.playersSkins.findMany({
@@ -81,14 +104,14 @@ export class Ready extends Listener {
                     }
                 }
             }, 60000);
-
-            // Import DB every 6 hours
-            setInterval(async () => {
-                await importGods();
-                await importSkins();
-                await importFandomMissingData();
-            }, 21600000);
         }
+
+        // Import DB every 6 hours
+        setInterval(async () => {
+            await importGods();
+            await importSkins();
+            await importFandomMissingData();
+        }, 21600000);
     }
 
     async seedAchievements() {

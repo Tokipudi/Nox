@@ -91,6 +91,8 @@ model Players {
     userId                String
     guild                 Guilds                  @relation(fields: [guildId], references: [id])
     guildId               String
+    rollsAvailable        Int                     @default(3)
+    lastRollChangeDate    DateTime?
     lastClaimDate         DateTime?
     isBanned              Boolean                 @default(false)
     banStartDate          DateTime?
