@@ -4,17 +4,15 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { Snowflake } from 'discord-api-types';
 
 @ApplyOptions<RewardOptions>({
-    description: 'Get an additional claim (can go over the limit).',
+    description: 'Better damage output on your next fight.',
     tokens: 8
 })
-export class AddClaim extends Reward {
+export class BetterFighter extends Reward {
 
     async giveReward(userId: Snowflake, guildId: Snowflake): Promise<void> {
         await this.container.prisma.players.update({
             data: {
-                claimsAvailable: {
-                    increment: 1
-                }
+                isBoosted: true
             },
             where: {
                 userId_guildId: {

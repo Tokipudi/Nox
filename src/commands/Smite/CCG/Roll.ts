@@ -11,7 +11,7 @@ import moment from 'moment';
     cooldownLimit: 1,
     cooldownDelay: 5000,
     cooldownScope: 0,
-    preconditions: ['CanPlayerRoll']
+    preconditions: ['PlayerExists', 'CanPlayerRoll']
 })
 export class Roll extends NoxCommand {
 
@@ -85,7 +85,7 @@ export class Roll extends NoxCommand {
                         claimsAvailable: {
                             decrement: 1
                         },
-                        lastClaimDate: moment.utc().toDate()
+                        lastClaimChangeDate: moment.utc().toDate()
                     },
                     where: {
                         userId_guildId: {

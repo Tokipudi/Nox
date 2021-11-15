@@ -21,10 +21,28 @@ export abstract class Achievement extends Piece implements AchievementInterface 
     async deliverAchievement(guildId: Snowflake): Promise<void> {
         const userIds = await this.getCurrentUserIds(guildId);
         await this.addAchievementRoleByUserIds(userIds, guildId);
+
+        if (this.tokens != null && this.tokens > 0) {
+            await this.container.prisma.players.updateMany({
+                data: {
+                    tokens: {
+                        increment: this.tokens
+                    }
+                },
+                where: {
+                    userId: {
+                        in: userIds
+                    },
+                    guild: {
+                        id: guildId
+                    }
+                }
+            });
+        }
     };
 
     /**
-     * Adds a the achievement role to the users
+     * Adds the achievement role to the users
      * 
      * @param userIds the users to give the achievement to
      * @param guildId the guild the users belong to

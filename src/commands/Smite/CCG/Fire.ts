@@ -13,7 +13,8 @@ import { Message } from 'discord.js';
         'Snuggly Artemis',
         '"Nuclear Winter" Ymir',
         '"Playful Bunny" "Nu Wa"'
-    ]
+    ],
+    preconditions: ['PlayerExists']
 })
 export class Fire extends NoxCommand {
 

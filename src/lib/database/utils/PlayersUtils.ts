@@ -2,11 +2,16 @@ import { container } from '@sapphire/framework';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
 
-export async function getPlayers() {
+export async function getPlayers(guildId: Snowflake) {
     return await container.prisma.players.findMany({
         include: {
             guild: true,
             playersSkins: true
+        },
+        where: {
+            guild: {
+                id: guildId
+            }
         }
     });
 }
@@ -73,11 +78,12 @@ export async function addRoll(userId: Snowflake, guildId: Snowflake) {
     });
 }
 
-export async function resetLastClaimDate(userId: Snowflake, guildId: Snowflake) {
-    return await container.prisma.players.update({
+export async function substractAvailableClaims(userId: Snowflake, guildId: Snowflake, claimsToSubstract: number = 1) {
+    let player = await container.prisma.players.update({
         data: {
-            claimsAvailable: 1,
-            lastClaimDate: null
+            claimsAvailable: {
+                decrement: claimsToSubstract
+            }
         },
         where: {
             userId_guildId: {
@@ -86,6 +92,54 @@ export async function resetLastClaimDate(userId: Snowflake, guildId: Snowflake) 
             }
         }
     });
+
+    if (player.lastClaimChangeDate == null || moment.utc().isAfter(moment(player.lastClaimChangeDate).add(3, 'hour'))) {
+        player = await container.prisma.players.update({
+            data: {
+                lastClaimChangeDate: moment.utc().toDate()
+            },
+            where: {
+                userId_guildId: {
+                    userId: userId,
+                    guildId: guildId
+                }
+            }
+        });
+    }
+
+    return player;
+}
+
+export async function addAvailableClaims(userId: Snowflake, guildId: Snowflake, claimsToAdd: number = 1) {
+    let player = await container.prisma.players.update({
+        data: {
+            claimsAvailable: {
+                increment: claimsToAdd
+            }
+        },
+        where: {
+            userId_guildId: {
+                userId: userId,
+                guildId: guildId
+            }
+        }
+    });
+
+    if (player.lastClaimChangeDate == null || (moment.utc().isAfter(moment(player.lastClaimChangeDate).add(3, 'hour')))) {
+        player = await container.prisma.players.update({
+            data: {
+                lastClaimChangeDate: moment.utc().toDate()
+            },
+            where: {
+                userId_guildId: {
+                    userId: userId,
+                    guildId: guildId
+                }
+            }
+        });
+    }
+
+    return player;
 }
 
 /**
@@ -242,7 +296,7 @@ export async function addAvailableRolls(userId: Snowflake, guildId: Snowflake, r
 export async function canPlayerClaimRoll(userId: Snowflake, guildId: Snowflake) {
     const player = await getPlayer(userId, guildId);
     if (player) {
-        return (!player || !player.lastClaimDate || moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour'))) && !player.isBanned;
+        return !player.isBanned && (!player || player.claimsAvailable > 0);
     }
     return true;
 }
@@ -260,7 +314,7 @@ export async function getTimeLeftBeforeClaim(userId: Snowflake, guildId: Snowfla
     const player = await getPlayer(userId, guildId);
 
     const now = moment().unix();
-    const claimableDate = moment(player.lastClaimDate).add(3, 'hours').unix();
+    const claimableDate = moment(player.lastClaimChangeDate).add(3, 'hours').unix();
     const timeLeft = claimableDate - now;
     return moment.duration(timeLeft * 1000, 'milliseconds');
 }

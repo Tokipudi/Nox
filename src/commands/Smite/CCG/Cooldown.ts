@@ -13,7 +13,8 @@ import { Message, User } from 'discord.js';
     examples: [
         '',
         '@User#1234'
-    ]
+    ],
+    preconditions: ['PlayerExists']
 })
 export class Cooldown extends NoxCommand {
 

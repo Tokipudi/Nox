@@ -92,13 +92,13 @@ model Players {
     guild                 Guilds                  @relation(fields: [guildId], references: [id])
     guildId               String
     rollsAvailable        Int                     @default(3)
-    claimsAvailable       Int                     @default(1)
     lastRollChangeDate    DateTime?
-    lastClaimDate         DateTime?
+    claimsAvailable       Int                     @default(1)
+    lastClaimChangeDate   DateTime?
     isBanned              Boolean                 @default(false)
     banStartDate          DateTime?
     banEndDate            DateTime?
-    banCount              Int?                    @default(0)
+    banCount              Int                     @default(0)
     playersSkins          PlayersSkins[]
     wishedSkins           PlayersWishedSkins[]
     joinDate              DateTime                @default(now())
@@ -114,6 +114,8 @@ model Players {
     cardsExchanged        Int                     @default(0)
     cardsStolen           Int                     @default(0)
     cardsReceived         Int                     @default(0)
+    isBoosted             Boolean                 @default(false)
+    tokens                Int                     @default(0)
     playersSeasonsArchive PlayersSeasonsArchive[]
 
     @@id([userId, guildId])

@@ -9,7 +9,13 @@ export class CanPlayerRoll extends Precondition {
 
         const player = await getPlayer(author.id, guildId);
 
-        if (player.rollsAvailable <= 0) {
+        if (player != null && player.isBanned) {
+            return this.error({
+                message: `You are banned from the game.`
+            });
+        }
+
+        if (player != null && player.rollsAvailable <= 0) {
             const duration = await getTimeLeftBeforeRoll(author.id, guildId);
 
             return this.error({

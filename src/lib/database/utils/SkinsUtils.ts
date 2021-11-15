@@ -54,7 +54,7 @@ export async function getSkinsByObtainability(obtainability: string, guildId: Sn
     });
 }
 
-export async function connectSkin(skinId: number, userId: Snowflake, guildId: Snowflake, updateLastClaimDate: boolean = true) {
+export async function connectSkin(skinId: number, userId: Snowflake, guildId: Snowflake, updatelastClaimChangeDate: boolean = true) {
     const skin = await container.prisma.skins.update({
         data: {
             playersSkins: {
@@ -98,10 +98,10 @@ export async function connectSkin(skinId: number, userId: Snowflake, guildId: Sn
         }
     });
 
-    if (updateLastClaimDate) {
+    if (updatelastClaimChangeDate) {
         await container.prisma.players.update({
             data: {
-                lastClaimDate: moment.utc().toDate()
+                lastClaimChangeDate: moment.utc().toDate()
             },
             where: {
                 userId_guildId: {
@@ -247,7 +247,7 @@ export async function getUnclaimedSkinsByGuildId(guildId: Snowflake) {
     })
 }
 
-export async function exchangeSkins(userId1: Snowflake, skinId1: number, userId2: Snowflake, skinId2: number, guildId: Snowflake, updateLastClaimDate: boolean = true) {
+export async function exchangeSkins(userId1: Snowflake, skinId1: number, userId2: Snowflake, skinId2: number, guildId: Snowflake, updatelastClaimChangeDate: boolean = true) {
     await container.prisma.playersSkins.update({
         data: {
             userId: userId2
@@ -301,11 +301,11 @@ export async function exchangeSkins(userId1: Snowflake, skinId1: number, userId2
     });
 }
 
-export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number, updateLastClaimDate: boolean = true) {
+export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number, updatelastClaimChangeDate: boolean = true) {
     const skin = await getSkinById(skinId, guildId);
     await disconnectSkin(skinId, guildId);
 
-    const newSkin = await connectSkin(skinId, userId, guildId, updateLastClaimDate);
+    const newSkin = await connectSkin(skinId, userId, guildId, updatelastClaimChangeDate);
 
     await container.prisma.players.update({
         data: {

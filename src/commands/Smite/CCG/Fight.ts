@@ -1,4 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
+import { getPlayer } from '@lib/database/utils/PlayersUtils';
 import { addLoss, addWin, exhaustSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -14,7 +15,8 @@ import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
     usage: '<@user>',
     examples: [
         '@User#1234'
-    ]
+    ],
+    preconditions: ['PlayerExists']
 })
 export class Fight extends NoxCommand {
 
@@ -93,6 +95,9 @@ export class Fight extends NoxCommand {
             filter: ({ user }) => user.id === author.id,
             time: 45000
         })
+
+        const player1 = await getPlayer(author.id, guildId);
+        const player2 = await getPlayer(player.id, guildId);
 
         let skinName1 = '';
         let skinName2 = '';
@@ -274,7 +279,7 @@ export class Fight extends NoxCommand {
                                     switch (playingPlayer) {
                                         case 1:
                                             randomAbility = JSON.parse(god1['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                            randomDamage = this.getRandomDamageFromMaxHealth(god1.health, skin1.obtainability.name);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god1.health, skin1.obtainability.name, player1.isBoosted);
                                             god2Health -= randomDamage;
                                             if (god2Health < 0) {
                                                 god2Health = 0;
@@ -284,7 +289,7 @@ export class Fight extends NoxCommand {
                                             break;
                                         case 2:
                                             randomAbility = JSON.parse(god2['ability' + (Math.floor(Math.random() * 4) + 1)]);
-                                            randomDamage = this.getRandomDamageFromMaxHealth(god2.health, skin2.obtainability.name);
+                                            randomDamage = this.getRandomDamageFromMaxHealth(god2.health, skin2.obtainability.name, player2.isBoosted);
                                             god1Health -= randomDamage;
                                             if (god1Health < 0) {
                                                 god1Health = 0;
@@ -308,6 +313,33 @@ export class Fight extends NoxCommand {
                                     await message.channel.send(`${player}'s **${skinName2} ${skin2.god.name}** won the fight!`);
                                     await message.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                 }
+
+                                if (player1.isBoosted) {
+                                    await this.container.prisma.players.update({
+                                        data: {
+                                            isBoosted: false
+                                        },
+                                        where: {
+                                            userId_guildId: {
+                                                userId: player1.userId,
+                                                guildId: guildId
+                                            }
+                                        }
+                                    });
+                                }
+                                if (player2.isBoosted) {
+                                    await this.container.prisma.players.update({
+                                        data: {
+                                            isBoosted: false
+                                        },
+                                        where: {
+                                            userId_guildId: {
+                                                userId: player2.userId,
+                                                guildId: guildId
+                                            }
+                                        }
+                                    });
+                                }
                             }
 
                             this._channelIds.splice(runningInIndex, 1);
@@ -318,30 +350,35 @@ export class Fight extends NoxCommand {
         });
     }
 
-    protected getRandomDamageFromMaxHealth(health: number, obtainability: string) {
-        let advantage = 0;
+    protected getRandomDamageFromMaxHealth(health: number, obtainability: string, isBoosted: boolean = false) {
+        let advantage = isBoosted
+            ? 0.2
+            : 0;
         switch (obtainability) {
             case 'Clan Reward':
             case 'Unlimited':
-                advantage = 0.2;
+                advantage += 0.2;
                 break;
             case 'Limited':
-                advantage = 0.15;
+                advantage += 0.15;
                 break;
             case 'Exclusive':
-                advantage = 0.05;
+                advantage += 0.05;
                 break;
             case 'Standard':
             default:
                 // Do nothing
                 break;
         }
-        return getRandomIntInclusive(advantage, health * 0.5);
+        return getRandomIntInclusive(advantage, health * 0.75);
     }
 
     protected generateFightEmbed(god, title, skinName1, skinName2, godName1, godName2, god1Health, god2Health, player, randomAbility = null, randomDamage = null) {
+        const authorTitle = player.isBoosted
+            ? title + ' (boosted)'
+            : title;
         const embed = new MessageEmbed()
-            .setAuthor(title, god.godIconUrl)
+            .setAuthor(authorTitle, god.godIconUrl)
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .addField(`${skinName1} ${godName1}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
             .addField(`${skinName2} ${godName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)

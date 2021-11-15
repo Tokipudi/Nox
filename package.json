@@ -9,7 +9,6 @@
         "prisma-migrate-prod": "npx prisma migrate deploy",
         "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
         "start": "systemctl start nox",
-        "seed": "npx prisma db seed",
         "stop": "systemctl stop nox",
         "logs": "journalctl -u nox -f | sed 's/.*]: //'"
     },

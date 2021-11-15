@@ -12,7 +12,8 @@ import { Message, MessageEmbed, User } from 'discord.js';
     examples: [
         '',
         '@User#1234'
-    ]
+    ],
+    preconditions: ['PlayerExists']
 })
 export class Player extends NoxCommand {
 
@@ -37,6 +38,7 @@ export class Player extends NoxCommand {
 
         const embed = new MessageEmbed()
             .setAuthor(`${user.username}#${user.discriminator}`, user.avatarURL())
+            .setDescription(`Tokens: \`${player.tokens}\``)
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setTimestamp(player.joinDate);
@@ -45,26 +47,33 @@ export class Player extends NoxCommand {
             embed.setImage(favoriteSkin.godSkinUrl);
         }
 
-        embed.addField('Rolls', `\`${player.rolls}\``, true)
-            .addField('Claimed Cards', `\`${player.claimedCards}\``, true)
-            .addField('Cards Stolen', `\`${player.cardsStolen}\``, true)
-            .addField('Cards Given', `\`${player.cardsGiven}\``, true)
-            .addField('Cards Received', `\`${player.cardsReceived}\``, true)
-            .addField('Cards Exchanged', `\`${player.cardsExchanged}\``, true)
-            .addField('Wins', `\`${player.win}\``, true)
-            .addField('Losses', `\`${player.loss}\``, true)
-            .addField('Highest Winning Streak', `\`${player.highestWinningStreak}\``, true)
-            .addField('Highest Losing Streak', `\`${player.highestLosingStreak}\``, true);
+        embed.addField(
+            'Cards',
+            `Rolled: \`${player.rolls}\`\n` +
+            `Claimed: \`${player.claimedCards}\`\n` +
+            `Stolen: \`${player.cardsStolen}\`\n` +
+            `Given: \`${player.cardsGiven}\`\n` +
+            `Exchanged: \`${player.cardsExchanged}\``,
+            true
+        );
+
+        let fightDescription =
+            `Wins: \`${player.win}\`\n` +
+            `Losses: \`${player.loss}\`\n` +
+            `Highest Winning Streak: \`${player.highestWinningStreak}\`\n` +
+            `Highest Losing Streak: \`${player.highestLosingStreak}\`\n`;
 
         if (player.win > 0 || player.loss > 0) {
-            embed.addField('Win rate', `\`${(player.win / (player.win + player.loss)) * 100}%\``, true);
+            fightDescription += `\`${(player.win / (player.win + player.loss)) * 100}%\`\n`;
         }
         if (player.losingStreak > 0) {
-            embed.addField('Current Losing Streak', `\`${player.losingStreak}\``);
+            fightDescription += `\`${player.losingStreak}\`\n`;
         }
         if (player.winningStreak > 0) {
-            embed.addField('Current Winning Streak', `\`${player.losingStreak}\``);
+            fightDescription += `\`${player.losingStreak}\``;
         }
+
+        embed.addField('Fights', fightDescription, true);
 
         return message.reply({ embeds: [embed] });
     }

@@ -1,7 +1,7 @@
 import { Achievement } from '@lib/achievements/Achievement';
 import { getGuilds } from '@lib/database/utils/GuildsUtils';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
-import { addAvailableRolls, getBannedPlayersByGuildId, resetLastClaimDate, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { addAvailableClaims, addAvailableRolls, getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
@@ -61,7 +61,7 @@ export class Ready extends Listener {
                 for (let player of players) {
                     if (moment.utc().isSameOrAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
                         await addAvailableRolls(player.userId, guild.id);
-                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added a roll.`);
+                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added 3 rolls.`);
                     }
                 }
             }, 60000);
@@ -77,14 +77,14 @@ export class Ready extends Listener {
                     },
                     select: {
                         userId: true,
-                        lastClaimDate: true
+                        lastClaimChangeDate: true
                     }
                 })
 
                 for (let player of players) {
-                    if (moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour'))) {
-                        await resetLastClaimDate(player.userId, guild.id);
-                        this.container.logger.info(`Player ${player.userId}<${guild.id}> can now claim again.`);
+                    if (moment.utc().isSameOrAfter(moment(player.lastClaimChangeDate).add(3, 'hour'))) {
+                        await addAvailableClaims(player.userId, guild.id);
+                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added 1 roll.`);
                     }
                 }
             }, 60000);
