@@ -1,4 +1,5 @@
 import { AchievementStore } from '@lib/achievements/AchivementStore';
+import { RewardStore } from '@lib/rewards/RewardStore';
 import { PrismaClient } from '@prisma/client';
 import { container, SapphireClient } from '@sapphire/framework';
 import '@sapphire/plugin-logger/register';
@@ -10,6 +11,7 @@ export class NoxClient extends SapphireClient {
         super(options);
         container.prisma = new PrismaClient();
         container.stores.register(new AchievementStore());
+        container.stores.register(new RewardStore());
     }
 }
 
@@ -18,7 +20,8 @@ declare module '@sapphire/pieces' {
         prisma: PrismaClient
     }
     interface StoreRegistryEntries {
-        achievements: AchievementStore
+        achievements: AchievementStore,
+        rewards: RewardStore
     }
 }
 

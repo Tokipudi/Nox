@@ -76,6 +76,7 @@ export async function addRoll(userId: Snowflake, guildId: Snowflake) {
 export async function resetLastClaimDate(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.update({
         data: {
+            claimsAvailable: 1,
             lastClaimDate: null
         },
         where: {

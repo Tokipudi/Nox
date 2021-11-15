@@ -4,6 +4,7 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Message, MessageEmbed } from 'discord.js';
+import moment from 'moment';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Roll a card and react with an emoji to claim it.',
@@ -79,6 +80,20 @@ export class Roll extends NoxCommand {
                 collector.stop();
 
                 await connectSkin(skin.id, user.id, guildId);
+                await this.container.prisma.players.update({
+                    data: {
+                        claimsAvailable: {
+                            decrement: 1
+                        },
+                        lastClaimDate: moment.utc().toDate()
+                    },
+                    where: {
+                        userId_guildId: {
+                            userId: user.id,
+                            guildId: guildId
+                        }
+                    }
+                });
                 if (user.id !== author.id) {
                     await this.container.prisma.players.update({
                         data: {

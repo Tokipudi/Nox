@@ -1,7 +1,7 @@
 import { Achievement } from '@lib/achievements/Achievement';
 import { getGuilds } from '@lib/database/utils/GuildsUtils';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
-import { addAvailableRolls, getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { addAvailableRolls, getBannedPlayersByGuildId, resetLastClaimDate, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
 import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
@@ -29,6 +29,7 @@ export class Ready extends Listener {
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('commands').size + ' commands.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('listeners').size + ' listeners.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('preconditions').size + ' preconditions.');
+        this.container.logger.info('|_ Loaded ' + this.container.stores.get('rewards').size + ' rewards.');
 
         // Prisma seeds
         this.container.logger.info('Starting seeding of achievements...');
@@ -42,7 +43,7 @@ export class Ready extends Listener {
         for (let i in guilds) {
             const guild = guilds[i];
 
-            // Update player rolls every minute
+            // Update player available rolls every minute
             setInterval(async () => {
                 const players = await this.container.prisma.players.findMany({
                     where: {
@@ -61,6 +62,29 @@ export class Ready extends Listener {
                     if (moment.utc().isSameOrAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
                         await addAvailableRolls(player.userId, guild.id);
                         this.container.logger.info(`Player ${player.userId}<${guild.id}> was added a roll.`);
+                    }
+                }
+            }, 60000);
+
+            // Update player available claims every minute
+            setInterval(async () => {
+                const players = await this.container.prisma.players.findMany({
+                    where: {
+                        claimsAvailable: {
+                            lt: 1
+                        },
+                        guildId: guild.id
+                    },
+                    select: {
+                        userId: true,
+                        lastClaimDate: true
+                    }
+                })
+
+                for (let player of players) {
+                    if (moment.utc().isSameOrAfter(moment(player.lastClaimDate).add(3, 'hour'))) {
+                        await resetLastClaimDate(player.userId, guild.id);
+                        this.container.logger.info(`Player ${player.userId}<${guild.id}> can now claim again.`);
                     }
                 }
             }, 60000);
