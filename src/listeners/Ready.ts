@@ -1,8 +1,5 @@
 import { Achievement } from '@lib/achievements/Achievement';
-import { getGuilds } from '@lib/database/utils/GuildsUtils';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
-import { addAvailableClaims, addAvailableRolls, getBannedPlayersByGuildId, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
-import { unexhaustSkin } from '@lib/database/utils/SkinsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions } from '@sapphire/framework';
 import moment from 'moment';
@@ -39,96 +36,74 @@ export class Ready extends Listener {
             this.container.logger.error(e);
         });
 
-        const guilds = await getGuilds();
-        for (let i in guilds) {
-            const guild = guilds[i];
-
-            // Update player available rolls every minute
-            setInterval(async () => {
-                const players = await this.container.prisma.players.findMany({
-                    where: {
-                        rollsAvailable: {
-                            lt: 3
-                        },
-                        guildId: guild.id
+        // Update player available rolls every minute
+        setInterval(async () => {
+            const players = await this.container.prisma.players.updateMany({
+                data: {
+                    rollsAvailable: 3
+                },
+                where: {
+                    rollsAvailable: {
+                        lt: 3
                     },
-                    select: {
-                        userId: true,
-                        lastRollChangeDate: true
-                    }
-                })
-
-                for (let player of players) {
-                    if (moment.utc().isSameOrAfter(moment(player.lastRollChangeDate).add(1, 'hour'))) {
-                        await addAvailableRolls(player.userId, guild.id);
-                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added 3 rolls.`);
+                    lastRollChangeDate: {
+                        lte: moment.utc().subtract(1, 'hour').toDate()
                     }
                 }
-            }, 60000);
+            });
+            this.container.logger.info(`${players.count} players have had their rolls reset to 3.`);
+        }, 60000);
 
-            // Update player available claims every minute
-            setInterval(async () => {
-                const players = await this.container.prisma.players.findMany({
-                    where: {
-                        claimsAvailable: {
-                            lt: 1
-                        },
-                        guildId: guild.id
+        // Update player available claims every minute
+        setInterval(async () => {
+            const players = await this.container.prisma.players.updateMany({
+                data: {
+                    claimsAvailable: 1
+                },
+                where: {
+                    rollsAvailable: {
+                        lt: 1
                     },
-                    select: {
-                        userId: true,
-                        lastClaimChangeDate: true
-                    }
-                })
-
-                for (let player of players) {
-                    if (moment.utc().isSameOrAfter(moment(player.lastClaimChangeDate).add(3, 'hour'))) {
-                        await addAvailableClaims(player.userId, guild.id);
-                        this.container.logger.info(`Player ${player.userId}<${guild.id}> was added 1 roll.`);
+                    lastClaimChangeDate: {
+                        lte: moment.utc().subtract(3, 'hour').toDate()
                     }
                 }
-            }, 60000);
+            });
+            this.container.logger.info(`${players.count} players have had their claims reset to 1.`);
+        }, 60000);
 
-            // Update exhaust every minute
-            setInterval(async () => {
-                const playersSkins = await this.container.prisma.playersSkins.findMany({
-                    where: {
-                        isExhausted: true,
-                        guildId: guild.id
-                    },
-                    select: {
-                        skin: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        exhaustChangeDate: true
-                    }
-                })
-
-                for (let i in playersSkins) {
-                    let playerSkin = playersSkins[i];
-                    if (moment.utc().isSameOrAfter(moment(playerSkin.exhaustChangeDate).add(6, 'hour'))) {
-                        await unexhaustSkin(playerSkin.skin.id, guild.id);
-                        this.container.logger.info(`The skin ${playerSkin.skin.name}<${playerSkin.skin.id}> has been unexhausted.`);
+        // Update exhaust every minute
+        setInterval(async () => {
+            const playersSkins = await this.container.prisma.playersSkins.updateMany({
+                data: {
+                    isExhausted: false
+                },
+                where: {
+                    isExhausted: true,
+                    exhaustChangeDate: {
+                        lte: moment.utc().subtract(6, 'hours').toDate()
                     }
                 }
-            }, 60000);
+            })
+            this.container.logger.info(`${playersSkins.count} skins have been unexhausted.`);
+        }, 60000);
 
-            // Update banned players every minute
-            setInterval(async () => {
-                const bannedPlayers = await getBannedPlayersByGuildId(guild.id);
-
-                for (let i in bannedPlayers) {
-                    let player = bannedPlayers[i];
-                    if (moment.utc().isSameOrAfter(moment(player.banEndDate))) {
-                        await setPlayerAsUnbanned(player.userId, guild.id);
-                        this.container.logger.info(`The player ${player.userId} in guild ${guild.id} has been unbanned.`);
+        // Update banned players every minute
+        setInterval(async () => {
+            const bannedPlayers = await this.container.prisma.players.updateMany({
+                data: {
+                    isBanned: false,
+                    banStartDate: null,
+                    banEndDate: null
+                },
+                where: {
+                    banEndDate: {
+                        lte: moment.utc().toDate()
                     }
                 }
-            }, 60000);
-        }
+            });
+            this.container.logger.info(`${bannedPlayers.count} have been unbanned.`);
+        }, 60000);
 
         // Import DB every 6 hours
         setInterval(async () => {
