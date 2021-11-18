@@ -20,24 +20,51 @@ export abstract class Achievement extends Piece implements AchievementInterface 
 
     async deliverAchievement(guildId: Snowflake): Promise<void> {
         const userIds = await this.getCurrentUserIds(guildId);
-        await this.addAchievementRoleByUserIds(userIds, guildId);
 
-        if (this.tokens != null && this.tokens > 0) {
-            await this.container.prisma.players.updateMany({
-                data: {
-                    tokens: {
-                        increment: this.tokens
-                    }
-                },
-                where: {
-                    userId: {
-                        in: userIds
+        if (userIds.length > 0) {
+            await this.addAchievementRoleByUserIds(userIds, guildId);
+
+            if (this.tokens != null && this.tokens > 0) {
+                // Update tokens
+                await this.container.prisma.players.updateMany({
+                    data: {
+                        tokens: {
+                            increment: this.tokens
+                        }
                     },
-                    guild: {
+                    where: {
+                        userId: {
+                            in: userIds
+                        },
+                        guild: {
+                            id: guildId
+                        }
+                    }
+                });
+
+                // Update achievements archive
+                const achievement = await this.container.prisma.achievements.findUnique({
+                    where: {
+                        name: this.label
+                    }
+                });
+                const guild = await this.container.prisma.guilds.findUnique({
+                    where: {
                         id: guildId
                     }
+                });
+
+                for (let userId of userIds) {
+                    await this.container.prisma.playerSeasonsAchievements.create({
+                        data: {
+                            achievementId: achievement.id,
+                            guildId: guild.id,
+                            season: guild.season,
+                            userId: userId
+                        }
+                    });
                 }
-            });
+            }
         }
     };
 
