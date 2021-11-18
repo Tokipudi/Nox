@@ -46,12 +46,21 @@ export class Ready extends Listener {
                     rollsAvailable: {
                         lt: 3
                     },
-                    lastRollChangeDate: {
-                        lte: moment.utc().subtract(1, 'hour').toDate()
-                    }
+                    OR: [
+                        {
+                            lastRollChangeDate: {
+                                lte: moment.utc().subtract(1, 'hour').toDate()
+                            }
+                        },
+                        {
+                            lastRollChangeDate: null
+                        }
+                    ]
                 }
             });
-            this.container.logger.info(`${players.count} players have had their rolls reset to 3.`);
+            if (players.count > 0) {
+                this.container.logger.info(`${players.count} players have had their rolls reset to 3.`);
+            }
         }, 60000);
 
         // Update player available claims every minute
@@ -61,15 +70,24 @@ export class Ready extends Listener {
                     claimsAvailable: 1
                 },
                 where: {
-                    rollsAvailable: {
+                    claimsAvailable: {
                         lt: 1
                     },
-                    lastClaimChangeDate: {
-                        lte: moment.utc().subtract(3, 'hour').toDate()
-                    }
+                    OR: [
+                        {
+                            lastClaimChangeDate: {
+                                lte: moment.utc().subtract(3, 'hour').toDate()
+                            }
+                        },
+                        {
+                            lastClaimChangeDate: null
+                        }
+                    ]
                 }
             });
-            this.container.logger.info(`${players.count} players have had their claims reset to 1.`);
+            if (players.count > 0) {
+                this.container.logger.info(`${players.count} players have had their claims reset to 1.`);
+            }
         }, 60000);
 
         // Update exhaust every minute
@@ -85,7 +103,9 @@ export class Ready extends Listener {
                     }
                 }
             })
-            this.container.logger.info(`${playersSkins.count} skins have been unexhausted.`);
+            if (playersSkins.count > 0) {
+                this.container.logger.info(`${playersSkins.count} skins have been unexhausted.`);
+            }
         }, 60000);
 
         // Update banned players every minute
@@ -102,7 +122,10 @@ export class Ready extends Listener {
                     }
                 }
             });
-            this.container.logger.info(`${bannedPlayers.count} have been unbanned.`);
+
+            if (bannedPlayers.count > 0) {
+                this.container.logger.info(`${bannedPlayers.count} have been unbanned.`);
+            }
         }, 60000);
 
         // Import DB every 6 hours

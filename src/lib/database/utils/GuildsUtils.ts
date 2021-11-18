@@ -1,4 +1,3 @@
-import { Achievements } from ".prisma/client";
 import { Achievement } from "@lib/achievements/Achievement";
 import { container } from "@sapphire/pieces";
 import { Snowflake } from "discord-api-types";
@@ -70,7 +69,9 @@ export async function startNewSeason(guildId: Snowflake) {
                 cardsReceived: 0,
                 cardsStolen: 0,
                 claimedCards: 0,
-                lastClaimChangeDate: null
+                lastClaimChangeDate: null,
+                rollsAvailable: 3,
+                claimsAvailable: 1
             },
             where: {
                 userId: {
