@@ -1,3 +1,4 @@
+import { PlayersSeasonsArchive } from ".prisma/client";
 import { Achievement } from "@lib/achievements/Achievement";
 import { container } from "@sapphire/pieces";
 import { Snowflake } from "discord-api-types";
@@ -11,7 +12,7 @@ export async function getGuilds() {
 export async function startNewSeason(guildId: Snowflake) {
     const players = await getPlayers(guildId);
     if (players !== null && players.length >= 0) {
-        const data = [];
+        const data: PlayersSeasonsArchive[] = [];
         const playerIds = [];
 
         container.stores.get('achievements').forEach((achievement: Achievement) => {
@@ -49,7 +50,9 @@ export async function startNewSeason(guildId: Snowflake) {
                 cardsExchanged: player.cardsExchanged,
                 cardsStolen: player.cardsStolen,
                 cardsReceived: player.cardsReceived,
-                favoriteSkinId: favoriteSkinId
+                favoriteSkinId: favoriteSkinId,
+                allInLoss: player.allInLoss,
+                allInWins: player.allInWins
             });
         }
 
@@ -71,7 +74,9 @@ export async function startNewSeason(guildId: Snowflake) {
                 claimedCards: 0,
                 lastClaimChangeDate: null,
                 rollsAvailable: 3,
-                claimsAvailable: 1
+                claimsAvailable: 1,
+                loss: 0,
+                win: 0
             },
             where: {
                 userId: {

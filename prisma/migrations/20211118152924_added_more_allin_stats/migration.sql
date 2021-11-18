@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "PlayersSeasonsArchive" ADD COLUMN     "allInLoss" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "allInWins" INTEGER NOT NULL DEFAULT 0;

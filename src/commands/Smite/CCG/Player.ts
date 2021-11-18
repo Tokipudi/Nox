@@ -61,16 +61,18 @@ export class Player extends NoxCommand {
             `Wins: \`${player.win}\`\n` +
             `Losses: \`${player.loss}\`\n` +
             `Highest Winning Streak: \`${player.highestWinningStreak}\`\n` +
-            `Highest Losing Streak: \`${player.highestLosingStreak}\`\n`;
+            `Highest Losing Streak: \`${player.highestLosingStreak}\`\n` +
+            `All Ins Won: \`${player.allInWins}\`\n` +
+            `All Ins Lost: \`${player.allInLoss}\`\n`;
 
         if (player.win > 0 || player.loss > 0) {
-            fightDescription += `\`${(player.win / (player.win + player.loss)) * 100}%\`\n`;
+            fightDescription += `\`${((player.win / (player.win + player.loss)) * 100).toFixed(2)}%\`\n`;
         }
         if (player.losingStreak > 0) {
-            fightDescription += `\`${player.losingStreak}\`\n`;
+            fightDescription += `Current Losing Streak: \`${player.losingStreak}\`\n`;
         }
         if (player.winningStreak > 0) {
-            fightDescription += `\`${player.losingStreak}\``;
+            fightDescription += `Current Winning Streak: \`${player.losingStreak}\`\n`;
         }
 
         embed.addField('Fights', fightDescription, true);
