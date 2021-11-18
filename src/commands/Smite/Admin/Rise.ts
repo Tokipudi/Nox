@@ -28,7 +28,8 @@ export class Rise extends NoxCommand {
         if (player.claimsAvailable <= 0) {
             await this.container.prisma.players.update({
                 data: {
-                    claimsAvailable: 1
+                    claimsAvailable: 1,
+                    rollsAvailable: 3
                 },
                 where: {
                     userId_guildId: {
