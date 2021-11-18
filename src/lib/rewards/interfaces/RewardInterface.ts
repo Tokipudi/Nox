@@ -9,10 +9,12 @@ export interface RewardInterface {
      * @param userId
      * @param guildId 
      */
-    giveReward(userId: Snowflake, guildId: Snowflake): Promise<void>;
+    giveReward(userId: Snowflake, guildId: Snowflake, options: GiveRewardOptions): Promise<void>;
 }
 
 export interface RewardOptions extends PieceOptions {
     description?: string,
     tokens?: number
 }
+
+export interface GiveRewardOptions { }

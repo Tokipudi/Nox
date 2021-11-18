@@ -10,10 +10,15 @@ import { Snowflake } from 'discord-api-types';
 export class AddRoll extends Reward {
 
     async giveReward(userId: Snowflake, guildId: Snowflake): Promise<void> {
+        await super.giveReward(userId, guildId);
+
         await this.container.prisma.players.update({
             data: {
                 rollsAvailable: {
                     increment: 1
+                },
+                tokens: {
+                    decrement: this.tokens
                 }
             },
             where: {

@@ -45,7 +45,7 @@ export function getSelectButton(
     return getButton('select', label, style, emoji, disabled, url);
 }
 
-function getButton(
+export function getButton(
     customId: string,
     label: string = '',
     style: MessageButtonStyle = 'SECONDARY',
