@@ -1,11 +1,12 @@
-import { getSkinsByUser, giveSkin } from '@lib/database/utils/SkinsUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { getSkinsByPlayer, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Message, MessageActionRow, User } from 'discord.js';
+import { Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Exchanges a card you own to a user of your choice. The specified user will have to validate the exchange with the same NoxCommand.',
@@ -18,22 +19,29 @@ import { Message, MessageActionRow, User } from 'discord.js';
 export class Exchange extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message
-        const user: User = await args.rest('user');
+        const { author, guildId } = message;
+
+        const user = await args.peek('user');
 
         if (!user) return message.reply('The first argument **must** be a user.');
         if (user.id === author.id) return message.reply('You cannot exchange a card with yourself!');
         if (user.bot) return message.reply('You cannot exchange a card with a bot!');
 
+        const userPlayer = await args.pick('player');
+        if (!userPlayer) return message.reply(`An error occured when trying to load ${user}'s player.`);
+
+        const authorPlayer = await getPlayerByUserId(author.id, guildId);
+        if (!authorPlayer) return message.reply(`An error occured when trying to load ${author}'s player.`);
+
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Select', 'SUCCESS');
 
-        const skins1 = await getSkinsByUser(author.id, guildId);
+        const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
             return message.reply('You currently don\'t own any card!');
         }
-        const skins2 = await getSkinsByUser(user.id, guildId);
+        const skins2 = await getSkinsByPlayer(userPlayer.id);
         if (!skins2 || skins2.length === 0) {
             return message.reply(`${user} does not own any card!`);
         }
@@ -196,8 +204,8 @@ export class Exchange extends NoxCommand {
                                 }
 
                                 if (skinId1 && skinId2) {
-                                    await giveSkin(user.id, guildId, skinId1, false)
-                                    await giveSkin(author.id, guildId, skinId2, false);
+                                    await giveSkin(userPlayer.id, guildId, skinId1, false)
+                                    await giveSkin(authorPlayer.id, guildId, skinId2, false);
 
                                     this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
                                     message.reply(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);

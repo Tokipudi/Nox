@@ -1,5 +1,5 @@
-import { Snowflake } from "discord-api-types";
 import { PieceOptions } from '@sapphire/pieces';
+import { Snowflake } from "discord-api-types";
 
 export interface AchievementInterface {
 
@@ -8,7 +8,7 @@ export interface AchievementInterface {
      * 
      * @param guildId 
      */
-    getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]>;
+    getCurrentPlayerIds(guildId: Snowflake): Promise<number[]>;
 
     /**
      * Delivers the achievements to the users of a given guild

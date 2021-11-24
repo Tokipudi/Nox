@@ -10,9 +10,9 @@ import { Snowflake } from "discord-api-types";
 })
 export class TheHermit extends Achievement {
 
-    async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
+    async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
         const players = await container.prisma.playersSkins.groupBy({
-            by: ['userId'],
+            by: ['playerId'],
             _count: {
                 skinId: true
             },
@@ -22,26 +22,28 @@ export class TheHermit extends Achievement {
                 }
             },
             where: {
-                guildId: guildId
+                player: {
+                    guild: {
+                        id: guildId
+                    }
+                }
             }
         });
 
         let max = 0;
-        const userIds = [];
-        for (let i in players) {
-            const player = players[i];
-
+        const playerIds = [];
+        for (let player of players) {
             if (max === 0 && player._count.skinId > 0) {
                 max = player._count.skinId;
             }
 
             if (max !== 0 && player._count.skinId === max) {
-                userIds.push(player.userId);
+                playerIds.push(player.playerId);
             } else {
                 break;
             }
         }
 
-        return userIds;
+        return playerIds;
     }
 }

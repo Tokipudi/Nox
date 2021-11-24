@@ -1,8 +1,9 @@
-import { disconnectSkin, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
+import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
 import { Message } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -27,10 +28,29 @@ export class Release extends NoxCommand {
         godName = godName.trim();
         if (!godName) return message.reply('The second argument needs to be a valid god name!');
 
-        const skin = await getSkinByGodName(godName, skinName);
+        const skin = await this.container.prisma.skins.findFirst({
+            where: {
+                name: toTitleCase(skinName),
+                god: {
+                    name: toTitleCase(godName)
+                }
+            },
+            include: {
+                playersSkins: {
+                    include: {
+                        player: {
+                            select: {
+                                id: true,
+                            }
+                        }
+                    }
+                }
+            }
+        });
         if (!skin) return message.reply(`**${skinName}** is not a valid card name!`);
+        if (skin.playersSkins.length <= 0) return message.reply(`${skinName} does not belong to anyone on this server!`);
 
-        await disconnectSkin(skin.id, message.guildId);
+        await disconnectSkin(skin.id, skin.playersSkins[0].player.id);
 
         message.reply(`The card **${skinName} ${godName}** was released.`);
     }

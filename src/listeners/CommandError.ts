@@ -1,6 +1,6 @@
 import { CommandContextWithCooldown } from '@lib/structures/context/CommandContextWithCooldown';
 import { ApplyOptions } from '@sapphire/decorators';
-import { CommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
+import { Args, CommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
 
 @ApplyOptions<ListenerOptions>({
     name: 'commandDenied'
@@ -18,6 +18,10 @@ export class CommandError extends Listener<typeof Events.CommandDenied> {
                 default:
                 // Do nothing
             }
+        }
+
+        if (error.identifier === 'argsMissing') {
+            
         }
     }
 

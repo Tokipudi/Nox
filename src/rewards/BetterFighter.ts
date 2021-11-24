@@ -1,7 +1,6 @@
 import { RewardOptions } from '@lib/rewards/interfaces/RewardInterface';
 import { Reward } from '@lib/rewards/Reward';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Snowflake } from 'discord-api-types';
 
 @ApplyOptions<RewardOptions>({
     description: 'Better damage output on your next fight.',
@@ -9,9 +8,9 @@ import { Snowflake } from 'discord-api-types';
 })
 export class BetterFighter extends Reward {
 
-    async giveReward(userId: Snowflake, guildId: Snowflake): Promise<void> {
-        await super.giveReward(userId, guildId);
-        
+    async giveReward(playerId: number): Promise<void> {
+        await super.giveReward(playerId);
+
         await this.container.prisma.players.update({
             data: {
                 isBoosted: true,
@@ -20,10 +19,7 @@ export class BetterFighter extends Reward {
                 }
             },
             where: {
-                userId_guildId: {
-                    userId: userId,
-                    guildId: guildId
-                }
+                id: playerId
             }
         });
     }

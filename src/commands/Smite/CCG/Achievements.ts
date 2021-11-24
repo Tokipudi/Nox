@@ -1,4 +1,6 @@
 import { Achievement } from '@lib/achievements/Achievement';
+import { fetchAchievements } from '@lib/achievements/AchievementUtils';
+import { getPlayer } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
@@ -15,7 +17,7 @@ export class Achievements extends NoxCommand {
         const { author, guildId } = message;
         const guild = await this.container.client.guilds.fetch(guildId);
 
-        const achievements = this.fetchAchievements();
+        const achievements = fetchAchievements();
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -79,17 +81,6 @@ export class Achievements extends NoxCommand {
         });
     }
 
-    private fetchAchievements() {
-        const achievements = [];
-        this.container.stores.get('achievements').sort((a, b) => {
-            return a.name.localeCompare(b.name);
-        }).forEach((achievement: Achievement) => {
-            achievements.push(achievement);
-        });
-
-        return achievements;
-    }
-
     private async generateEmbed(achievements: Achievement[], index: number, guild: Guild) {
         const embed = new MessageEmbed()
             .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
@@ -99,13 +90,14 @@ export class Achievements extends NoxCommand {
             .setFooter(`Showing achievements ${index + 1}..${index + 5} out of ${achievements.length}`);
 
         for (const achievement of achievements.slice(index, index + 5)) {
-            const userIds = await achievement.getCurrentUserIds(guild.id);
+            const playerIds = await achievement.getCurrentPlayerIds(guild.id);
 
             let description = `Reward: \`${achievement.tokens}\` tokens`;
 
             const users = [];
-            for (let userId of userIds) {
-                const user = await guild.members.fetch(userId);
+            for (let playerId of playerIds) {
+                const player = await getPlayer(playerId);
+                const user = await guild.members.fetch(player.user.id);
                 users.push(user);
             }
 

@@ -10,11 +10,10 @@ import { Snowflake } from "discord-api-types";
 })
 export class ThePopular extends Achievement {
 
-    async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
-
+    async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
         const players = await container.prisma.players.findMany({
             select: {
-                userId: true,
+                id: true,
                 cardsReceived: true
             },
             where: {
@@ -28,21 +27,19 @@ export class ThePopular extends Achievement {
         });
 
         let max = 0;
-        const userIds = [];
-        for (let i in players) {
-            const player = players[i];
-
+        const playerIds = [];
+        for (let player of players) {
             if (max === 0 && player.cardsReceived > 0) {
                 max = player.cardsReceived;
             }
 
             if (max !== 0 && player.cardsReceived === max) {
-                userIds.push(player.userId);
+                playerIds.push(player.id);
             } else {
                 break;
             }
         }
 
-        return userIds;
+        return playerIds;
     }
 }

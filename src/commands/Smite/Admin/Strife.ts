@@ -1,4 +1,5 @@
-import { disconnectSkin, getSkinsByUser } from '@lib/database/utils/SkinsUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { disconnectSkin, getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -17,14 +18,17 @@ import { Message, User } from 'discord.js';
 export class Strife extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
-        const user: User = await args.pick('user');
+        const user = await args.peek('user');
         if (!user) return message.reply('The first argument **must** be a user.');
+
+        const player = await args.pick('player');
+        if (!player) return message.reply('An error occured when trying to load the player.');
 
         let amount: string = await args.rest('string');
         amount = amount.trim();
         if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the NoxCommand.')
 
-        const skins = await getSkinsByUser(user.id, message.guildId);
+        const skins = await getSkinsByPlayer(player.id);
         if (!skins || !skins.length) return message.reply(`${user} does not have any cards!`);
 
         let skinsToRelease = 0;
@@ -42,7 +46,7 @@ export class Strife extends NoxCommand {
             let randomSkinIndex = Math.floor(Math.random() * skinsToRelease);
             let skin = skins[randomSkinIndex];
 
-            await disconnectSkin(skin.id, message.guildId);
+            await disconnectSkin(skin.id, player.id);
             this.container.logger.info(`The card ${skin.name}<${skin.id}> was released from player ${user.username}#${user.discriminator}<${user.id}>.`);
 
             skinsReleased.push(skin.name);

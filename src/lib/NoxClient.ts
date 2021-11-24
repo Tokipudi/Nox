@@ -1,6 +1,6 @@
 import { AchievementStore } from '@lib/achievements/AchivementStore';
 import { RewardStore } from '@lib/rewards/RewardStore';
-import { PrismaClient } from '@prisma/client';
+import { Players, PrismaClient } from '@prisma/client';
 import { container, SapphireClient } from '@sapphire/framework';
 import '@sapphire/plugin-logger/register';
 import { ClientOptions } from "discord.js";
@@ -29,5 +29,8 @@ declare module '@sapphire/framework' {
     interface Preconditions {
         CanPlayerRoll: never,
         PlayerExists: never
+    }
+    interface ArgType {
+        player: Players
     }
 }

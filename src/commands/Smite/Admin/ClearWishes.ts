@@ -3,7 +3,7 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Message, User } from 'discord.js';
+import { Message } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Empty the wishlist of a user.',
@@ -17,16 +17,18 @@ import { Message, User } from 'discord.js';
 export class ClearWishes extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
-        const user: User = await args.pick('user');
+        const user = await args.peek('user');
         if (!user) return message.reply('The first argument **must** be a user.');
 
-        const skins = await getSkinWishlist(user.id, message.guildId);
+        const player = await args.pick('player');
+        if (!player) return message.reply('An error occured when trying to load the player.');
+
+        const skins = await getSkinWishlist(player.id);
         if (!skins || !skins.length) return message.reply(`${user} has no cards in their wishlist.`);
 
-        for (let i in skins) {
-            let skin = skins[i];
-            await disconnectWishlistSkin(skin.id, user.id, message.guildId);
-            this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the wishlist of ${user.username}#${user.discriminator}<${user.id}>`);
+        for (const skin of skins) {
+            await disconnectWishlistSkin(skin.id, player.id);
+            this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the wishlist of player ${player.id}`);
         }
 
         message.reply(`The wishlist of ${user} has been emptied.`);

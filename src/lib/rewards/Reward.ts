@@ -1,6 +1,5 @@
 import { getPlayer } from '@lib/database/utils/PlayersUtils';
 import { Piece, PieceContext } from '@sapphire/pieces';
-import { Snowflake } from 'discord-api-types';
 import { RewardInterface, RewardOptions } from './interfaces/RewardInterface';
 
 export abstract class Reward extends Piece implements RewardInterface {
@@ -16,8 +15,8 @@ export abstract class Reward extends Piece implements RewardInterface {
         this.tokens = options.tokens;
     }
 
-    async giveReward(userId: Snowflake, guildId: Snowflake): Promise<void> {
-        const player = await getPlayer(userId, guildId);
+    async giveReward(playerId: number): Promise<void> {
+        const player = await getPlayer(playerId);
         if (player.tokens < this.tokens) {
             throw 'You don\'t have enough tokens for this reward.';
         }

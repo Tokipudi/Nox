@@ -1,5 +1,6 @@
 import { Achievement } from "@lib/achievements/Achievement";
 import { AchievementOptions } from "@lib/achievements/interfaces/AchievementInterface";
+import { GodsAmountByPlayers } from "@lib/database/interfaces/ViewsInterfaces";
 import { ApplyOptions } from "@sapphire/decorators";
 import { container } from "@sapphire/framework";
 import { Snowflake } from "discord-api-types";
@@ -10,15 +11,14 @@ import { Snowflake } from "discord-api-types";
 })
 export class Rampage extends Achievement {
 
-    async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
-        const players: any = await container.prisma.$queryRaw`select * from godsamountbyplayers g where "guildId" = ${guildId} and count >= ${10} order by count desc;`;
+    async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
+        const rows: GodsAmountByPlayers = await container.prisma.$queryRaw`select * from godsamountbyplayers g where "guildId" = ${guildId} and count >= ${10} order by count desc;`;
 
-        const userIds = [];
-        for (let i in players) {
-            const player = players[i];
-            userIds.push(player.userId);
+        const playerIds = [];
+        for (let row of rows) {
+            playerIds.push(row.playerId);
         }
 
-        return userIds;
+        return playerIds;
     }
 }

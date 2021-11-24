@@ -1,5 +1,5 @@
-import { SetFavoriteSkin } from '@lib/database/utils/PlayersUtils';
-import { disconnectSkin, getSkinsByUser, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
+import { getPlayerByUserId, setFavoriteSkin } from '@lib/database/utils/PlayersUtils';
+import { disconnectSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -21,18 +21,22 @@ export class Team extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
-        const user: User = await args.pick('user').catch(() => author);
+
+        const user = await args.peek('user').catch(() => author);
+        const player = await args.pick('player').catch(async error => {
+            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
+        });
+        if (!player) return message.reply('An error occured when trying to load the player.');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const favoriteButton = getFavoriteButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
 
-        const skins = await getSkinsByUser(user.id, guildId);
+        const skins = await getSkinsByPlayer(player.id);
         if (!skins || skins.length === 0) {
             return message.reply(`${user} currently does not own any card!`);
         }
-
 
         if (skins[0].playersSkins[0].isFavorite) {
             favoriteButton.setEmoji('💔');
@@ -111,7 +115,7 @@ export class Team extends NoxCommand {
 
                 for (let i = 0; i < skins.length; i++) {
                     if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
-                        await SetFavoriteSkin(skins[i].id, author.id, guildId);
+                        await setFavoriteSkin(player.id, skins[i].id);
                         skins[i].playersSkins[0].isFavorite = true;
                         favoriteButton.setEmoji('💔');
                     } else {
@@ -144,7 +148,7 @@ export class Team extends NoxCommand {
                         break;
                     }
                 }
-                let skin = await disconnectSkin(skinId, guildId);
+                let skin = await disconnectSkin(skinId, player.id);
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

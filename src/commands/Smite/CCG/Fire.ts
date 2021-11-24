@@ -1,3 +1,4 @@
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -21,6 +22,8 @@ export class Fire extends NoxCommand {
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message;
 
+        const player = await getPlayerByUserId(author.id, guildId);
+
         let skinName: string = await args.pick('string');
         skinName = toTitleCase(skinName.trim());
         if (!skinName) return message.reply('The first argument needs to be a valid card name!');
@@ -37,8 +40,9 @@ export class Fire extends NoxCommand {
                 name: skinName,
                 playersSkins: {
                     every: {
-                        userId: author.id,
-                        guildId: guildId
+                        player: {
+                            id: player.id
+                        }
                     }
                 }
             },
@@ -49,9 +53,9 @@ export class Fire extends NoxCommand {
         });
         if (!skin) return message.reply('The card **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
 
-        await disconnectSkin(skin.id, guildId);
+        await disconnectSkin(skin.id, player.id);
 
         this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
-        return message.reply(`The card **${skinName}** was successfully removed from your team!`);
+        return message.reply(`The card **${skinName} ${godName}** was successfully removed from your team!`);
     }
 }

@@ -1,9 +1,10 @@
+import { Players } from '.prisma/client';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { Reward } from '@lib/rewards/Reward';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Snowflake } from 'discord-api-types';
 import { Message, MessageActionRow, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -27,9 +28,11 @@ export class Rewards extends NoxCommand {
             selectRewardButtons.push(this.getSelectRewardButton(i));
         }
 
+        const player = await getPlayerByUserId(author.id, guildId);
+
         let index = 0;
         const reply = await message.reply({
-            embeds: [await this.generateEmbed(author.id, guildId, rewards, index)],
+            embeds: [await this.generateEmbed(player, rewards, index)],
             components: rewards.length > 5
                 ? [
                     new MessageActionRow({
@@ -64,8 +67,8 @@ export class Rewards extends NoxCommand {
                 const i: number = +interaction.customId.replace('reward-', '');
                 const selectedRewardKey = index - 1 + i;
                 const reward: Reward = rewards[selectedRewardKey];
-                
-                reward.giveReward(author.id, guildId).then(() => {
+
+                reward.giveReward(player.id).then(() => {
                     message.reply(`You successfully claimed the following reward: **${reward.label}**\n`)
                 }).catch(e => {
                     message.reply(`An error occured when trying to give you the following reward: **${reward.label}**\nPlease make sure you have enough tokens.`);
@@ -86,7 +89,7 @@ export class Rewards extends NoxCommand {
 
             // Respond to interaction by updating message with new embed
             await interaction.update({
-                embeds: [await this.generateEmbed(author.id, guildId, rewards, index)],
+                embeds: [await this.generateEmbed(player, rewards, index)],
                 components: rewards.length > 5
                     ? [
                         new MessageActionRow({
@@ -140,18 +143,7 @@ export class Rewards extends NoxCommand {
         return rewards;
     }
 
-    private async generateEmbed(userId: Snowflake, guildId: Snowflake, rewards: Reward[], index: number) {
-        const player = await this.container.prisma.players.findUnique({
-            select: {
-                tokens: true
-            },
-            where: {
-                userId_guildId: {
-                    userId: userId,
-                    guildId: guildId
-                }
-            }
-        })
+    private async generateEmbed(player: Players, rewards: Reward[], index: number) {
         const embed = new MessageEmbed()
             .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
             .setDescription(`*Tokens available: \`${player.tokens}\`*`)

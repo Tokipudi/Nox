@@ -10,10 +10,10 @@ import { Snowflake } from "discord-api-types";
 })
 export class SweetGrind extends Achievement {
 
-    async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
+    async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
         const players = await container.prisma.players.findMany({
             select: {
-                userId: true
+                id: true
             },
             where: {
                 guild: {
@@ -25,12 +25,11 @@ export class SweetGrind extends Achievement {
             }
         });
 
-        const userIds = [];
-        for (let i in players) {
-            const player = players[i];
-            userIds.push(player.userId);
+        const playerIds = [];
+        for (let player of players) {
+            playerIds.push(player.id);
         }
 
-        return userIds;
+        return playerIds;
     }
 }

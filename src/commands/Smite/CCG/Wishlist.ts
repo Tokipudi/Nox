@@ -1,3 +1,4 @@
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { disconnectWishlistSkin, getSkinOwner, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -5,8 +6,7 @@ import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/Pag
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Snowflake } from 'discord-api-types';
-import { Message, MessageActionRow, User } from 'discord.js';
+import { Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     name: 'wishlist',
@@ -22,21 +22,24 @@ export class Wishlist extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
-        const player: User = await args.pick('user').catch(() => message.author);
 
-        if (player) {
-            if (player.bot) return message.reply('Bots do not have a wishlist!');
-        }
+        const userArgument = await args.peek('user').catch(() => author);
+        if (userArgument.bot) return message.reply('Bots do not have a wishlist!');
+
+        const player = await args.pick('player').catch(async error => {
+            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
+        });
+        if (!player) return message.reply('An error occured when trying to load the player.');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Remove', 'DANGER');
 
-        let skins = await getSkinWishlist(player.id, guildId);
+        let skins = await getSkinWishlist(player.id);
         if (!skins || skins.length === 0) {
-            return player.id === author.id
+            return userArgument.id === author.id
                 ? message.reply('Your wishlist is empty!')
-                : message.reply(`${player}'s wishlist is empty!`)
+                : message.reply(`${userArgument}'s wishlist is empty!`)
         }
 
         skins.length <= 1
@@ -45,10 +48,10 @@ export class Wishlist extends NoxCommand {
 
         const reply = await message.reply({
             content: 'Here is your wishlist.',
-            embeds: [await this.generateGodSkinEmbed(skins, 0, guildId)],
+            embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
             components: [
                 new MessageActionRow({
-                    components: player.id === author.id
+                    components: userArgument.id === author.id
                         ? [...([backButton]), ...([selectButton]), ...([forwardButton])]
                         : [...([backButton]), ...([forwardButton])]
                 })
@@ -82,16 +85,16 @@ export class Wishlist extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
                     components: [
                         new MessageActionRow({
-                            components: player.id === author.id
+                            components: userArgument.id === author.id
                                 ? [...([backButton]), ...([selectButton]), ...([forwardButton])]
                                 : [...([backButton]), ...([forwardButton])]
                         })
                     ]
                 })
-            } else if (interaction.customId === selectButton.customId && player.id === author.id) {
+            } else if (interaction.customId === selectButton.customId && userArgument.id === author.id) {
                 let skinName = interaction.message.embeds[0].title;
 
                 let skinId = 0;
@@ -102,9 +105,9 @@ export class Wishlist extends NoxCommand {
                     }
                 }
 
-                let playerWishedSkin = await disconnectWishlistSkin(skinId, player.id, guildId);
-                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was removed from the wishlist of ${player.username}#${player.discriminator}<${player.id}>!`);
-                skins = await getSkinWishlist(player.id, guildId);
+                let playerWishedSkin = await disconnectWishlistSkin(skinId, player.id);
+                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was removed from the wishlist of ${userArgument.username}#${userArgument.discriminator}<${userArgument.id}>!`);
+                skins = await getSkinWishlist(player.id);
 
                 if (skins == null || skins.length === 0) {
                     collector.stop();
@@ -118,7 +121,7 @@ export class Wishlist extends NoxCommand {
                     backButton.disabled = currentIndex === 0;
 
                     await interaction.update({
-                        embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
+                        embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
                         components: [
                             new MessageActionRow({
                                 components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -140,14 +143,14 @@ export class Wishlist extends NoxCommand {
         });
     }
 
-    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
+    protected async generateGodSkinEmbed(skins, index, playerId: number) {
         const embed = generateSkinEmbed(skins, index);
 
-        const owner = await getSkinOwner(skins[index].id, guildId);
+        const owner = await getSkinOwner(skins[index].id, playerId);
         if (owner !== null) {
-            const user = await this.container.client.users.fetch(owner.userId);
+            const user = await this.container.client.users.fetch(owner.player.user.id);
             if (user === null) {
-                embed.addField('Owner', `${owner.userId}`);
+                embed.addField('Owner', `${owner.player.user.id}`);
             } else {
                 embed.addField('Owner', `${user}`);
             }

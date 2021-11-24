@@ -1,9 +1,9 @@
-import { canPlayerClaimRoll, getTimeLeftBeforeClaim } from '@lib/database/utils/PlayersUtils';
+import { canPlayerClaimRoll, canPlayerRoll, getPlayerByUserId, getTimeLeftBeforeClaim, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Message, User } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     aliases: ['cd'],
@@ -20,15 +20,39 @@ export class Cooldown extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message;
-        const user: User = await args.pick('user').catch(() => author);
 
-        const canClaim = await canPlayerClaimRoll(user.id, guildId);
-        if (canClaim) {
-            return await message.reply(`${user} can claim a roll!`);
+        const player = await args.pick('player').catch(async error => {
+            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
+        });
+        if (!player) return message.reply('An error occured when trying to load the player.');
+
+        const embed = new MessageEmbed()
+            .setAuthor(author.username, author.avatarURL())
+            .setTitle('Cooldowns')
+            .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
+            .setColor('DARK_PURPLE')
+            .setTimestamp();
+
+        let cdMsg = '';
+
+        const canRoll = await canPlayerRoll(player.id);
+        if (canRoll) {
+            cdMsg = `\`${player.rollsAvailable}\` available.`
+        } else {
+            const duration = await getTimeLeftBeforeRoll(player.id);
+            cdMsg = `\`${duration.minutes()}min ${duration.seconds()}s\``;
         }
+        embed.addField('Rolls', cdMsg, true);
 
-        const duration = await getTimeLeftBeforeClaim(user.id, guildId);
+        const canClaim = await canPlayerClaimRoll(player.id);
+        if (canClaim) {
+            cdMsg = `\`${player.claimsAvailable}\` available.`;
+        } else {
+            const duration = await getTimeLeftBeforeClaim(player.id);
+            cdMsg = `\`${duration.hours()}h ${duration.minutes()}min ${duration.seconds()}s\``;
+        }
+        embed.addField('Claims', cdMsg, true);
 
-        return await message.reply(`${user} has to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
+        return await message.reply({ embeds: [embed] });
     }
 }

@@ -1,4 +1,5 @@
-import { getSkinsByUser, giveSkin } from '@lib/database/utils/SkinsUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { getSkinsByPlayer, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -19,17 +20,22 @@ export class Give extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message
-        const user: User = await args.pick('user');
 
+        const user = await args.peek('user');
         if (!user) return message.reply('The first argument **must** be a user.');
         if (user.id === author.id) return message.reply('You cannot give yourself a card!');
         if (user.bot) return message.reply('You cannot give a card to a bot!');
+
+        const player = await args.pick('player');
+        if (!player) return message.reply('An error occured when trying to load the player.');
+
+        const authorPlayer = await getPlayerByUserId(author.id, guildId);
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Give', 'DANGER');
 
-        const skins = await getSkinsByUser(author.id, guildId);
+        const skins = await getSkinsByPlayer(authorPlayer.id);
         if (!skins || skins.length === 0) {
             return message.reply('You currently don\'t own any card!');
         }
@@ -99,7 +105,7 @@ export class Give extends NoxCommand {
                         break;
                     }
                 }
-                let skin = await giveSkin(user.id, guildId, skinId, false);
+                let skin = await giveSkin(player.id, guildId, skinId, false);
 
                 this.container.logger.info(`The card ${skinName}<${skin.id}> was given to ${user.username}#${user.discriminator}<${user.id}> by ${author.username}#${author.discriminator}<${author.id}>!`)
                 embedMessage1.edit({

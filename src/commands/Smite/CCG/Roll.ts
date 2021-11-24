@@ -1,4 +1,4 @@
-import { addRoll, canPlayerClaimRoll, getPlayer, getTimeLeftBeforeClaim, substractAvailableRolls } from '@lib/database/utils/PlayersUtils';
+import { addRoll, canPlayerClaimRoll, getPlayerByUserId, getTimeLeftBeforeClaim, substractAvailableRolls } from '@lib/database/utils/PlayersUtils';
 import { connectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -16,7 +16,7 @@ import moment from 'moment';
 export class Roll extends NoxCommand {
 
     public async messageRun(message: Message) {
-        const { author, guildId } = message
+        const { author, guildId } = message;
 
         const msg = await message.reply('Fetching data...');
 
@@ -25,7 +25,12 @@ export class Roll extends NoxCommand {
             `from "Skins", "Gods", "SkinsObtainability" ` +
             `where "Skins"."godId" = "Gods"."id" ` +
             `and "Skins"."obtainabilityId" = "SkinsObtainability"."id" ` +
-            `and "Skins"."id" not in (select "skinId" from "PlayersSkins" where "guildId" = '${guildId}') ` +
+            `and "Skins"."id" not in ( ` +
+            `select "skinId" from "PlayersSkins", "Players", "Guilds" ` +
+            `where "PlayersSkins"."playerId" = "Players"."id" ` +
+            `and "Players"."guildId" = "Guilds"."id" ` +
+            `and "Guilds"."id" = '${guildId}'` +
+            `) ` +
             `order by random() limit 1;`
         );
 
@@ -33,7 +38,9 @@ export class Roll extends NoxCommand {
             return await msg.edit('No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.');
         }
 
-        await substractAvailableRolls(author.id, guildId);
+        const player = await getPlayerByUserId(author.id, guildId);
+
+        await substractAvailableRolls(player.id);
 
         let skin = skins[0];
 
@@ -61,25 +68,25 @@ export class Roll extends NoxCommand {
                 break;
         }
 
-        await addRoll(author.id, guildId);
+        await addRoll(player.id);
         await msg.edit('React with any emoji to claim.');
         await msg.edit({ embeds: [embed] });
 
         const collector = msg.createReactionCollector({ time: 45000 });
 
         collector.on('collect', async (reaction, user) => {
-            const player = await getPlayer(user.id, guildId);
-            const canClaim = await canPlayerClaimRoll(user.id, guildId);
+            const player = await getPlayerByUserId(user.id, guildId);
+            const canClaim = await canPlayerClaimRoll(player.id);
             if (player && player.isBanned) {
                 message.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
             } else if (!canClaim) {
-                const duration = await getTimeLeftBeforeClaim(user.id, guildId);
+                const duration = await getTimeLeftBeforeClaim(player.id);
 
                 message.channel.send(`${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
             } else {
                 collector.stop();
 
-                await connectSkin(skin.id, user.id, guildId);
+                await connectSkin(skin.id, player.id);
                 await this.container.prisma.players.update({
                     data: {
                         claimsAvailable: {
@@ -88,10 +95,7 @@ export class Roll extends NoxCommand {
                         lastClaimChangeDate: moment.utc().toDate()
                     },
                     where: {
-                        userId_guildId: {
-                            userId: user.id,
-                            guildId: guildId
-                        }
+                        id: player.id
                     }
                 });
                 if (user.id !== author.id) {
@@ -105,10 +109,7 @@ export class Roll extends NoxCommand {
                             }
                         },
                         where: {
-                            userId_guildId: {
-                                userId: user.id,
-                                guildId: guildId
-                            }
+                            id: player.id
                         }
                     });
                 } else {
@@ -119,30 +120,36 @@ export class Roll extends NoxCommand {
                             }
                         },
                         where: {
-                            userId_guildId: {
-                                userId: user.id,
-                                guildId: guildId
-                            }
+                            id: player.id
                         }
                     });
                 }
 
                 msg.reply(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
-                this.container.logger.info(`User ${user.username}#${user.discriminator}<${user.id}> collected ${skin.name}<${skin.id}>.`);
+                this.container.logger.info(`Player ${player.id} collected ${skin.name} ${skin.godname}<${skin.id}>.`);
             }
         });
 
         let wishedPlayers = await this.container.prisma.playersWishedSkins.findMany({
             where: {
                 skinId: skin.id,
-                guildId: guildId
+                player: {
+                    guild: {
+                        id: guildId
+                    }
+                }
+            },
+            include: {
+                player: {
+                    include: {
+                        user: true
+                    }
+                }
             }
         });
         if (wishedPlayers && wishedPlayers.length > 0) {
-            for (let k in wishedPlayers) {
-                let player = wishedPlayers[k];
-
-                let user = await this.container.client.users.fetch(player.userId);
+            for (let wishedPlayer of wishedPlayers) {
+                let user = await this.container.client.users.fetch(wishedPlayer.player.user.id);
                 try {
                     await user.send('A card from your wishlist is available for grab! ' + msg.url);
                 } catch (e) {

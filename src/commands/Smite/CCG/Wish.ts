@@ -1,3 +1,4 @@
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { addSkinToWishlist, getSkinByGodName } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -32,9 +33,11 @@ export class Wish extends NoxCommand {
         const skin = await getSkinByGodName(godName, skinName);
         if (!skin) return message.reply('The card **' + skinName + '** does not exist for the god ' + godName + '!');
 
-        await addSkinToWishlist(author.id, guildId, skin.id);
+        const player = await getPlayerByUserId(author.id, guildId);
+
+        await addSkinToWishlist(player.id, skin.id);
 
         this.container.logger.info(`The card ${skin.name}<${skin.id}> was added to the wishlist of ${author.username}#${author.discriminator}<${author.id}>!`)
-        return message.reply(`The card **${skinName}** was successfully added to your wishlist!`);
+        return message.reply(`The card **${skinName} ${godName}** was successfully added to your wishlist!`);
     }
 }

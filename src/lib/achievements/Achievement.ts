@@ -16,13 +16,13 @@ export abstract class Achievement extends Piece implements AchievementInterface 
         this.tokens = options.tokens;
     }
 
-    abstract getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]>;
+    abstract getCurrentPlayerIds(guildId: Snowflake): Promise<number[]>;
 
     async deliverAchievement(guildId: Snowflake): Promise<void> {
-        const userIds = await this.getCurrentUserIds(guildId);
+        const playerIds = await this.getCurrentPlayerIds(guildId);
 
-        if (userIds.length > 0) {
-            await this.addAchievementRoleByUserIds(userIds, guildId);
+        if (playerIds.length > 0) {
+            await this.addAchievementRoleByPlayerIds(playerIds);
 
             if (this.tokens != null && this.tokens > 0) {
                 // Update tokens
@@ -33,11 +33,8 @@ export abstract class Achievement extends Piece implements AchievementInterface 
                         }
                     },
                     where: {
-                        userId: {
-                            in: userIds
-                        },
-                        guild: {
-                            id: guildId
+                        id: {
+                            in: playerIds
                         }
                     }
                 });
@@ -54,13 +51,12 @@ export abstract class Achievement extends Piece implements AchievementInterface 
                     }
                 });
 
-                for (let userId of userIds) {
-                    await this.container.prisma.playerSeasonsAchievements.create({
+                for (let playerId of playerIds) {
+                    await this.container.prisma.playersSeasonsAchievements.create({
                         data: {
                             achievementId: achievement.id,
-                            guildId: guild.id,
-                            season: guild.season,
-                            userId: userId
+                            playerId: playerId,
+                            season: guild.season
                         }
                     });
                 }
@@ -74,24 +70,35 @@ export abstract class Achievement extends Piece implements AchievementInterface 
      * @param userIds the users to give the achievement to
      * @param guildId the guild the users belong to
      */
-    async addAchievementRoleByUserIds(userIds: Snowflake[], guildId: Snowflake): Promise<void> {
+    async addAchievementRoleByPlayerIds(playerIds: number[]): Promise<void> {
         try {
-            const guild = await container.client.guilds.fetch(guildId);
-            let role = (await guild.roles.fetch()).find(role => role.name === this.label);
+            const players = await this.container.prisma.players.findMany({
+                where: {
+                    id: {
+                        in: playerIds
+                    }
+                },
+                include: {
+                    user: true,
+                    guild: true
+                }
+            });
 
-            if (role == null) {
-                role = await guild.roles.create({ name: this.label, color: 'DARK_PURPLE', reason: 'Role created automatically as a reward for Smite\s CCG.' });
-                container.logger.info(`Role ${this.label} created.`);
-            }
+            for (let player of players) {
+                const guild = await container.client.guilds.fetch(player.guild.id);
+                let role = (await guild.roles.fetch()).find(role => role.name === this.label);
+                if (role == null) {
+                    role = await guild.roles.create({ name: this.label, color: 'DARK_PURPLE', reason: 'Role created automatically as a reward for Smite\s CCG.' });
+                    container.logger.info(`Role ${this.label} created.`);
+                }
 
-            for (let i in userIds) {
-                const userId = userIds[i];
-
-                const user = await guild.members.fetch(userId);
+                const user = await guild.members.fetch(player.user.id);
                 await user.roles.add(role);
 
-                container.logger.info(`User <${userId}> was added the role ${this.label}.`);
+                container.logger.info(`Player ${player.id} was added the role ${this.label}.`);
             }
+
+
         } catch (e) {
             container.logger.error(e);
         }

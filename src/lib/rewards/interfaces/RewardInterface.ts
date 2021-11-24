@@ -1,5 +1,4 @@
 import { PieceOptions } from '@sapphire/pieces';
-import { Snowflake } from "discord-api-types";
 
 export interface RewardInterface {
 
@@ -9,7 +8,7 @@ export interface RewardInterface {
      * @param userId
      * @param guildId 
      */
-    giveReward(userId: Snowflake, guildId: Snowflake, options: GiveRewardOptions): Promise<void>;
+    giveReward(playerId: number, options: GiveRewardOptions): Promise<void>;
 }
 
 export interface RewardOptions extends PieceOptions {

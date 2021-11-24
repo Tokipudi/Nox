@@ -1,3 +1,4 @@
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { addSkinToWishlist, getSkinOwner, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -28,6 +29,8 @@ export class GodSkins extends NoxCommand {
         let godName: string = await args.rest('string');
         godName = toTitleCase(godName);
 
+        const player = await getPlayerByUserId(author.id, guildId);
+
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Wish', 'SUCCESS');
@@ -37,7 +40,7 @@ export class GodSkins extends NoxCommand {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: `Here are the cards for ${godName}.`,
-            embeds: [await this.generateGodSkinEmbed(skins, 0, guildId)],
+            embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -69,11 +72,11 @@ export class GodSkins extends NoxCommand {
                 // Disable the buttons if they cannot be used
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
-                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(author.id, guildId));
+                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(player.id));
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -91,13 +94,14 @@ export class GodSkins extends NoxCommand {
                     }
                 }
 
-                let playerWishedSkin = await addSkinToWishlist(author.id, guildId, skinId);
+
+                let playerWishedSkin = await addSkinToWishlist(player.id, skinId);
                 this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
 
                 // Disable the wish button
                 selectButton.disabled = true;
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -108,14 +112,14 @@ export class GodSkins extends NoxCommand {
         });
     }
 
-    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
+    protected async generateGodSkinEmbed(skins, index, playerId: number) {
         const embed = generateSkinEmbed(skins, index);
 
-        const owner = await getSkinOwner(skins[index].id, guildId);
+        const owner = await getSkinOwner(skins[index].id, playerId);
         if (owner !== null) {
-            const user = await this.container.client.users.fetch(owner.userId);
+            const user = await this.container.client.users.fetch(owner.player.user.id);
             if (user === null) {
-                embed.addField('Owner', `${owner.userId}`);
+                embed.addField('Owner', `${owner.player.user.id}`);
             } else {
                 embed.addField('Owner', `${user}`);
             }

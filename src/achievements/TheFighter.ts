@@ -10,11 +10,11 @@ import { Snowflake } from "discord-api-types";
 })
 export class TheFighter extends Achievement {
 
-    async getCurrentUserIds(guildId: Snowflake): Promise<Snowflake[]> {
+    async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
 
         const players = await container.prisma.players.findMany({
             select: {
-                userId: true,
+                id: true,
                 win: true
             },
             where: {
@@ -28,21 +28,19 @@ export class TheFighter extends Achievement {
         });
 
         let max = 0;
-        const userIds = [];
-        for (let i in players) {
-            const player = players[i];
-
+        const playerIds = [];
+        for (let player of players) {
             if (max === 0 && player.win > 0) {
                 max = player.win;
             }
 
             if (max !== 0 && player.win === max) {
-                userIds.push(player.userId);
+                playerIds.push(player.id);
             } else {
                 break;
             }
         }
 
-        return userIds;
+        return playerIds;
     }
 }

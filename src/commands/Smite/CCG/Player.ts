@@ -1,9 +1,10 @@
-import { getPlayer } from '@lib/database/utils/PlayersUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Message, MessageEmbed, User } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows a player\'s statistics.',
@@ -19,19 +20,19 @@ export class Player extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
         const { author, guildId } = message;
-        const user: User = await args.pick('user').catch(() => author);
 
-        const player = await getPlayer(user.id, guildId);
+        const user = await args.peek('user').catch(() => author);
+        const player = await args.pick('player').catch(async error => {
+            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
+        });
+        if (!player) return message.reply('An error occured when trying to load the player.');
 
-        if (!player) {
-            return await message.reply(`${user} is not registered as a player yet!`);
-        }
+        const skins = await getSkinsByPlayer(player.id);
 
         let favoriteSkin = null;
-        for (const i in player.playersSkins) {
-            const playerSkin = player.playersSkins[i];
-            if (playerSkin.isFavorite) {
-                favoriteSkin = playerSkin.skin;
+        for (const skin of skins) {
+            if (skin.playersSkins[0].isFavorite) {
+                favoriteSkin = skin;
                 break;
             }
         }
@@ -41,7 +42,8 @@ export class Player extends NoxCommand {
             .setDescription(`Tokens: \`${player.tokens}\``)
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .setTimestamp(player.joinDate);
+            .setTimestamp(player.joinDate)
+            .setFooter(`#${player.id}`);
 
         if (favoriteSkin !== null) {
             embed.setImage(favoriteSkin.godSkinUrl);
@@ -66,7 +68,7 @@ export class Player extends NoxCommand {
             `All Ins Lost: \`${player.allInLoss}\`\n`;
 
         if (player.win > 0 || player.loss > 0) {
-            fightDescription += `\`${((player.win / (player.win + player.loss)) * 100).toFixed(2)}%\`\n`;
+            fightDescription += `\`${Math.round(((player.win / (player.win + player.loss)) * 100))}%\`\n`;
         }
         if (player.losingStreak > 0) {
             fightDescription += `Current Losing Streak: \`${player.losingStreak}\`\n`;

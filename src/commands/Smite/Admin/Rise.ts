@@ -1,9 +1,9 @@
-import { getPlayer, setPlayerAsUnbanned } from '@lib/database/utils/PlayersUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Args } from '@sapphire/framework';
-import { Message, User } from 'discord.js';
+import { Message } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Unbans a player.',
@@ -12,35 +12,33 @@ import { Message, User } from 'discord.js';
     usage: '<@user>',
     examples: [
         '@User#1234'
-    ]
+    ],
+    preconditions: ['PlayerExists']
 })
 export class Rise extends NoxCommand {
 
     public async messageRun(message: Message, args: Args) {
-        const { guildId } = message;
+        const { author, guildId } = message;
 
-        const user: User = await args.pick('user').catch(() => message.author);
-        if (!user) return message.reply('The first argument **must** be a user.');
+        const user = await args.peek('user').catch(() => author);
+        const player = await args.pick('player').catch(async error => {
+            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
+        });
+        if (!player) return message.reply('An error occured when trying to load the player.');
 
-        const player = await getPlayer(user.id, message.guildId);
-        if (!player) return message.reply(`${user} has not rolled any card yet.`);
+        await this.container.prisma.players.update({
+            data: {
+                claimsAvailable: player.claimsAvailable > 1 ? player.claimsAvailable : 1,
+                rollsAvailable: player.rollsAvailable > 3 ? player.rollsAvailable : 3,
+                isBanned: false,
+                banStartDate: null,
+                banEndDate: null
+            },
+            where: {
+                id: player.id
+            }
+        })
 
-        if (player.claimsAvailable <= 0) {
-            await this.container.prisma.players.update({
-                data: {
-                    claimsAvailable: 1,
-                    rollsAvailable: 3
-                },
-                where: {
-                    userId_guildId: {
-                        userId: user.id,
-                        guildId: guildId
-                    }
-                }
-            })
-        }
-        await setPlayerAsUnbanned(user.id, guildId);
-
-        message.reply(`${user} can claim a card again.`);
+        message.reply(`${user} can claim and roll again.`);
     }
 }

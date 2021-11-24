@@ -22,7 +22,11 @@ export async function getSkinById(skinId: number, guildId: Snowflake) {
             id: skinId,
             playersSkins: {
                 some: {
-                    guildId: guildId
+                    player: {
+                        guild: {
+                            id: guildId
+                        }
+                    }
                 }
             }
         },
@@ -42,7 +46,11 @@ export async function getSkinsByObtainability(obtainability: string, guildId: Sn
         include: {
             playersSkins: {
                 where: {
-                    guildId: guildId
+                    player: {
+                        guild: {
+                            id: guildId
+                        }
+                    }
                 }
             }
         },
@@ -54,39 +62,21 @@ export async function getSkinsByObtainability(obtainability: string, guildId: Sn
     });
 }
 
-export async function connectSkin(skinId: number, userId: Snowflake, guildId: Snowflake, updatelastClaimChangeDate: boolean = true) {
+export async function connectSkin(skinId: number, playerId: number, updatelastClaimChangeDate: boolean = true) {
     const skin = await container.prisma.skins.update({
         data: {
             playersSkins: {
                 connectOrCreate: {
                     create: {
                         player: {
-                            connectOrCreate: {
-                                create: {
-                                    userId: userId,
-                                    guild: {
-                                        connectOrCreate: {
-                                            create: {
-                                                id: guildId
-                                            },
-                                            where: {
-                                                id: guildId
-                                            }
-                                        }
-                                    }
-                                },
-                                where: {
-                                    userId_guildId: {
-                                        userId: userId,
-                                        guildId: guildId
-                                    }
-                                }
+                            connect: {
+                                id: playerId
                             }
                         }
                     },
                     where: {
-                        guildId_skinId: {
-                            guildId: guildId,
+                        playerId_skinId: {
+                            playerId: playerId,
                             skinId: skinId
                         }
                     }
@@ -104,10 +94,7 @@ export async function connectSkin(skinId: number, userId: Snowflake, guildId: Sn
                 lastClaimChangeDate: moment.utc().toDate()
             },
             where: {
-                userId_guildId: {
-                    userId: userId,
-                    guildId: guildId
-                }
+                id: playerId
             }
         });
     }
@@ -115,31 +102,14 @@ export async function connectSkin(skinId: number, userId: Snowflake, guildId: Sn
     return skin;
 }
 
-export async function disconnectSkin(skinId: number, guildId: Snowflake) {
-    return await container.prisma.skins.update({
-        data: {
-            playersSkins: {
-                delete: {
-                    guildId_skinId: {
-                        guildId: guildId,
-                        skinId: skinId
-                    }
-                }
-            }
-        },
-        where: {
-            id: skinId
-        }
-    });
-}
-
-export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
+export async function getSkinsByPlayer(playerId: number) {
     const skins = await container.prisma.skins.findMany({
         where: {
             playersSkins: {
                 some: {
-                    userId: userId,
-                    guildId: guildId
+                    player: {
+                        id: playerId
+                    }
                 }
             }
         },
@@ -155,19 +125,10 @@ export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
                 }
             },
             playersSkins: {
-                select: {
-                    isExhausted: true,
-                    isFavorite: true,
-                    win: true,
-                    loss: true,
-                    winningStreak: true,
-                    highestWinningStreak: true,
-                    losingStreak: true,
-                    highestLosingStreak: true
-                },
                 where: {
-                    userId: userId,
-                    guildId: guildId
+                    player: {
+                        id: playerId
+                    }
                 }
             }
         },
@@ -186,6 +147,24 @@ export async function getSkinsByUser(userId: Snowflake, guildId: Snowflake) {
         }
     }
     return skins;
+}
+
+export async function disconnectSkin(skinId: number, playerId: number) {
+    return await container.prisma.skins.update({
+        data: {
+            playersSkins: {
+                delete: {
+                    playerId_skinId: {
+                        playerId: playerId,
+                        skinId: skinId
+                    }
+                }
+            }
+        },
+        where: {
+            id: skinId
+        }
+    });
 }
 
 export async function getSkinByGodName(godName: string, skinName: string) {
@@ -239,73 +218,11 @@ export async function getSkinsByGodName(name: string) {
     });
 }
 
-export async function getUnclaimedSkinsByGuildId(guildId: Snowflake) {
-    return await container.prisma.skins.count({
-        where: {
-
-        }
-    })
-}
-
-export async function exchangeSkins(userId1: Snowflake, skinId1: number, userId2: Snowflake, skinId2: number, guildId: Snowflake, updatelastClaimChangeDate: boolean = true) {
-    await container.prisma.playersSkins.update({
-        data: {
-            userId: userId2
-        },
-        where: {
-            guildId_skinId: {
-                guildId: guildId,
-                skinId: skinId1
-            }
-        }
-    });
-
-    await container.prisma.playersSkins.update({
-        data: {
-            userId: userId1
-        },
-        where: {
-            guildId_skinId: {
-                guildId: guildId,
-                skinId: skinId2
-            }
-        }
-    });
-
-    await container.prisma.players.update({
-        data: {
-            cardsExchanged: {
-                increment: 1
-            }
-        },
-        where: {
-            userId_guildId: {
-                userId: userId1,
-                guildId: guildId
-            }
-        }
-    });
-
-    await container.prisma.players.update({
-        data: {
-            cardsExchanged: {
-                increment: 1
-            }
-        },
-        where: {
-            userId_guildId: {
-                userId: userId2,
-                guildId: guildId
-            }
-        }
-    });
-}
-
-export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: number, updatelastClaimChangeDate: boolean = true) {
+export async function giveSkin(playerId: number, guildId: Snowflake, skinId: number, updatelastClaimChangeDate: boolean = true) {
     const skin = await getSkinById(skinId, guildId);
-    await disconnectSkin(skinId, guildId);
+    await disconnectSkin(skinId, skin.playersSkins[0].player.id);
 
-    const newSkin = await connectSkin(skinId, userId, guildId, updatelastClaimChangeDate);
+    const newSkin = await connectSkin(skinId, playerId, updatelastClaimChangeDate);
 
     await container.prisma.players.update({
         data: {
@@ -314,10 +231,7 @@ export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: nu
             }
         },
         where: {
-            userId_guildId: {
-                userId: skin.playersSkins[0].userId,
-                guildId: guildId
-            }
+            id: skin.playersSkins[0].player.id
         }
     });
 
@@ -328,10 +242,7 @@ export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: nu
             }
         },
         where: {
-            userId_guildId: {
-                userId: userId,
-                guildId: guildId
-            }
+            id: playerId
         }
     });
 
@@ -345,8 +256,8 @@ export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: nu
             exhaustChangeDate: skin.playersSkins[0].exhaustChangeDate
         },
         where: {
-            guildId_skinId: {
-                guildId: guildId,
+            playerId_skinId: {
+                playerId: playerId,
                 skinId: skinId
             }
         }
@@ -355,13 +266,14 @@ export async function giveSkin(userId: Snowflake, guildId: Snowflake, skinId: nu
     return await getSkinById(skinId, guildId);
 }
 
-export async function getSkinWishlist(userId: Snowflake, guildId: Snowflake) {
+export async function getSkinWishlist(playerId: number) {
     return await container.prisma.skins.findMany({
         where: {
             playersWishes: {
                 some: {
-                    userId: userId,
-                    guildId: guildId
+                    player: {
+                        id: playerId
+                    }
                 }
             }
         },
@@ -381,8 +293,9 @@ export async function getSkinWishlist(userId: Snowflake, guildId: Snowflake) {
                     isExhausted: true
                 },
                 where: {
-                    userId: userId,
-                    guildId: guildId
+                    player: {
+                        id: playerId
+                    }
                 }
             }
         },
@@ -394,42 +307,23 @@ export async function getSkinWishlist(userId: Snowflake, guildId: Snowflake) {
     });
 }
 
-export async function disconnectWishlistSkin(skinId: number, userId: Snowflake, guildId: Snowflake) {
+export async function disconnectWishlistSkin(skinId: number, playerId: number) {
     return await container.prisma.playersWishedSkins.delete({
         where: {
-            userId_guildId_skinId: {
-                userId: userId,
-                guildId: guildId,
+            playerId_skinId: {
+                playerId: playerId,
                 skinId: skinId
             }
         }
     });
 }
 
-export async function addSkinToWishlist(userId: Snowflake, guildId: Snowflake, skinId: number) {
+export async function addSkinToWishlist(playerId: number, skinId: number) {
     return await container.prisma.playersWishedSkins.create({
         data: {
             player: {
-                connectOrCreate: {
-                    create: {
-                        userId: userId,
-                        guild: {
-                            connectOrCreate: {
-                                create: {
-                                    id: guildId
-                                },
-                                where: {
-                                    id: guildId
-                                }
-                            }
-                        }
-                    },
-                    where: {
-                        userId_guildId: {
-                            userId: userId,
-                            guildId: guildId
-                        }
-                    }
+                connect: {
+                    id: playerId
                 }
             },
             skin: {
@@ -441,18 +335,25 @@ export async function addSkinToWishlist(userId: Snowflake, guildId: Snowflake, s
     });
 }
 
-export async function getSkinOwner(skinId: number, guildId: Snowflake) {
+export async function getSkinOwner(skinId: number, playerId: number) {
     return await container.prisma.playersSkins.findUnique({
         where: {
-            guildId_skinId: {
-                guildId: guildId,
+            playerId_skinId: {
+                playerId: playerId,
                 skinId: skinId
+            }
+        },
+        include: {
+            player: {
+                include: {
+                    user: true
+                }
             }
         }
     })
 }
 
-export async function addWin(skinId: number, guildId: Snowflake) {
+export async function addWin(skinId: number, playerId: number) {
     let playersSkin = await container.prisma.playersSkins.update({
         data: {
             win: {
@@ -467,8 +368,8 @@ export async function addWin(skinId: number, guildId: Snowflake) {
             player: true
         },
         where: {
-            guildId_skinId: {
-                guildId: guildId,
+            playerId_skinId: {
+                playerId: playerId,
                 skinId: skinId
             }
         }
@@ -483,8 +384,8 @@ export async function addWin(skinId: number, guildId: Snowflake) {
                 player: true
             },
             where: {
-                guildId_skinId: {
-                    guildId: guildId,
+                playerId_skinId: {
+                    playerId: playerId,
                     skinId: skinId
                 }
             }
@@ -501,31 +402,14 @@ export async function addWin(skinId: number, guildId: Snowflake) {
             }
         },
         where: {
-            userId_guildId: {
-                guildId: guildId,
-                userId: playersSkin.player.userId
-            }
+            id: playerId
         }
     });
-
-    if (player.losingStreak > player.highestLosingStreak) {
-        await container.prisma.players.update({
-            data: {
-                highestWinningStreak: player.winningStreak
-            },
-            where: {
-                userId_guildId: {
-                    guildId: guildId,
-                    userId: playersSkin.player.userId
-                }
-            }
-        });
-    }
 
     return playersSkin;
 }
 
-export async function addLoss(skinId: number, guildId: Snowflake) {
+export async function addLoss(skinId: number, playerId: number) {
     let playersSkin = await container.prisma.playersSkins.update({
         data: {
             loss: {
@@ -540,8 +424,8 @@ export async function addLoss(skinId: number, guildId: Snowflake) {
             player: true
         },
         where: {
-            guildId_skinId: {
-                guildId: guildId,
+            playerId_skinId: {
+                playerId: playerId,
                 skinId: skinId
             }
         }
@@ -556,8 +440,8 @@ export async function addLoss(skinId: number, guildId: Snowflake) {
                 player: true
             },
             where: {
-                guildId_skinId: {
-                    guildId: guildId,
+                playerId_skinId: {
+                    playerId: playerId,
                     skinId: skinId
                 }
             }
@@ -574,10 +458,7 @@ export async function addLoss(skinId: number, guildId: Snowflake) {
             }
         },
         where: {
-            userId_guildId: {
-                guildId: guildId,
-                userId: playersSkin.player.userId
-            }
+            id: playerId
         }
     });
 
@@ -587,10 +468,7 @@ export async function addLoss(skinId: number, guildId: Snowflake) {
                 highestLosingStreak: player.losingStreak
             },
             where: {
-                userId_guildId: {
-                    guildId: guildId,
-                    userId: playersSkin.player.userId
-                }
+                id: playerId
             }
         });
     }
@@ -598,50 +476,17 @@ export async function addLoss(skinId: number, guildId: Snowflake) {
     return playersSkin;
 }
 
-export async function exhaustSkin(skinId: number, guildId: Snowflake) {
-    return await container.prisma.skins.update({
+export async function exhaustSkin(skinId: number, playerId: number) {
+    return await container.prisma.playersSkins.update({
         data: {
-            playersSkins: {
-                update: {
-                    data: {
-                        isExhausted: true,
-                        exhaustChangeDate: moment.utc().toDate()
-                    },
-                    where: {
-                        guildId_skinId: {
-                            guildId: guildId,
-                            skinId: skinId
-                        }
-                    }
-                }
-            }
+            isExhausted: true,
+            exhaustChangeDate: moment.utc().toDate()
         },
         where: {
-            id: skinId
-        }
-    });
-}
-
-export async function unexhaustSkin(skinId: number, guildId: Snowflake) {
-    return await container.prisma.skins.update({
-        data: {
-            playersSkins: {
-                update: {
-                    data: {
-                        isExhausted: false,
-                        exhaustChangeDate: moment.utc().toDate()
-                    },
-                    where: {
-                        guildId_skinId: {
-                            guildId: guildId,
-                            skinId: skinId
-                        }
-                    }
-                }
+            playerId_skinId: {
+                playerId: playerId,
+                skinId: skinId
             }
-        },
-        where: {
-            id: skinId
         }
     });
 }
@@ -649,12 +494,20 @@ export async function unexhaustSkin(skinId: number, guildId: Snowflake) {
 export async function resetAllSkinsByGuildId(guildId: Snowflake) {
     await container.prisma.playersSkins.deleteMany({
         where: {
-            guildId: guildId
+            player: {
+                guild: {
+                    id: guildId
+                }
+            }
         }
     });
     await container.prisma.playersWishedSkins.deleteMany({
         where: {
-            guildId: guildId
+            player: {
+                guild: {
+                    id: guildId
+                }
+            }
         }
     });
 }
