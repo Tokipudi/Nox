@@ -29,8 +29,8 @@ function sortCommandsAlphabetically(_: NoxCommand[], __: NoxCommand[], firstCate
     description: 'This NoxCommand.',
     detailedDescription: 'Lists all of the commands available for this user.',
     examples: [
-        'help',
-        'help roll'
+        'godskins',
+        'roll'
     ]
 })
 export class Help extends NoxCommand {
@@ -67,14 +67,14 @@ export class Help extends NoxCommand {
                         )
 
                         const commandStart = this.container.client.options.defaultPrefix + command.name + ' ';
-                        if (command.usage.length > 0) {
-                            embed.addField('Usage', `\`\`\`\n${commandStart}${command.usage}\n\`\`\``)
+                        if (command.usage != null && command.usage.length > 0) {
+                            embed.addField('Usage', `\`\`\`\n${commandStart}${command.usage}\n\`\`\``);
                         }
-                        if (command.examples.length > 0) {
+                        if (command.examples != null && command.examples.length > 0) {
                             embed.addField('Examples', `\`\`\`\n${commandStart}${command.examples.join(`\n${commandStart}`)}\n\`\`\``);
                         }
 
-                        if (command.aliases.length > 0) {
+                        if (command.aliases != null && command.aliases.length > 0) {
                             embed.addField('Aliases', `\`${command.aliases.join('`, `')}\``)
                         }
 
