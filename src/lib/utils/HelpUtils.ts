@@ -71,20 +71,22 @@ export async function getCommandEmbed(message: Message, commandName: string, con
                         ? command.detailedDescription
                         : commandDescription
                 )
+
+                if (command.aliases != null && command.aliases.length > 0) {
+                    embed.addField('Aliases', `\`${command.aliases.join('`, `')}\``)
+                }
+                
                 const commandStart = container.client.options.defaultPrefix + command.name + ' ';
                 embed.addField(
                     'Usage',
                     command.usage != null && command.usage.length > 0
                         ? `\`\`\`\n${commandStart}${command.usage}\n\`\`\``
-                        : `\`\`\`\n${commandStart}\n\`\`\``
+                        : `\`\`\`\n${commandStart}\n\`\`\``,
+                    true
                 )
 
                 if (command.examples != null && command.examples.length > 0) {
-                    embed.addField('Examples', `\`\`\`\n${commandStart}${command.examples.join(`\n${commandStart}`)}\n\`\`\``);
-                }
-
-                if (command.aliases != null && command.aliases.length > 0) {
-                    embed.addField('Aliases', `\`${command.aliases.join('`, `')}\``)
+                    embed.addField('Examples', `\`\`\`\n${commandStart}${command.examples.join(`\n${commandStart}`)}\n\`\`\``, true);
                 }
             }
         }
