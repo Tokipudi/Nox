@@ -1,7 +1,11 @@
 import { getPlayerByUserId, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
-import { AsyncPreconditionResult, Precondition } from '@sapphire/framework';
+import { ApplyOptions } from '@sapphire/decorators';
+import { AsyncPreconditionResult, Precondition, PreconditionOptions } from '@sapphire/framework';
 import type { Message } from 'discord.js';
 
+@ApplyOptions<PreconditionOptions>({
+    name: 'canPlayerRoll'
+})
 export class CanPlayerRoll extends Precondition {
 
     public async run(message: Message): AsyncPreconditionResult {
