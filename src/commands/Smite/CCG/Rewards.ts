@@ -9,7 +9,7 @@ import { Message, MessageActionRow, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the rewards available.',
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Rewards extends NoxCommand {
 

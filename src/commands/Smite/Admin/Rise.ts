@@ -13,7 +13,7 @@ import { Message } from 'discord.js';
     examples: [
         '@User#1234'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Rise extends NoxCommand {
 

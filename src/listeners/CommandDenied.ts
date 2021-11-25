@@ -13,7 +13,7 @@ export class CommandDenied extends Listener<typeof Events.CommandDenied> {
                 case 'preconditionCooldown':
                     const context = error.context as CommandContextWithCooldown;
                     return await payload.message.reply(`You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`);
-                case 'CanPlayerRoll':
+                case 'canPlayerRoll':
                     return payload.message.reply(error.message);
                 default:
                 // Do nothing

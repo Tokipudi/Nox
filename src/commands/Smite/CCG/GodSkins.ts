@@ -19,7 +19,7 @@ import { Message, MessageActionRow } from 'discord.js';
         'Ymir',
         'Nu Wa'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class GodSkins extends NoxCommand {
 

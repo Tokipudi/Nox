@@ -15,7 +15,7 @@ import { Message } from 'discord.js';
         '"Nuclear Winter" Ymir',
         '"Playful Bunny" "Nu Wa"'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Fire extends NoxCommand {
 

@@ -14,7 +14,7 @@ import { Message, MessageActionRow, User } from 'discord.js';
     examples: [
         '@User#1234'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Give extends NoxCommand {
 

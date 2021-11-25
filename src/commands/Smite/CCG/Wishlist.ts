@@ -16,7 +16,7 @@ import { Message, MessageActionRow } from 'discord.js';
         '',
         '@User#1234'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Wishlist extends NoxCommand {
 

@@ -11,7 +11,7 @@ import moment from 'moment';
     cooldownLimit: 1,
     cooldownDelay: 5000,
     cooldownScope: 0,
-    preconditions: ['PlayerExists', 'CanPlayerRoll']
+    preconditions: ['playerExists', 'canPlayerRoll']
 })
 export class Roll extends NoxCommand {
 

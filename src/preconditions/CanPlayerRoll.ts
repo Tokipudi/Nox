@@ -6,7 +6,7 @@ import type { Message } from 'discord.js';
 @ApplyOptions<PreconditionOptions>({
     name: 'canPlayerRoll'
 })
-export class CanPlayerRoll extends Precondition {
+export class canPlayerRoll extends Precondition {
 
     public async run(message: Message): AsyncPreconditionResult {
         const { author, guildId } = message;

@@ -16,7 +16,7 @@ import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
     examples: [
         '@User#1234'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Fight extends NoxCommand {
 

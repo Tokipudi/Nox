@@ -14,7 +14,7 @@ import { Message, MessageEmbed } from 'discord.js';
         '',
         '@User#1234'
     ],
-    preconditions: ['PlayerExists']
+    preconditions: ['playerExists']
 })
 export class Cooldown extends NoxCommand {
 

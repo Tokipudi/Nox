@@ -1,8 +1,12 @@
 import { createPlayer, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
-import { AsyncPreconditionResult, Command, Precondition } from '@sapphire/framework';
+import { ApplyOptions } from '@sapphire/decorators';
+import { AsyncPreconditionResult, Command, Precondition, PreconditionOptions } from '@sapphire/framework';
 import type { Message } from 'discord.js';
 
-export class PlayerExists extends Precondition {
+@ApplyOptions<PreconditionOptions>({
+    name: 'playerExists'
+})
+export class playerExists extends Precondition {
 
     public async run(message: Message, command: Command): AsyncPreconditionResult {
         const { author, guildId } = message;

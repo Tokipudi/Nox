@@ -27,8 +27,8 @@ declare module '@sapphire/pieces' {
 
 declare module '@sapphire/framework' {
     interface Preconditions {
-        CanPlayerRoll: never,
-        PlayerExists: never
+        canPlayerRoll: never,
+        playerExists: never
     }
     interface ArgType {
         player: Players
