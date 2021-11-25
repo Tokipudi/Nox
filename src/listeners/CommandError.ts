@@ -1,34 +1,24 @@
-import { CommandContextWithCooldown } from '@lib/structures/context/CommandContextWithCooldown';
+import { getCommandEmbed } from '@lib/utils/HelpUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args, CommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
+import { CommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
 
 @ApplyOptions<ListenerOptions>({
-    name: 'commandDenied'
+    name: 'commandError'
 })
 export class CommandError extends Listener<typeof Events.CommandDenied> {
 
     public async run(error: PreconditionError, payload: CommandDeniedPayload) {
-        if (payload.command.name === 'roll') {
-            switch (error.identifier) {
-                case 'preconditionCooldown':
-                    const context = error.context as CommandContextWithCooldown;
-                    return await payload.message.reply(`You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`);
-                case 'CanPlayerRoll':
-                    return payload.message.reply(error.message);
-                default:
+        switch (error.identifier) {
+            case 'argsMissing':
+                const embed = await getCommandEmbed(payload.message, payload.command.name, payload.context);
+                payload.message.reply({
+                    content: `There has been an error when trying to process this command.\nPlease make sure you used it properly, as shown below:`, 
+                    embeds: [embed]
+                });
+                break;
+            default:
                 // Do nothing
-            }
+                break;
         }
-
-        if (error.identifier === 'argsMissing') {
-            
-        }
-    }
-
-    private getTimeLeftBeforeRoll(milliseconds: number) {
-        const date = new Date(0);
-        date.setMilliseconds(milliseconds);
-        const isoString = date.toISOString();
-        return `${isoString.substr(17, 2)} seconds`;
     }
 };
