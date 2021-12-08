@@ -7,8 +7,8 @@
         "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
         "start-dev": "node build/src/index.js",
         "prisma-migrate-prod": "npx prisma migrate deploy",
-        "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
-        "start": "systemctl start nox",
+        "build": "rm -rf /home/runner/work/Nox/Nox/build/* && npx ttsc --build --verbose && chmod +x /home/runner/work/Nox/Nox/build/src/index.js",
+        "start": "node /home/runner/work/Nox/Nox/build/src/index.js",
         "stop": "systemctl stop nox",
         "logs": "journalctl -u nox -f | sed 's/.*]: //'"
     },
