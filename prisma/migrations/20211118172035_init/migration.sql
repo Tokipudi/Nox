@@ -164,7 +164,7 @@ CREATE TABLE "PlayersSeasonsAchievements" (
     "season" INTEGER NOT NULL,
     "achievementId" INTEGER NOT NULL,
 
-    CONSTRAINT "PlayerSeasonsAchievements_pkey" PRIMARY KEY ("playerId","season","achievementId")
+    CONSTRAINT "PlayersSeasonsAchievements_pkey" PRIMARY KEY ("playerId","season","achievementId")
 );
 
 -- CreateTable
@@ -238,10 +238,10 @@ ALTER TABLE "PlayersSeasonsArchive" ADD CONSTRAINT "PlayersSeasonsArchive_player
 ALTER TABLE "PlayersSeasonsArchive" ADD CONSTRAINT "PlayersSeasonsArchive_favoriteSkinId_fkey" FOREIGN KEY ("favoriteSkinId") REFERENCES "Skins"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerSeasonsAchievements" ADD CONSTRAINT "PlayerSeasonsAchievements_playerId_season_fkey" FOREIGN KEY ("playerId", "season") REFERENCES "PlayersSeasonsArchive"("playerId", "season") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PlayersSeasonsAchievements" ADD CONSTRAINT "PlayersSeasonsAchievements_playerId_season_fkey" FOREIGN KEY ("playerId", "season") REFERENCES "PlayersSeasonsArchive"("playerId", "season") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerSeasonsAchievements" ADD CONSTRAINT "PlayerSeasonsAchievements_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "Achievements"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PlayersSeasonsAchievements" ADD CONSTRAINT "PlayersSeasonsAchievements_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "Achievements"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlayersSkins" ADD CONSTRAINT "PlayersSkins_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
