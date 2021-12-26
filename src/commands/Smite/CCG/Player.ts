@@ -68,7 +68,7 @@ export class Player extends NoxCommand {
             `All Ins Lost: \`${player.allInLoss}\`\n`;
 
         if (player.win > 0 || player.loss > 0) {
-            fightDescription += `\`${Math.round(((player.win / (player.win + player.loss)) * 100))}%\`\n`;
+            fightDescription += `Winrate: \`${Math.round(((player.win / (player.win + player.loss)) * 100))}%\`\n`;
         }
         if (player.losingStreak > 0) {
             fightDescription += `Current Losing Streak: \`${player.losingStreak}\`\n`;
