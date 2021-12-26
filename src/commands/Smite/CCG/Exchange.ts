@@ -206,6 +206,19 @@ export class Exchange extends NoxCommand {
                                 if (skinId1 && skinId2) {
                                     await giveSkin(userPlayer.id, guildId, skinId1, false)
                                     await giveSkin(authorPlayer.id, guildId, skinId2, false);
+                                    await this.container.prisma.players.updateMany({
+                                        data: {
+                                            cardsExchanged: {
+                                                increment: 1
+                                            }
+                                        },
+                                        where: {
+                                            id: {
+                                                in: [userPlayer.id, authorPlayer.id]
+                                            }
+                                        }
+                                    });
+
 
                                     this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
                                     message.reply(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);
