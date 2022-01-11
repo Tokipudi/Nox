@@ -1,5 +1,5 @@
-import { CommandContext } from "@sapphire/framework";
+import { MessageCommandContext } from "@sapphire/framework";
 
-export interface CommandContextWithCooldown extends CommandContext {
+export interface CommandContextWithCooldown extends MessageCommandContext {
     remaining: number;
 }

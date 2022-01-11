@@ -1,13 +1,13 @@
 import { CommandContextWithCooldown } from '@lib/structures/context/CommandContextWithCooldown';
 import { ApplyOptions } from '@sapphire/decorators';
-import { CommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
+import { Events, Listener, ListenerOptions, MessageCommandDeniedPayload, PreconditionError } from '@sapphire/framework';
 
 @ApplyOptions<ListenerOptions>({
-    name: 'commandDenied'
+    name: 'messageCommandDenied'
 })
-export class CommandDenied extends Listener<typeof Events.CommandDenied> {
+export class CommandDenied extends Listener<typeof Events.MessageCommandDenied> {
 
-    public async run(error: PreconditionError, payload: CommandDeniedPayload) {
+    public async run(error: PreconditionError, payload: MessageCommandDeniedPayload) {
         if (payload.command.name === 'roll') {
             switch (error.identifier) {
                 case 'preconditionCooldown':
