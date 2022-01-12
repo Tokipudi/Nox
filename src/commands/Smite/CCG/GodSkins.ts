@@ -37,10 +37,14 @@ export class GodSkins extends NoxCommand {
 
         let skins = await getSkinsByGodName(godName);
 
+        let currentIndex = 0
+
+        selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(player.id));
+
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await message.reply({
             content: `Here are the cards for ${godName}.`,
-            embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
+            embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -51,8 +55,6 @@ export class GodSkins extends NoxCommand {
         const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
         })
-
-        let currentIndex = 0
         collector.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
                 // Increase/decrease index
