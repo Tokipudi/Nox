@@ -146,7 +146,7 @@ export class Wishlist extends NoxCommand {
     protected async generateGodSkinEmbed(skins, index, playerId: number) {
         const embed = generateSkinEmbed(skins, index);
 
-        const owner = await getSkinOwner(skins[index].id, playerId);
+        const owner = await getSkinOwner(skins[index].id);
         if (owner !== null) {
             const user = await this.container.client.users.fetch(owner.player.user.id);
             if (user === null) {

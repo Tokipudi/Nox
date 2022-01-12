@@ -500,6 +500,6 @@ export class Fight extends NoxCommand {
         });
 
         await disconnectSkin(skinId, loserId);
-        return await connectSkin(skinId, winnerId);
+        return await connectSkin(skinId, winnerId, false);
     }
 }

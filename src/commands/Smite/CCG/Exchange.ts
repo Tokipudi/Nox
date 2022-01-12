@@ -100,11 +100,14 @@ export class Exchange extends NoxCommand {
                 })
             } else if (interaction.customId === selectButton.customId) {
                 skinName1 = interaction.message.embeds[0].title;
+                godName1 = interaction.message.embeds[0].author.name;
                 await embedMessage1.delete();
                 collector1.stop();
             }
         });
 
+        let godName1 = '';
+        let godName2 = '';
         collector1.on('end', async collected => {
             if (skinName1 === '') {
                 message.reply('You did not select a card. The exchange is canceled.');
@@ -160,8 +163,9 @@ export class Exchange extends NoxCommand {
                         })
                     } else if (interaction.customId === selectButton.customId) {
                         skinName2 = interaction.message.embeds[0].title;
+                        godName2 = interaction.message.embeds[0].author.name;
                         await embedMessage2.delete();
-                        await message.channel.send(`An exchange was started between ${author}'s **${skinName1}** and ${user}'s **${skinName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`);
+                        await message.channel.send(`An exchange was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`);
                         collector2.stop();
                     }
                 });
@@ -184,21 +188,17 @@ export class Exchange extends NoxCommand {
                                 collector3.stop();
                             } else if (m.content.startsWith(`${prefix}accept`)) {
                                 let skinId1 = 0;
-                                let godName1 = '';
                                 for (let i = 0; i < skins1.length; i++) {
                                     if (skins1[i].name === skinName1) {
                                         skinId1 = skins1[i].id;
-                                        godName1 = skins1[i].god.name;
                                         break;
                                     }
                                 }
 
                                 let skinId2 = 0;
-                                let godName2 = '';
                                 for (let i = 0; i < skins2.length; i++) {
                                     if (skins2[i].name === skinName2) {
                                         skinId2 = skins2[i].id;
-                                        godName2 = skins2[i].god.name;
                                         break;
                                     }
                                 }
