@@ -335,12 +335,11 @@ export async function addSkinToWishlist(playerId: number, skinId: number) {
     });
 }
 
-export async function getSkinOwner(skinId: number, playerId: number) {
-    return await container.prisma.playersSkins.findUnique({
+export async function getSkinOwner(skinId: number) {
+    return await container.prisma.playersSkins.findFirst({
         where: {
-            playerId_skinId: {
-                playerId: playerId,
-                skinId: skinId
+            skin: {
+                id: skinId
             }
         },
         include: {
