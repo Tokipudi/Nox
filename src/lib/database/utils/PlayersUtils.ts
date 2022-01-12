@@ -41,6 +41,19 @@ export async function createPlayer(userId: Snowflake, guildId: Snowflake) {
     });
 }
 
+export async function createPlayerIfNotExists(userId: Snowflake, guildId: Snowflake) {
+    const player = await getPlayerByUserId(userId, guildId);
+    if (player == null) {
+        try {
+            await createPlayer(userId, guildId);
+        } catch (e) {
+            this.container.logger.error(e);
+        }
+    }
+
+    return player;
+}
+
 export async function getPlayerByUserId(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.findFirst({
         include: {

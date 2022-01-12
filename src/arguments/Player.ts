@@ -9,6 +9,7 @@ import { Argument, ArgumentContext, ArgumentOptions, Resolvers } from '@sapphire
 export class PlayerArgument extends Argument<Players> {
 
     public async run(parameter: string, context: ArgumentContext) {
+        console.log(parameter);
         const resolvedUser = await Resolvers.resolveUser(parameter);
         if (resolvedUser.success) {
             try {

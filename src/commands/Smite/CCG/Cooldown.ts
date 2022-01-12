@@ -1,9 +1,9 @@
-import { canPlayerClaimRoll, canPlayerRoll, getPlayerByUserId, getTimeLeftBeforeClaim, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
+import { canPlayerClaimRoll, canPlayerRoll, createPlayerIfNotExists, getTimeLeftBeforeClaim, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     aliases: ['cd'],
@@ -18,16 +18,23 @@ import { Message, MessageEmbed } from 'discord.js';
 })
 export class Cooldown extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user as User;
 
-        const player = await args.pick('player').catch(async error => {
-            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
-        });
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        let user = interaction.options.getUser('user');
+        if (user == null) {
+            user = author;
+        }
+
+        const player = await createPlayerIfNotExists(user.id, guildId);
+        if (player == null) return interaction.reply('An error occured when trying to load the player.');
 
         const embed = new MessageEmbed()
-            .setAuthor(author.username, author.avatarURL())
+            .setAuthor({
+                name: user.username,
+                iconURL: user.avatarURL()
+            })
             .setTitle('Cooldowns')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setColor('DARK_PURPLE')
@@ -53,6 +60,23 @@ export class Cooldown extends NoxCommand {
         }
         embed.addField('Claims', cdMsg, true);
 
-        return await message.reply({ embeds: [embed] });
+        return await interaction.reply({ embeds: [embed] });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you want to check the cooldown of.',
+                    required: false,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: ['890643277081092117']
+        });
     }
 }

@@ -1,32 +1,41 @@
-import { getPlayerByUserId, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { AsyncPreconditionResult, Precondition, PreconditionOptions } from '@sapphire/framework';
-import type { Message } from 'discord.js';
+import { AsyncPreconditionResult, ChatInputCommand, ContextMenuCommand, Precondition, PreconditionOptions } from '@sapphire/framework';
+import type { CommandInteraction, ContextMenuInteraction, Message, Snowflake } from 'discord.js';
 
 @ApplyOptions<PreconditionOptions>({
     name: 'canPlayerRoll'
 })
-export class canPlayerRoll extends Precondition {
+export class CanPlayerRoll extends Precondition {
 
-    public async run(message: Message): AsyncPreconditionResult {
+    public async messageRun(message: Message): AsyncPreconditionResult {
         const { author, guildId } = message;
 
-        const player = await getPlayerByUserId(author.id, guildId);
+        const canPlayerRoll = await this.canPlayerRoll(author.id, guildId);
 
-        if (player != null && player.isBanned) {
-            return this.error({
-                message: `You are banned from the game.`
+        return canPlayerRoll
+            ? this.ok()
+            : this.error({
+                message: `You are unable to roll right now.`
             });
-        }
+    }
 
-        if (player != null && player.rollsAvailable <= 0) {
-            const duration = await getTimeLeftBeforeRoll(player.id);
+    public override async chatInputRun(interaction: CommandInteraction, command: ChatInputCommand, context: Precondition.Context): AsyncPreconditionResult {
+        const { member, guildId } = interaction;
+        const { user } = member;
 
-            return this.error({
-                message: `You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before rolling a new card again.`
+        const canPlayerRoll = await this.canPlayerRoll(user.id, guildId);
+
+        return canPlayerRoll
+            ? this.ok()
+            : this.error({
+                message: `You are unable to roll right now.`
             });
-        }
+    }
 
-        return this.ok();
+    private async canPlayerRoll(userId: Snowflake, guildId: Snowflake) {
+        const player = await getPlayerByUserId(userId, guildId);
+
+        return player != null && !player.isBanned && player.rollsAvailable > 0;
     }
 }

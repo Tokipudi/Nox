@@ -5,16 +5,18 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Guild, Message, MessageActionRow, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Guild, Message, MessageActionRow, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the achievements for the CCG.'
 })
 export class Achievements extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
+
         const guild = await this.container.client.guilds.fetch(guildId);
 
         const achievements = fetchAchievements();
@@ -25,7 +27,7 @@ export class Achievements extends NoxCommand {
         const startButton = getStartButton();
 
         let index = 0;
-        const embed = await message.reply({
+        const embed = await interaction.reply({
             embeds: [await this.generateEmbed(achievements, index, guild)],
             components: achievements.length > 5
                 ? [
@@ -33,8 +35,9 @@ export class Achievements extends NoxCommand {
                         components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                     })
                 ]
-                : []
-        });
+                : [],
+            fetchReply: true
+        }) as Message;
 
         const collector = embed.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
@@ -83,11 +86,16 @@ export class Achievements extends NoxCommand {
 
     private async generateEmbed(achievements: Achievement[], index: number, guild: Guild) {
         const embed = new MessageEmbed()
-            .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
+            .setAuthor({
+                name: this.container.client.user.username,
+                iconURL: this.container.client.user.avatarURL()
+            })
             .setTitle('Achievements')
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .setFooter(`Showing achievements ${index + 1}..${index + 5} out of ${achievements.length}`);
+            .setFooter({
+                text: `Showing achievements ${index + 1}..${index + 5} out of ${achievements.length}`
+            });
 
         for (const achievement of achievements.slice(index, index + 5)) {
             const playerIds = await achievement.getCurrentPlayerIds(guild.id);
@@ -109,5 +117,12 @@ export class Achievements extends NoxCommand {
         }
 
         return embed;
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        });
     }
 }
