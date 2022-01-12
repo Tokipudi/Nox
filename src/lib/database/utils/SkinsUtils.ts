@@ -335,12 +335,11 @@ export async function addSkinToWishlist(playerId: number, skinId: number) {
     });
 }
 
-export async function getSkinOwner(skinId: number, playerId: number) {
-    return await container.prisma.playersSkins.findUnique({
+export async function getSkinOwner(skinId: number) {
+    return await container.prisma.playersSkins.findFirst({
         where: {
-            playerId_skinId: {
-                playerId: playerId,
-                skinId: skinId
+            skin: {
+                id: skinId
             }
         },
         include: {
@@ -399,12 +398,24 @@ export async function addWin(skinId: number, playerId: number) {
             },
             win: {
                 increment: 1
-            }
+            },
+            losingStreak: 0
         },
         where: {
             id: playerId
         }
     });
+
+    if (player.winningStreak > player.highestWinningStreak) {
+        await container.prisma.players.update({
+            data: {
+                highestWinningStreak: player.winningStreak
+            },
+            where: {
+                id: playerId
+            }
+        });
+    }
 
     return playersSkin;
 }
@@ -455,7 +466,8 @@ export async function addLoss(skinId: number, playerId: number) {
             },
             loss: {
                 increment: 1
-            }
+            },
+            winningStreak: 0
         },
         where: {
             id: playerId
