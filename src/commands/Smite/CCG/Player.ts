@@ -74,7 +74,7 @@ export class Player extends NoxCommand {
             fightDescription += `Current Losing Streak: \`${player.losingStreak}\`\n`;
         }
         if (player.winningStreak > 0) {
-            fightDescription += `Current Winning Streak: \`${player.losingStreak}\`\n`;
+            fightDescription += `Current Winning Streak: \`${player.winningStreak}\`\n`;
         }
 
         embed.addField('Fights', fightDescription, true);
