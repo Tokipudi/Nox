@@ -1,21 +1,22 @@
-import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { AsyncPreconditionResult, ChatInputCommand, Precondition, PreconditionOptions } from '@sapphire/framework';
 import type { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<PreconditionOptions>({
-    name: 'playerExists'
+    name: 'playerIsNotBanned'
 })
-export class PlayerExists extends Precondition {
+export class PlayerIsNotBanned extends Precondition {
 
     public override async chatInputRun(interaction: CommandInteraction, command: ChatInputCommand, context: Precondition.Context): AsyncPreconditionResult {
         const { member, guildId } = interaction;
         const { user } = member;
 
-        const authorPlayer = await createPlayerIfNotExists(user.id, guildId);
-        if (authorPlayer == null) {
+        const authorPlayer = await getPlayerByUserId(user.id, guildId);
+
+        if (authorPlayer.isBanned) {
             return this.error({
-                message: `An error occured when trying to create the player for ${user}.`
+                message: `${user} is banned and cannot use this command.`
             });
         }
 

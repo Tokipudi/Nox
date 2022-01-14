@@ -1,31 +1,33 @@
-import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
 import { getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows a player\'s statistics.',
-    detailedDescription: 'Shows a player\'s win/loss ratio, joining date and more.\nDefaults to the current user if no user is specified.',
-    usage: '<@user>',
-    examples: [
-        '',
-        '@User#1234'
-    ],
-    preconditions: ['playerExists']
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists'
+    ]
 })
 export class Player extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user as User;
 
-        const user = await args.peek('user').catch(() => author);
-        const player = await args.pick('player').catch(async error => {
-            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
-        });
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        let user = interaction.options.getUser('user');
+        if (user == null) {
+            user = author;
+        }
+        if (user.bot) return await interaction.reply('You cannot use this command on a bot.');
+
+        const player = await createPlayerIfNotExists(user.id, guildId);
+        if (player == null) return interaction.reply('An error occured when trying to load the player.');
 
         const skins = await getSkinsByPlayer(player.id);
 
@@ -38,12 +40,17 @@ export class Player extends NoxCommand {
         }
 
         const embed = new MessageEmbed()
-            .setAuthor(`${user.username}#${user.discriminator}`, user.avatarURL())
+            .setAuthor({
+                name: `${user.username}#${user.discriminator}`,
+                iconURL: user.displayAvatarURL()
+            })
             .setDescription(`Tokens: \`${player.tokens}\``)
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setTimestamp(player.joinDate)
-            .setFooter(`#${player.id}`);
+            .setFooter({
+                text: `#${player.id}`
+            });
 
         if (favoriteSkin !== null) {
             embed.setImage(favoriteSkin.godSkinUrl);
@@ -79,6 +86,28 @@ export class Player extends NoxCommand {
 
         embed.addField('Fights', fightDescription, true);
 
-        return message.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you want to check the statistics of. Defaults to the current user if not specified.',
+                    required: false,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

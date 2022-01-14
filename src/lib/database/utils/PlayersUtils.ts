@@ -1,6 +1,7 @@
 import { container } from '@sapphire/framework';
 import { Snowflake } from 'discord-api-types';
 import moment from 'moment';
+import { getSkinWishlist } from './SkinsUtils';
 
 export async function createPlayer(userId: Snowflake, guildId: Snowflake) {
     return await container.prisma.players.create({
@@ -117,6 +118,16 @@ export async function setFavoriteSkin(playerId: number, skinId: number) {
             }
         }
     });
+}
+
+export async function isSkinInWishlist(skinId: number, playerId: number) {
+    const wishlist = await getSkinWishlist(playerId);
+    for (let skin of wishlist) {
+        if (skin.id === skinId) {
+            return true;
+        }
+    }
+    return false;
 }
 
 export async function addRoll(playerId: number) {

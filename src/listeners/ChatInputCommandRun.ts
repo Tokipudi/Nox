@@ -8,6 +8,6 @@ import { CacheType, CommandInteraction } from 'discord.js';
 export class ChatInputCommandRun extends Listener<typeof Events.ChatInputCommandRun> {
 
     public async run(interaction: CommandInteraction<CacheType>, command: ChatInputCommand, payload: ChatInputCommandRunPayload) {
-        // this.container.logger.error(error);
+        
     }
 };

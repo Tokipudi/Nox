@@ -1,31 +1,24 @@
-import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { getBackButton, getForwardButton } from '@lib/utils/PaginationUtils';
-import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
-import { Message, MessageActionRow } from 'discord.js';
-import { generateGodDetailsEmbed, generateGodLoreEmbed, generateGodAbilityEmbed, godCustomId, loreCustomId, ability1CustomId, ability2CustomId, ability3CustomId, ability4CustomId, ability5CustomId } from '@lib/utils/smite/GodsPaginationUtils';
-import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { getGodById } from '@lib/database/utils/GodsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
+import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { getBackButton, getForwardButton } from '@lib/utils/PaginationUtils';
+import { ability1CustomId, ability2CustomId, ability3CustomId, ability4CustomId, ability5CustomId, generateGodAbilityEmbed, generateGodDetailsEmbed, generateGodLoreEmbed, godCustomId, loreCustomId } from '@lib/utils/smite/GodsPaginationUtils';
+import { ApplyOptions } from '@sapphire/decorators';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, MessageReaction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Get more information about a god.',
-    usage: '<god name>',
-    examples: [
-        'Ymir',
-        'Nu Wa'
-    ]
+    description: 'Get more information about a god.'
 })
 export class God extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author } = message
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
-        let godName: string = await args.rest('string');
-        godName = toTitleCase(godName);
-
-        let god = await getGodByName(godName);
-        if (!god) message.reply('Unabled to find a god with the name **' + godName + '**');
+        const godId = interaction.options.getNumber('god', true);
+        const god = await getGodById(godId);
+        if (!god) interaction.reply('Unabled to find a god with the name **' + godId + '**');
 
         const ability1 = JSON.parse(god.ability1);
         const ability2 = JSON.parse(god.ability2);
@@ -53,14 +46,15 @@ export class God extends NoxCommand {
         const ability3Forward = getForwardButton(ability3Title, ability3CustomId);
         const ability4Forward = getForwardButton(ability4Title, ability4CustomId);
 
-        const reply = await message.reply({
+        const reply = await interaction.reply({
             embeds: [generateGodDetailsEmbed(god)],
             components: [
                 new MessageActionRow({
                     components: [...([loreButtonForward])]
                 })
-            ]
-        });
+            ],
+            fetchReply: true
+        }) as Message;
 
         const collector = reply.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
@@ -139,6 +133,29 @@ export class God extends NoxCommand {
                     });
                     break;
             }
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'god',
+                    description: 'The god you want to check the skins of.',
+                    required: true,
+                    type: 'NUMBER',
+                    autocomplete: true
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 }

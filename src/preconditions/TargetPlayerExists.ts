@@ -4,19 +4,22 @@ import { AsyncPreconditionResult, ChatInputCommand, Precondition, PreconditionOp
 import type { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<PreconditionOptions>({
-    name: 'playerExists'
+    name: 'targetPlayerExists'
 })
-export class PlayerExists extends Precondition {
+export class TargetPlayerExists extends Precondition {
 
     public override async chatInputRun(interaction: CommandInteraction, command: ChatInputCommand, context: Precondition.Context): AsyncPreconditionResult {
         const { member, guildId } = interaction;
-        const { user } = member;
 
-        const authorPlayer = await createPlayerIfNotExists(user.id, guildId);
-        if (authorPlayer == null) {
-            return this.error({
-                message: `An error occured when trying to create the player for ${user}.`
-            });
+        for (let option of interaction.options.data) {
+            if (option.type === 'USER' && !option.user.bot) {
+                const player = await createPlayerIfNotExists(option.user.id, guildId);
+                if (player == null) {
+                    return this.error({
+                        message: `An error occured when trying to create the player for ${option.user}.`
+                    });
+                }
+            }
         }
 
         return this.ok();

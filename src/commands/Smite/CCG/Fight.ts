@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { addLoss, addWin, connectSkin, disconnectSkin, exhaustSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -7,34 +7,36 @@ import { getBackButton, getButton, getForwardButton, getSelectButton } from '@li
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { getRandomIntInclusive } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageActionRow, MessageEmbed, User } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, MessageEmbed, MessageReaction, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fight against another player.',
-    usage: '<@user>',
-    examples: [
-        '@User#1234'
-    ],
-    preconditions: ['playerExists']
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists',
+        'targetIsNotBanned'
+    ]
 })
 export class Fight extends NoxCommand {
 
     private _channelIds = [];
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message
-        const userArgument: User = await args.peek('user');
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
-        if (!userArgument) return message.reply('The first argument **must** be a user.');
-        if (userArgument.id === author.id) return message.reply('You cannot fight against yourself!');
-        if (userArgument.bot) return message.reply('You cannot fight against a bot!');
+        const userArgument = interaction.options.getUser('user', true);
 
-        const userPlayer = await args.pick('player');
-        if (!userPlayer) return message.reply(`An error occured when trying to load ${userArgument}'s player.`);
+        if (userArgument.id === author.id) return interaction.reply('You cannot fight against yourself!');
+        if (userArgument.bot) return interaction.reply('You cannot fight against a bot!');
+
+        const userPlayer = await createPlayerIfNotExists(userArgument.id, guildId);
+        if (!userPlayer) return interaction.reply(`An error occured when trying to load ${userArgument}'s player.`);
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
-        if (!authorPlayer) return message.reply(`An error occured when trying to load ${author}'s player.`);
+        if (!authorPlayer) return interaction.reply(`An error occured when trying to load ${author}'s player.`);
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -43,7 +45,7 @@ export class Fight extends NoxCommand {
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
-            return message.reply('You currently don\'t own any cards!');
+            return interaction.reply('You currently don\'t own any cards!');
         }
         let allExhausted = true;
         for (let i in skins1) {
@@ -53,12 +55,12 @@ export class Fight extends NoxCommand {
             }
         }
         if (allExhausted) {
-            return message.reply('All of your fighters are currently exhausted!');
+            return interaction.reply('All of your fighters are currently exhausted!');
         }
 
         const skins2 = await getSkinsByPlayer(userPlayer.id);
         if (!skins2 || skins2.length === 0) {
-            return message.reply(`${userArgument} does not own any cards!`);
+            return interaction.reply(`${userArgument} does not own any cards!`);
         }
         allExhausted = true;
         for (let i in skins2) {
@@ -68,16 +70,16 @@ export class Fight extends NoxCommand {
             }
         }
         if (allExhausted) {
-            return message.reply(`All of ${userArgument}'s cards are currently exhausted!`);
+            return interaction.reply(`All of ${userArgument}'s cards are currently exhausted!`);
         }
 
         // Add channel ID to prevent multiple fights at the same time
-        const runningInIndex = this._channelIds.indexOf(message.channel.id);
+        const runningInIndex = this._channelIds.indexOf(interaction.channel.id);
         if (runningInIndex >= 0) {
-            return message.reply(`There is already an ongoing fight in this channel. Please try again once it is over.`);
+            return interaction.reply(`There is already an ongoing fight in this channel. Please try again once it is over.`);
         }
 
-        this._channelIds.push(message.channel.id);
+        this._channelIds.push(interaction.channel.id);
 
         // Send the embed with the first skin
         let currentIndex = 0;
@@ -87,7 +89,7 @@ export class Fight extends NoxCommand {
         fightButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
         allInButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
 
-        const embedMessage1 = await message.reply({
+        const embedMessage1 = await interaction.reply({
             content: 'Select your fighter.',
             embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
             components: [
@@ -97,8 +99,9 @@ export class Fight extends NoxCommand {
                 new MessageActionRow({
                     components: [...([fightButton]), ...([allInButton])]
                 })
-            ]
-        })
+            ],
+            fetchReply: true
+        }) as Message;
 
         // Collect button interactions (when a user clicks a button),
         // but only when the button as clicked by the original message author
@@ -159,34 +162,39 @@ export class Fight extends NoxCommand {
                 skinName1 = interaction.message.embeds[0].title;
                 godName1 = interaction.message.embeds[0].author.name;
                 rarity1 = interaction.message.embeds[0].description.replace(/^\*+|\*+$/g, '');
-                await embedMessage1.delete();
+                await interaction.reply({
+                    content: `${author} You selected **${skinName1} ${godName1}**.`,
+                    components: [],
+                    embeds: []
+                })
                 collector1.stop();
             }
         });
 
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                message.reply('You did not select a fighter in the given time. The fight is canceled.');
-
+                await interaction.channel.send('You did not select a fighter in the given time. The fight is canceled.');
                 this._channelIds.splice(runningInIndex, 1);
             } else {
-                let replyMessage = `${userArgument} You have been challenged to fight against **${skinName1} ${godName1} *(${rarity1})* ${player1.isBoosted ? ' <Boosted>' : ''}**!\nType \`${this.container.client.options.defaultPrefix}accept\` to select your fighter, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`;
+                let replyMessage = `${userArgument} You have been challenged to fight against **${skinName1} ${godName1} *(${rarity1})* ${player1.isBoosted ? ' <Boosted>' : ''}**!\nReact to this message to accept or deny the fight.`;
                 if (allIn) {
                     replyMessage += `\n\n**Modifiers:** \`All In (winner takes all)\``
                 }
-                const reply = await message.reply(replyMessage);
+                const reply = await interaction.channel.send(replyMessage);
+                await reply.react('⚔️');
+                await reply.react('🚫');
 
-                const prefix = this.container.client.options.defaultPrefix;
-                const filter = (m: Message) => {
-                    return m.author.id === userArgument.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
+                const filter = (reaction: MessageReaction, user: User) => {
+                    return user.id === userArgument.id
+                        && (reaction.emoji.name == '⚔️' || reaction.emoji.name == '🚫');
                 };
-                const collector2 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
+                const collector2 = reply.createReactionCollector({ filter, time: 120000 /* 2min */ });
 
                 let isAboutToFight = false;
-                collector2.on('collect', async (m: Message) => {
-                    if (m.content.startsWith(`${prefix}deny`)) {
+                collector2.on('collect', async (react: MessageReaction) => {
+                    if (react.emoji.name === '🚫') {
                         collector2.stop();
-                    } else if (m.content.startsWith(`${prefix}accept`)) {
+                    } else if (react.emoji.name === '⚔️') {
                         isAboutToFight = true;
                         collector2.stop();
                     }
@@ -194,8 +202,7 @@ export class Fight extends NoxCommand {
 
                 collector2.on('end', async collected => {
                     if (!isAboutToFight) {
-                        message.reply(`${userArgument} does not want to fight you or did not answer in time.`);
-
+                        await interaction.channel.send(`${userArgument} does not want to fight you or did not answer in time.`);
                         this._channelIds.splice(runningInIndex, 1);
                     } else {
                         currentIndex = 0
@@ -210,7 +217,7 @@ export class Fight extends NoxCommand {
                             ? [...([allInButton])]
                             : [...([fightButton])];
 
-                        const embedMessage3 = await message.reply({
+                        const embedMessage3 = await interaction.channel.send({
                             content: `Select your fighter.`,
                             embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                             components: [
@@ -271,15 +278,15 @@ export class Fight extends NoxCommand {
                                 god2 = await getGodByName(godName2);
                                 await embedMessage3.delete();
                                 const embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, godName1, godName2, god1.health, god2.health, author);
-                                await message.channel.send(`A fight was started between ${author}'s **${skinName1} ${godName1} *(${rarity1})*** and ${userArgument}'s **${skinName2} ${godName2} *(${rarity2})***!`);
-                                await message.channel.send({ embeds: [embed] });
+                                await interaction.channel.send(`A fight was started between ${author}'s **${skinName1} ${godName1} *(${rarity1})*** and ${userArgument}'s **${skinName2} ${godName2} *(${rarity2})***!`);
+                                await interaction.channel.send({ embeds: [embed] });
                                 collector3.stop();
                             }
                         });
 
                         collector3.on('end', async collected => {
                             if (skinName2 === '') {
-                                message.channel.send(`${userArgument} you did not select a fighter in time. The fight is canceled.`);
+                                await interaction.channel.send(`${userArgument} you did not select a fighter in time. The fight is canceled.`);
                             } else {
                                 let god1Health = god1.health;
                                 let god2Health = god2.health;
@@ -320,7 +327,7 @@ export class Fight extends NoxCommand {
                                                 god2Health = 0;
                                             }
                                             embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, godName1, godName2, god1Health, god2Health, author, randomAbility, randomDamage);
-                                            await message.channel.send({ embeds: [embed] });
+                                            await interaction.channel.send({ embeds: [embed] });
                                             break;
                                         case 2:
                                             randomAbility = JSON.parse(god2['ability' + (Math.floor(Math.random() * 4) + 1)]);
@@ -330,7 +337,7 @@ export class Fight extends NoxCommand {
                                                 god1Health = 0;
                                             }
                                             embed = this.generateFightEmbed(god2, skinName2, skinName1, skinName2, godName1, godName2, god1Health, god2Health, userArgument, randomAbility, randomDamage);
-                                            await message.channel.send({ embeds: [embed] });
+                                            await interaction.channel.send({ embeds: [embed] });
                                             break;
                                     }
                                 }
@@ -339,26 +346,26 @@ export class Fight extends NoxCommand {
                                     await addLoss(skinId2, player2.id);
                                     await addWin(skinId1, player1.id);
 
-                                    await message.channel.send(`${author}'s **${skinName1} ${skin1.god.name}** won the fight!`);
+                                    await interaction.channel.send(`${author}'s **${skinName1} ${skin1.god.name}** won the fight!`);
                                     if (allIn) {
                                         const skin = await this.giveSkin(player1.id, player2.id, skinId2);
                                         await exhaustSkin(skin.id, player1.id);
-                                        await message.channel.send(`${userArgument} the card **${skinName2} ${skin2.god.name}** was exhausted and now belongs to ${author}!`);
+                                        await interaction.channel.send(`${userArgument} the card **${skinName2} ${skin2.god.name}** was exhausted and now belongs to ${author}!`);
                                     } else {
                                         await exhaustSkin(skinId2, player2.id);
-                                        await message.channel.send(`${userArgument} your card **${skinName2} ${skin2.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                        await interaction.channel.send(`${userArgument} your card **${skinName2} ${skin2.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                     }
                                 } else {
                                     await addLoss(skinId1, player1.id);
                                     await addWin(skinId2, player2.id);
-                                    await message.channel.send(`${userArgument}'s **${skinName2} ${skin2.god.name}** won the fight!`);
+                                    await interaction.channel.send(`${userArgument}'s **${skinName2} ${skin2.god.name}** won the fight!`);
                                     if (allIn) {
                                         const skin = await this.giveSkin(player2.id, player1.id, skinId1);
                                         await exhaustSkin(skin.id, player2.id);
-                                        await message.channel.send(`${author} the card **${skinName1} ${skin1.god.name}** was exhausted and now belongs to ${userArgument}!`);
+                                        await interaction.channel.send(`${author} the card **${skinName1} ${skin1.god.name}** was exhausted and now belongs to ${userArgument}!`);
                                     } else {
                                         await exhaustSkin(skinId1, player1.id);
-                                        await message.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
+                                        await interaction.channel.send(`${author} your card **${skinName1} ${skin1.god.name}** is now exhausted. You will have to wait 6 hours to use it in a fight again.`);
                                     }
                                 }
 
@@ -392,6 +399,28 @@ export class Fight extends NoxCommand {
         });
     }
 
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you wish to fight against.',
+                    required: true,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
+    }
+
     protected getRandomDamageFromMaxHealth(health: number, obtainability: string, isBoosted: boolean = false) {
         let advantage = isBoosted
             ? 0.2
@@ -420,11 +449,16 @@ export class Fight extends NoxCommand {
             ? title + ' (boosted)'
             : title;
         const embed = new MessageEmbed()
-            .setAuthor(authorTitle, god.godIconUrl)
+            .setAuthor({
+                name: authorTitle,
+                iconURL: god.godIconUrl
+            })
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .addField(`${skinName1} ${godName1}'s health`, `\`\`\`css\n${god1Health.toString()}\n\`\`\``, true)
             .addField(`${skinName2} ${godName2}'s health`, `\`\`\`css\n${god2Health.toString()}\n\`\`\``, true)
-            .setFooter(`${player.username}#${player.discriminator}`)
+            .setFooter({
+                text: `${player.username}#${player.discriminator}`
+            })
             .setColor('DARK_PURPLE')
             .setTimestamp();
         if (randomDamage !== null) {

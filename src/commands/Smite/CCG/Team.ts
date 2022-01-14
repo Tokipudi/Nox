@@ -1,32 +1,35 @@
-import { getPlayerByUserId, setFavoriteSkin } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists, setFavoriteSkin } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageActionRow, User } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Lists the cards for the given user.',
-    detailedDescription: 'Lists the cards for the given user. Defaults to the message\'s author if none specified.',
-    usage: '<@user>',
-    examples: [
-        '',
-        '@User#1234'
+    description: 'Shows your team or the team of another player.',
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists'
     ]
 })
 export class Team extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user as User;
 
-        const user = await args.peek('user').catch(() => author);
-        const player = await args.pick('player').catch(async error => {
-            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
-        });
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        let user = interaction.options.getUser('user');
+        if (user == null) {
+            user = author;
+        }
+        if (user.bot) return await interaction.reply('You cannot use this command on a bot.');
+
+        const player = await createPlayerIfNotExists(user.id, guildId);
+        if (player == null) return interaction.reply('An error occured when trying to load the player.');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -35,7 +38,7 @@ export class Team extends NoxCommand {
 
         const skins = await getSkinsByPlayer(player.id);
         if (!skins || skins.length === 0) {
-            return message.reply(`${user} currently does not own any card!`);
+            return interaction.reply(`${user} currently does not own any card!`);
         }
 
         if (skins[0].playersSkins[0].isFavorite) {
@@ -45,7 +48,7 @@ export class Team extends NoxCommand {
         }
 
         let uniqueSkin = skins.length <= 1;
-        const embedMessage1 = await message.reply({
+        const embedMessage1 = await interaction.reply({
             content: 'Here is your team.',
             embeds: [await this.generateEmbed(skins, 0, guildId)],
             components: [
@@ -58,8 +61,9 @@ export class Team extends NoxCommand {
                             ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
                             : [...([backButton]), ...([forwardButton])]
                 })
-            ]
-        })
+            ],
+            fetchReply: true
+        }) as Message;
 
         const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
@@ -88,7 +92,7 @@ export class Team extends NoxCommand {
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
 
-                const embed = await this.generateEmbed(skins, currentIndex, message.guildId);
+                const embed = await this.generateEmbed(skins, currentIndex, guildId);
                 for (let i = 0; i < skins.length; i++) {
                     if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
                         if (skins[i].playersSkins[0].isFavorite) {
@@ -111,7 +115,7 @@ export class Team extends NoxCommand {
                     ]
                 });
             } else if (interaction.customId === favoriteButton.customId) {
-                const embed = await this.generateEmbed(skins, currentIndex, message.guildId);
+                const embed = await this.generateEmbed(skins, currentIndex, guildId);
 
                 for (let i = 0; i < skins.length; i++) {
                     if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
@@ -157,6 +161,28 @@ export class Team extends NoxCommand {
                     components: []
                 });
             }
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you want to check the team of. Defaults to the current user if not specified.',
+                    required: false,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 

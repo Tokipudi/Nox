@@ -1,41 +1,36 @@
 import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { AsyncPreconditionResult, ChatInputCommand, ContextMenuCommand, Precondition, PreconditionOptions } from '@sapphire/framework';
-import type { CommandInteraction, ContextMenuInteraction, Message, Snowflake } from 'discord.js';
+import { AsyncPreconditionResult, ChatInputCommand, Precondition, PreconditionOptions } from '@sapphire/framework';
+import type { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<PreconditionOptions>({
     name: 'canPlayerRoll'
 })
 export class CanPlayerRoll extends Precondition {
 
-    public async messageRun(message: Message): AsyncPreconditionResult {
-        const { author, guildId } = message;
-
-        const canPlayerRoll = await this.canPlayerRoll(author.id, guildId);
-
-        return canPlayerRoll
-            ? this.ok()
-            : this.error({
-                message: `You are unable to roll right now.`
-            });
-    }
-
     public override async chatInputRun(interaction: CommandInteraction, command: ChatInputCommand, context: Precondition.Context): AsyncPreconditionResult {
         const { member, guildId } = interaction;
         const { user } = member;
 
-        const canPlayerRoll = await this.canPlayerRoll(user.id, guildId);
-
-        return canPlayerRoll
-            ? this.ok()
-            : this.error({
-                message: `You are unable to roll right now.`
+        const player = await getPlayerByUserId(user.id, guildId);
+        if (player == null) {
+            return this.error({
+                message: `An error occured when trying to load the player for ${user}.`
             });
-    }
+        }
 
-    private async canPlayerRoll(userId: Snowflake, guildId: Snowflake) {
-        const player = await getPlayerByUserId(userId, guildId);
+        if (player.isBanned) {
+            return this.error({
+                message: `${user} Is banned and cannot roll.`
+            });
+        }
 
-        return player != null && !player.isBanned && player.rollsAvailable > 0;
+        if (player.rollsAvailable <= 0) {
+            return this.error({
+                message: `${user} Does not have any rolls available right now.`
+            });
+        }
+
+        return this.ok();
     }
 }

@@ -3,40 +3,42 @@ import { disconnectSkin, getSkinsByPlayer } from '@lib/database/utils/SkinsUtils
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, User } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { AutocompleteInteraction, CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Releases either half or all of a player\'s cards.',
     requiredUserPermissions: 'BAN_MEMBERS',
-    usage: '<@user> <half|all>',
-    examples: [
-        '@User#1234 half',
-        '@User#1234 all'
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists'
     ]
 })
 export class Strife extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const user = await args.peek('user');
-        if (!user) return message.reply('The first argument **must** be a user.');
+    private _halfAmountId = 1;
+    private _allAmountId = 2;
 
-        const player = await args.pick('player');
-        if (!player) return message.reply('An error occured when trying to load the player.');
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { guildId } = interaction;
 
-        let amount: string = await args.rest('string');
-        amount = amount.trim();
-        if (!amount || !['half', 'all'].includes(amount)) return message.reply('You need to specify of one the possible amounts.\n Either add `half` or `all` to the NoxCommand.')
+        let user = interaction.options.getUser('user', true);
+
+        const player = await getPlayerByUserId(user.id, guildId);
+        if (!player) return interaction.reply('An error occured when trying to load the player.');
+
+        let amount = interaction.options.getNumber('amount', true);
 
         const skins = await getSkinsByPlayer(player.id);
-        if (!skins || !skins.length) return message.reply(`${user} does not have any cards!`);
+        if (!skins || !skins.length) return interaction.reply(`${user} does not have any cards!`);
 
         let skinsToRelease = 0;
         switch (amount) {
-            case 'half':
+            case this._halfAmountId:
                 skinsToRelease = Math.round(skins.length / 2);
                 break;
-            case 'all':
+            case this._allAmountId:
                 skinsToRelease = skins.length;
                 break;
         }
@@ -60,6 +62,55 @@ export class Strife extends NoxCommand {
         }
         msg += `They have ${skins.length} cards left in their team.`
 
-        message.reply(msg);
+        interaction.reply(msg);
+    }
+
+    public override async autocompleteRun(interaction: AutocompleteInteraction) {
+        const focusedOption = interaction.options.getFocused(true);
+        switch (focusedOption.name) {
+            case 'amount':
+                interaction.respond([
+                    {
+                        name: 'Half',
+                        value: this._halfAmountId
+                    },
+                    {
+                        name: 'All',
+                        value: this._allAmountId
+                    }
+                ]);
+                break;
+            default:
+            // Do Nothing
+        }
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you wish to ban.',
+                    required: true,
+                    type: 'USER'
+                },
+                {
+                    name: 'amount',
+                    description: 'The amount of cards to randomly remove from a user\'s team.',
+                    required: true,
+                    type: 'NUMBER',
+                    autocomplete: true
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

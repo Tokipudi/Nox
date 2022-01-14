@@ -88,7 +88,8 @@ export class Achievements extends NoxCommand {
         const embed = new MessageEmbed()
             .setAuthor({
                 name: this.container.client.user.username,
-                iconURL: this.container.client.user.avatarURL()
+                iconURL: this.container.client.user.displayAvatarURL(),
+                url: 'https://github.com/Tokipudi/Nox'
             })
             .setTitle('Achievements')
             .setColor('DARK_PURPLE')
@@ -123,6 +124,13 @@ export class Achievements extends NoxCommand {
         registry.registerChatInputCommand({
             name: this.name,
             description: this.description
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 }

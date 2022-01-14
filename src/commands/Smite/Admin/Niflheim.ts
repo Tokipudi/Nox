@@ -1,30 +1,53 @@
-import { setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
+import { getPlayerByUserId, setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Bans a player.',
-    detailedDescription: 'Bans a player in the current guild. They will not be able to roll or claim skins anymore.',
     requiredUserPermissions: 'BAN_MEMBERS',
-    usage: '<@user>',
-    examples: [
-        '@User#1234'
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists'
     ]
 })
 export class Niflheim extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const user = await args.peek('user');
-        if (!user) return message.reply('The first argument **must** be a user.');
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { guildId } = interaction;
 
-        const player = await args.pick('player');
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        let user = interaction.options.getUser('user', true);
+
+        const player = await getPlayerByUserId(user.id, guildId);
+        if (!player) return interaction.reply('An error occured when trying to load the player.');
 
         await setPlayerAsBanned(player.id);
 
-        message.reply(`${user} is banned from claiming any card.`);
+        return interaction.reply(`${user} is banned from the Smite CCG.`);
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you wish to ban.',
+                    required: true,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

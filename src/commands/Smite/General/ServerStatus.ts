@@ -2,7 +2,8 @@ import { SmiteServerApi } from '@lib/api/hirez/smite/SmiteServerApi';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     aliases: ['status'],
@@ -10,14 +11,17 @@ import { Message, MessageEmbed } from 'discord.js';
 })
 export class ServerStatus extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const msg = await message.reply('Fetching data from Smite\'s servers...');
-
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
         const api = new SmiteServerApi();
         const data = await api.getServerStatus();
 
         // inside a NoxCommand, event listener, etc.
         const embed = new MessageEmbed()
+            .setAuthor({
+                name: this.container.client.user.username,
+                iconURL: this.container.client.user.displayAvatarURL(),
+                url: 'https://github.com/Tokipudi/Nox'
+            })
             .setTitle('Smite Servers Status')
             .setURL('https://status.hirezstudios.com/')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -42,6 +46,20 @@ export class ServerStatus extends NoxCommand {
             ? embed.setColor('YELLOW')
             : embed.setColor('GREEN');
 
-        return msg.edit({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

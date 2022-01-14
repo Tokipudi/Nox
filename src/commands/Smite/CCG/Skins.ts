@@ -1,33 +1,26 @@
-import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
-import { addSkinToWishlist, getSkinOwner, getSkinsByGodName, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
+import { getGodById } from '@lib/database/utils/GodsUtils';
+import { getPlayerByUserId, isSkinInWishlist } from '@lib/database/utils/PlayersUtils';
+import { addSkinToWishlist, getSkinOwner, getSkinsByGodId } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
-import { Skins } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
-import { Snowflake } from 'discord-api-types';
-import { Message, MessageActionRow } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    aliases: ['skins'],
     description: 'List the skins of a given god.',
-    usage: '<god name>',
-    examples: [
-        'Ymir',
-        'Nu Wa'
-    ],
     preconditions: ['playerExists']
 })
-export class GodSkins extends NoxCommand {
+export class Skins extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
-        let godName: string = await args.rest('string');
-        godName = toTitleCase(godName);
+        const godId = interaction.options.getNumber('god', true);
+        const god = await getGodById(godId);
 
         const player = await getPlayerByUserId(author.id, guildId);
 
@@ -35,22 +28,23 @@ export class GodSkins extends NoxCommand {
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Wish', 'SUCCESS');
 
-        let skins = await getSkinsByGodName(godName);
+        let skins = await getSkinsByGodId(godId);
 
         let currentIndex = 0
 
-        selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(player.id));
+        selectButton.disabled = await isSkinInWishlist(skins[currentIndex].id, player.id);
 
         let uniqueSkin = skins.length <= 1;
-        const embedMessage1 = await message.reply({
-            content: `Here are the cards for ${godName}.`,
+        const embedMessage1 = await interaction.reply({
+            content: `Here are the cards for ${god.name}.`,
             embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
                 })
-            ]
-        });
+            ],
+            fetchReply: true
+        }) as Message;
 
         const collector = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
@@ -74,7 +68,7 @@ export class GodSkins extends NoxCommand {
                 // Disable the buttons if they cannot be used
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
-                selectButton.disabled = this.isSkinInWishlist(skins[currentIndex].name, await getSkinWishlist(player.id));
+                selectButton.disabled = await isSkinInWishlist(skins[currentIndex].id, player.id);
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
@@ -98,7 +92,7 @@ export class GodSkins extends NoxCommand {
 
 
                 let playerWishedSkin = await addSkinToWishlist(player.id, skinId);
-                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was added to the wishlist of ${message.author.username}#${message.author.discriminator}<${message.author.id}>!`);
+                this.container.logger.debug(`The card ${skinName}<${playerWishedSkin.skinId}> was added to the wishlist of ${author.username}#${author.discriminator}<${author.id}>!`);
 
                 // Disable the wish button
                 selectButton.disabled = true;
@@ -111,6 +105,29 @@ export class GodSkins extends NoxCommand {
                     ]
                 })
             }
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'god',
+                    description: 'The god you want to check the skins of.',
+                    required: true,
+                    type: 'NUMBER',
+                    autocomplete: true
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 
@@ -128,15 +145,5 @@ export class GodSkins extends NoxCommand {
         }
 
         return embed;
-    }
-
-    protected isSkinInWishlist(skinName: string, wishlist: Skins[]) {
-        for (let i in wishlist) {
-            let skin = wishlist[i];
-            if (skin.name === skinName) {
-                return true;
-            }
-        }
-        return false;
     }
 }

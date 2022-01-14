@@ -6,15 +6,13 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    aliases: ['cd'],
     description: 'Shows the remaining cooldown of a given user before being able to claim another card.',
-    detailedDescription: 'Shows the remaining cooldown of a given user before being able to claim another card.\nDefaults to the current user if no user is specified.',
-    usage: '<@user>',
-    examples: [
-        '',
-        '@User#1234'
-    ],
-    preconditions: ['playerExists']
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists',
+        'targetIsNotBanned'
+    ]
 })
 export class Cooldown extends NoxCommand {
 
@@ -26,14 +24,15 @@ export class Cooldown extends NoxCommand {
         if (user == null) {
             user = author;
         }
+        if (user.bot) return await interaction.reply('The user cannot be a bot.');
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return await interaction.reply('An error occured when trying to load the player.');
 
         const embed = new MessageEmbed()
             .setAuthor({
-                name: user.username,
-                iconURL: user.avatarURL()
+                name: `${user.username}#${user.discriminator}`,
+                iconURL: user.displayAvatarURL()
             })
             .setTitle('Cooldowns')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -76,7 +75,12 @@ export class Cooldown extends NoxCommand {
                 }
             ]
         }, {
-            guildIds: ['890643277081092117']
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 }

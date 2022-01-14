@@ -3,15 +3,16 @@ import { getSkins, getSkinsByObtainability } from '@lib/database/utils/SkinsUtil
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows all of the different skins rarity.'
 })
 export class Rarity extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const { guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { guildId } = interaction;
 
         const skins = await getSkins();
         const skinsTotal = skins.length;
@@ -46,6 +47,20 @@ export class Rarity extends NoxCommand {
             );
         }
 
-        return message.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

@@ -3,41 +3,25 @@ import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { toTitleCase } from '@sapphire/utilities';
-import { Message } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fire a card from your collection.',
-    usage: '<skin name> <god name>',
-    examples: [
-        'Snuggly Artemis',
-        '"Nuclear Winter" Ymir',
-        '"Playful Bunny" "Nu Wa"'
-    ],
     preconditions: ['playerExists']
 })
 export class Fire extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
         const player = await getPlayerByUserId(author.id, guildId);
-
-        let skinName: string = await args.pick('string');
-        skinName = toTitleCase(skinName.trim());
-        if (!skinName) return message.reply('The first argument needs to be a valid card name!');
-
-        let godName: string = await args.rest('string');
-        godName = toTitleCase(godName.trim());
-        if (!godName) return message.reply('The second argument needs to be a valid god name!');
+        const skinId = interaction.options.getNumber('skin_owned', true);
 
         const skin = await this.container.prisma.skins.findFirst({
             where: {
-                god: {
-                    name: godName
-                },
-                name: skinName,
+                id: skinId,
                 playersSkins: {
                     every: {
                         player: {
@@ -48,14 +32,42 @@ export class Fire extends NoxCommand {
             },
             select: {
                 id: true,
-                name: true
+                name: true,
+                god: {
+                    select: {
+                        name: true
+                    }
+                }
             }
         });
-        if (!skin) return message.reply('The card **' + skinName + ' ' + godName + '** does not exist or does not belong to you!');
+        if (!skin) return interaction.reply('The card **' + skin.name + ' ' + skin.god.name + '** does not exist or does not belong to you!');
 
         await disconnectSkin(skin.id, player.id);
 
         this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
-        return message.reply(`The card **${skinName} ${godName}** was successfully removed from your team!`);
+        return interaction.reply(`The card **${skin.name} ${skin.god.name}** was successfully removed from your team!`);
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'skin_owned',
+                    description: 'The skin you wish to fire from your team.',
+                    required: true,
+                    type: 'NUMBER',
+                    autocomplete: true
+                }
+            ]
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
+        });
     }
 }

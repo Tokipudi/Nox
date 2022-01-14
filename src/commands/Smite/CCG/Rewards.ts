@@ -5,7 +5,8 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageActionRow, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the rewards available.',
@@ -13,8 +14,9 @@ import { Message, MessageActionRow, MessageEmbed } from 'discord.js';
 })
 export class Rewards extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
         const rewards = this.fetchRewards();
 
@@ -31,7 +33,7 @@ export class Rewards extends NoxCommand {
         const player = await getPlayerByUserId(author.id, guildId);
 
         let index = 0;
-        const reply = await message.reply({
+        const reply = await interaction.reply({
             embeds: [await this.generateEmbed(player, rewards, index)],
             components: rewards.length > 5
                 ? [
@@ -46,32 +48,41 @@ export class Rewards extends NoxCommand {
                     new MessageActionRow({
                         components: selectRewardButtons
                     })
-                ]
-        });
+                ],
+            fetchReply: true
+        }) as Message;
 
         const collector = reply.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
         });
 
-        collector.on('collect', async interaction => {
+        collector.on('collect', async messageInteraction => {
             // Increase/decrease index
-            if (interaction.customId === startButton.customId) {
+            if (messageInteraction.customId === startButton.customId) {
                 index = 0;
-            } else if (interaction.customId === backButton.customId && index >= 5) {
+            } else if (messageInteraction.customId === backButton.customId && index >= 5) {
                 index -= 5;
-            } else if (interaction.customId === forwardButton.customId && index < rewards.length - 6) {
+            } else if (messageInteraction.customId === forwardButton.customId && index < rewards.length - 6) {
                 index += 5;
-            } else if (interaction.customId === endButton.customId) {
+            } else if (messageInteraction.customId === endButton.customId) {
                 index = rewards.length - (rewards.length % 5);
-            } else if (interaction.customId.startsWith('reward-')) {
-                const i: number = +interaction.customId.replace('reward-', '');
+            } else if (messageInteraction.customId.startsWith('reward-')) {
+                const i: number = +messageInteraction.customId.replace('reward-', '');
                 const selectedRewardKey = index - 1 + i;
                 const reward: Reward = rewards[selectedRewardKey];
 
                 reward.giveReward(player.id).then(() => {
-                    message.reply(`You successfully claimed the following reward: **${reward.label}**\n`)
+                    interaction.editReply({
+                        content: `You successfully claimed the following reward: **${reward.label}**\n`,
+                        components: [],
+                        embeds: []
+                    })
                 }).catch(e => {
-                    message.reply(`An error occured when trying to give you the following reward: **${reward.label}**\nPlease make sure you have enough tokens.`);
+                    interaction.editReply({
+                        content: `An error occured when trying to give you the following reward: **${reward.label}**\nPlease make sure you have enough tokens.`,
+                        components: [],
+                        embeds: []
+                    });
                     this.container.logger.error(e);
                 });
             }
@@ -88,7 +99,7 @@ export class Rewards extends NoxCommand {
             endButton.disabled = index >= rewards.length - 5;
 
             // Respond to interaction by updating message with new embed
-            await interaction.update({
+            await messageInteraction.update({
                 embeds: [await this.generateEmbed(player, rewards, index)],
                 components: rewards.length > 5
                     ? [
@@ -105,6 +116,20 @@ export class Rewards extends NoxCommand {
                         })
                     ]
             });
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        }, {
+            guildIds: [
+                '890643277081092117', // Nox Local
+                '890917187412439040', // Nox Local 2
+                '310422196998897666', // Test Bot
+                // '451391692176752650' // The Church
+            ]
         });
     }
 
@@ -145,12 +170,18 @@ export class Rewards extends NoxCommand {
 
     private async generateEmbed(player: Players, rewards: Reward[], index: number) {
         const embed = new MessageEmbed()
-            .setAuthor(this.container.client.user.username, this.container.client.user.avatarURL())
+            .setAuthor({
+                name: this.container.client.user.username,
+                iconURL: this.container.client.user.displayAvatarURL(),
+                url: 'https://github.com/Tokipudi/Nox'
+            })
             .setDescription(`*Tokens available: \`${player.tokens}\`*`)
             .setTitle('Rewards')
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .setFooter(`Showing rewards ${index + 1}..${index + 5} out of ${rewards.length}`);
+            .setFooter({
+                text: `Showing rewards ${index + 1}..${index + 5} out of ${rewards.length}`
+            });
 
         let i = 1;
         for (const reward of rewards.slice(index, index + 5)) {
