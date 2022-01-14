@@ -75,12 +75,7 @@ export class Cooldown extends NoxCommand {
                 }
             ]
         }, {
-            guildIds: [
-                '890643277081092117', // Nox Local
-                '890917187412439040', // Nox Local 2
-                '310422196998897666', // Test Bot
-                // '451391692176752650' // The Church
-            ]
+            guildIds: this.guildIds
         });
     }
 }

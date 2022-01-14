@@ -18,7 +18,18 @@ export class Wish extends NoxCommand {
 
         const skinId = interaction.options.getNumber('skin', true);
 
-        const skin = await getSkinById(skinId, guildId);
+        const skin = await this.container.prisma.skins.findUnique({
+            where: {
+                id: skinId
+            },
+            include: {
+                god: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        });
         if (!skin) return interaction.reply('An error occured when trying to load the skin.');
 
         const player = await getPlayerByUserId(author.id, guildId);
@@ -46,12 +57,7 @@ export class Wish extends NoxCommand {
                 }
             ]
         }, {
-            guildIds: [
-                '890643277081092117', // Nox Local
-                '890917187412439040', // Nox Local 2
-                '310422196998897666', // Test Bot
-                // '451391692176752650' // The Church
-            ]
+            guildIds: this.guildIds
         });
     }
 }

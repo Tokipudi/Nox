@@ -1,12 +1,12 @@
 import { ApplyOptions } from '@sapphire/decorators';
-import { ChatInputCommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
+import { ContextMenuCommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
 
 @ApplyOptions<ListenerOptions>({
-    name: 'chatInputCommandDenied'
+    name: 'contextMenuCommandDenied'
 })
-export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputCommandDenied> {
+export class ChatInputCommandDenied extends Listener<typeof Events.ContextMenuCommandDenied> {
 
-    public async run(error: PreconditionError, payload: ChatInputCommandDeniedPayload) {
+    public async run(error: PreconditionError, payload: ContextMenuCommandDeniedPayload) {
         const { interaction } = payload;
 
         this.container.logger.error(error);
