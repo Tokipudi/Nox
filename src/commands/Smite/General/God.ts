@@ -5,7 +5,7 @@ import { getBackButton, getForwardButton } from '@lib/utils/PaginationUtils';
 import { ability1CustomId, ability2CustomId, ability3CustomId, ability4CustomId, ability5CustomId, generateGodAbilityEmbed, generateGodDetailsEmbed, generateGodLoreEmbed, godCustomId, loreCustomId } from '@lib/utils/smite/GodsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Message, MessageActionRow, MessageReaction } from 'discord.js';
+import { CommandInteraction, Message, MessageActionRow } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Get more information about a god.'
@@ -13,7 +13,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageReaction } from '
 export class God extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
-        const { member, guildId } = interaction;
+        const { member } = interaction;
         const author = member.user;
 
         const godId = interaction.options.getNumber('god', true);

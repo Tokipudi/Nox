@@ -1,4 +1,4 @@
-import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
+import { importFandomMissingData, importGods, importItems, importSkins } from '@lib/database/utils/ImportDatabase';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -25,6 +25,10 @@ export class ImportDatabase extends NoxCommand {
         interaction.editReply('Skins imported. Importing missing data from <https://smite.fandom.com/>');
         this.container.logger.info('Skins imported. Importing missing data from https://smite.fandom.com/');
         await importFandomMissingData();
+
+        interaction.editReply('Fandom data imported. Importing items....');
+        this.container.logger.info('Fandom data imported. Importing items...');
+        await importItems();
 
         this.container.logger.info('Data imported to the database.');
         return interaction.editReply('Data imported to the database.');

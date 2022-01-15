@@ -7,7 +7,7 @@ datasource db {
 }
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
     previewFeatures = ["fullTextSearch"]
 }
 
@@ -22,6 +22,23 @@ model Guilds {
     season  Int       @default(1)
     users   Users[]
     players Players[]
+}
+
+model Items {
+    id               Int     @id
+    name             String
+    type             String
+    rootItemId       Int
+    childItemId      Int
+    itemTier         Int
+    shortDescription String
+    itemDescription  Json
+    startingItem     Boolean
+    price            Int
+    restrictedRoles  String
+    itemIconUrl      String
+    iconId           Int
+    activeFlag       Boolean
 }
 
 model Gods {
@@ -138,33 +155,33 @@ model Players {
 }
 
 model PlayersSeasonsArchive {
-    player                    Players                     @relation(fields: [playerId], references: [id])
-    playerId                  Int
-    season                    Int
-    win                       Int                         @default(0)
-    loss                      Int                         @default(0)
-    highestWinningStreak      Int                         @default(0)
-    highestLosingStreak       Int                         @default(0)
-    rolls                     Int                         @default(0)
-    claimedCards              Int                         @default(0)
-    cardsGiven                Int                         @default(0)
-    cardsExchanged            Int                         @default(0)
-    cardsStolen               Int                         @default(0)
-    cardsReceived             Int                         @default(0)
-    allInWins                 Int                         @default(0)
-    allInLoss                 Int                         @default(0)
-    favoriteSkin              Skins?                      @relation(fields: [favoriteSkinId], references: [id])
-    favoriteSkinId            Int?
+    player                     Players                      @relation(fields: [playerId], references: [id])
+    playerId                   Int
+    season                     Int
+    win                        Int                          @default(0)
+    loss                       Int                          @default(0)
+    highestWinningStreak       Int                          @default(0)
+    highestLosingStreak        Int                          @default(0)
+    rolls                      Int                          @default(0)
+    claimedCards               Int                          @default(0)
+    cardsGiven                 Int                          @default(0)
+    cardsExchanged             Int                          @default(0)
+    cardsStolen                Int                          @default(0)
+    cardsReceived              Int                          @default(0)
+    allInWins                  Int                          @default(0)
+    allInLoss                  Int                          @default(0)
+    favoriteSkin               Skins?                       @relation(fields: [favoriteSkinId], references: [id])
+    favoriteSkinId             Int?
     PlayersSeasonsAchievements PlayersSeasonsAchievements[]
 
     @@id([playerId, season])
 }
 
 model Achievements {
-    id                        Int                         @id @default(autoincrement())
-    name                      String                      @unique
-    description               String
-    tokens                    Int                         @default(0)
+    id                         Int                          @id @default(autoincrement())
+    name                       String                       @unique
+    description                String
+    tokens                     Int                          @default(0)
     PlayersSeasonsAchievements PlayersSeasonsAchievements[]
 }
 
