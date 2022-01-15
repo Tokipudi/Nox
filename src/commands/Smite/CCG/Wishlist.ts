@@ -47,7 +47,7 @@ export class Wishlist extends NoxCommand {
             : forwardButton.setDisabled(false);
 
         const reply = await interaction.reply({
-            content: 'Here is your wishlist.',
+            content: `${user}'s wishlist:`,
             embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
             components: [
                 new MessageActionRow({

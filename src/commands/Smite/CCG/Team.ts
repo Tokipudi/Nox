@@ -49,7 +49,7 @@ export class Team extends NoxCommand {
 
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await interaction.reply({
-            content: 'Here is your team.',
+            content: `${user}'s team:`,
             embeds: [await this.generateEmbed(skins, 0, guildId)],
             components: [
                 new MessageActionRow({
