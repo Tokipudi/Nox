@@ -9,7 +9,7 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Start an exchange with a user of your choice.',
+    description: 'Start a trade another player.',
     preconditions: [
         'targetIsNotABot',
         'playerExists',
@@ -17,7 +17,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } 
         'targetIsNotBanned'
     ]
 })
-export class Exchange extends NoxCommand {
+export class Trade extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
         const { member, guildId } = interaction;
@@ -25,8 +25,8 @@ export class Exchange extends NoxCommand {
 
         const user = interaction.options.getUser('user', true);
 
-        if (user.id === author.id) return interaction.reply('You cannot exchange a card with yourself!');
-        if (user.bot) return interaction.reply('You cannot exchange a card with a bot!');
+        if (user.id === author.id) return interaction.reply('You cannot trade a card with yourself!');
+        if (user.bot) return interaction.reply('You cannot trade a card with a bot!');
 
         const userPlayer = await createPlayerIfNotExists(user.id, guildId);
         if (!userPlayer) return interaction.reply(`An error occured when trying to load ${user}'s player.`);
@@ -53,7 +53,7 @@ export class Exchange extends NoxCommand {
             ? forwardButton.setDisabled(true)
             : forwardButton.setDisabled(false);
         const embedMessage1 = await interaction.reply({
-            content: 'Select the card you wish to exchange.',
+            content: 'Select the card you wish to trade.',
             embeds: [generateSkinEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
@@ -116,7 +116,7 @@ export class Exchange extends NoxCommand {
         let godName2 = '';
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                interaction.channel.send(`${author} You did not select a card. The exchange is canceled.`);
+                interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
             } else {
                 currentIndex = 0
                 backButton.setDisabled(true);
@@ -177,9 +177,9 @@ export class Exchange extends NoxCommand {
 
                 collector2.on('end', async collected => {
                     if (skinName2 === '') {
-                        interaction.channel.send(`${author} You did not select a card. The exchange is canceled.`);
+                        interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
                     } else {
-                        const reply = await interaction.channel.send(`An exchange was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nReact to this message to accept or deny the exchange.`);
+                        const reply = await interaction.channel.send(`A trade was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nReact to this message to accept or deny the trade.`);
                         await reply.react('✅');
                         await reply.react('🚫');
 
@@ -192,7 +192,7 @@ export class Exchange extends NoxCommand {
                         let isValidated = false;
                         collector3.on('collect', async (react: MessageReaction) => {
                             if (react.emoji.name === '🚫') {
-                                interaction.channel.send(`${user} has rejected your exchange offer.`)
+                                interaction.channel.send(`${user} has rejected your trade offer.`)
                                 isValidated = true;
                                 collector3.stop();
                             } else if (react.emoji.name === '✅') {
@@ -229,8 +229,8 @@ export class Exchange extends NoxCommand {
                                     });
 
 
-                                    this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
-                                    interaction.channel.send(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);
+                                    this.container.logger.info(`The card ${skinName1}<${skinId1}> was given to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was given to ${author.username}#${author.discriminator}<${author.id}>!`)
+                                    interaction.channel.send(`${author} The card **${skinName1} ${godName1}** was successfully traded against **${skinName2} ${godName2}** with ${user}!`);
                                     isValidated = true;
                                     collector3.stop();
                                 }
@@ -249,7 +249,7 @@ export class Exchange extends NoxCommand {
             options: [
                 {
                     name: 'user',
-                    description: 'The you user you wish to exchange with.',
+                    description: 'The you user you wish to trade with.',
                     required: true,
                     type: 'USER'
                 }
