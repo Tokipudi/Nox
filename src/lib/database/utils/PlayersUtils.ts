@@ -46,7 +46,7 @@ export async function createPlayerIfNotExists(userId: Snowflake, guildId: Snowfl
     const player = await getPlayerByUserId(userId, guildId);
     if (player == null) {
         try {
-            await createPlayer(userId, guildId);
+            return await createPlayer(userId, guildId);
         } catch (e) {
             this.container.logger.error(e);
         }
