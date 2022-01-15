@@ -1,3 +1,4 @@
+import { CommandContextWithCooldown } from '@lib/structures/context/CommandContextWithCooldown';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ChatInputCommandDeniedPayload, Events, Listener, ListenerOptions, PreconditionError } from '@sapphire/framework';
 
@@ -11,9 +12,29 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
 
         this.container.logger.error(error);
 
-        const errMsg = `You are missing the required permissions to run this command.`;
+        let errMsg = '';
+        switch (error.identifier) {
+            case 'preconditionCooldown':
+                const context = error.context as CommandContextWithCooldown;
+                errMsg = `You have to wait \`${this.getTimeLeftBeforeRoll(context.remaining)}\` before rolling again.`;
+                break;
+            default:
+                if (error instanceof PreconditionError) {
+                    errMsg = error.message;
+                } else {
+                    errMsg = `You can't do that right now.`;
+                }
+        }
+
         return interaction.replied
             ? interaction.channel.send(errMsg)
             : interaction.reply(errMsg);
+    }
+
+    private getTimeLeftBeforeRoll(milliseconds: number) {
+        const date = new Date(0);
+        date.setMilliseconds(milliseconds);
+        const isoString = date.toISOString();
+        return `${isoString.substr(17, 2)} seconds`;
     }
 };
