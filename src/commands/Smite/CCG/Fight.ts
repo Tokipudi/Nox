@@ -278,7 +278,7 @@ export class Fight extends NoxCommand {
                                 god2 = await getGodByName(godName2);
                                 await embedMessage3.delete();
                                 const embed = this.generateFightEmbed(god1, skinName1, skinName1, skinName2, godName1, godName2, god1.health, god2.health, author);
-                                await interaction.channel.send(`A fight was started between ${author}'s **${skinName1} ${godName1} *(${rarity1})*** and ${userArgument}'s **${skinName2} ${godName2} *(${rarity2})***!`);
+                                await interaction.channel.send(`A fight was started between ${author}'s **${skinName1} ${godName1} *(${rarity1})${player1.isBoosted ? ' <Boosted>' : ''}*** and ${userArgument}'s **${skinName2} ${godName2} *(${rarity2})${player2.isBoosted ? ' <Boosted>' : ''}***!`);
                                 await interaction.channel.send({ embeds: [embed] });
                                 collector3.stop();
                             }
