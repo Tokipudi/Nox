@@ -1,36 +1,54 @@
+import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { disconnectWishlistSkin, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Empty the wishlist of a user.',
-    detailedDescription: 'Empties the wishlist of a user for the current guild.',
+    description: 'Empties the wishlist of a user.',
     requiredUserPermissions: 'BAN_MEMBERS',
-    usage: '<@user>',
-    examples: [
-        '@User#1234'
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists'
     ]
 })
 export class ClearWishes extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const user = await args.peek('user');
-        if (!user) return message.reply('The first argument **must** be a user.');
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { guildId } = interaction;
 
-        const player = await args.pick('player');
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        let user = interaction.options.getUser('user', true);
+
+        const player = await getPlayerByUserId(user.id, guildId);
+        if (!player) return interaction.reply('An error occured when trying to load the player.');
 
         const skins = await getSkinWishlist(player.id);
-        if (!skins || !skins.length) return message.reply(`${user} has no cards in their wishlist.`);
+        if (!skins || !skins.length) return interaction.reply(`${user} has no cards in their wishlist.`);
 
-        for (const skin of skins) {
+        for (let skin of skins) {
             await disconnectWishlistSkin(skin.id, player.id);
-            this.container.logger.info(`The card ${skin.name}<${skin.id}> was removed from the wishlist of player ${player.id}`);
         }
 
-        message.reply(`The wishlist of ${user} has been emptied.`);
+        return interaction.reply(`The wishlist of ${user} has been emptied.`);
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you want to clear the wishlist of.',
+                    required: true,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: this.guildIds
+        });
     }
 }

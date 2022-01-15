@@ -1,14 +1,14 @@
 import { Achievement } from '@lib/achievements/Achievement';
 import { importFandomMissingData, importGods, importSkins } from '@lib/database/utils/ImportDatabase';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Listener, ListenerOptions } from '@sapphire/framework';
+import { Events, Listener, ListenerOptions } from '@sapphire/framework';
 import moment from 'moment';
 
 @ApplyOptions<ListenerOptions>({
     once: true,
     name: 'ready'
 })
-export class Ready extends Listener {
+export class Ready extends  Listener<typeof Events.ClientReady> {
 
     public async run() {
         // Start message

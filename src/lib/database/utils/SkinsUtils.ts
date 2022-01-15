@@ -36,7 +36,8 @@ export async function getSkinById(skinId: number, guildId: Snowflake) {
                     player: true
                 }
             },
-            playersWishes: true
+            playersWishes: true,
+            god: true
         }
     });
 }
@@ -85,6 +86,9 @@ export async function connectSkin(skinId: number, playerId: number, updatelastCl
         },
         where: {
             id: skinId
+        },
+        include: {
+            god: true
         }
     });
 
@@ -195,6 +199,34 @@ export async function getSkinsByGodName(name: string) {
         where: {
             god: {
                 name: name
+            },
+            obtainability: {
+                isNot: null
+            }
+        },
+        include: {
+            god: {
+                select: {
+                    name: true
+                }
+            },
+            obtainability: {
+                select: {
+                    name: true
+                }
+            }
+        },
+        orderBy: {
+            releaseDate: 'desc'
+        }
+    });
+}
+
+export async function getSkinsByGodId(godId: number) {
+    return await container.prisma.skins.findMany({
+        where: {
+            god: {
+                id: godId
             },
             obtainability: {
                 isNot: null

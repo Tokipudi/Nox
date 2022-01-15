@@ -1,19 +1,26 @@
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import type { Message } from 'discord.js';
+import { ApplicationCommandRegistry } from '@sapphire/framework';
+import type { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    aliases: ['pong'],
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'ADMINISTRATOR',
+    description: 'Ping? Pong!'
 })
 export class Ping extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const msg = await message.channel.send('Ping?');
+    public override async chatInputRun(interaction: CommandInteraction) {
+        this.container.stores.get('commands').forEach(command => {
+            console.log(command.name);
+        });
+        await interaction.reply(`Pong! Bot Latency ${Math.round(this.container.client.ws.ping)}ms.`);
+    }
 
-        return msg.edit(
-            `Pong! Bot Latency ${Math.round(this.container.client.ws.ping)}ms. API Latency ${msg.createdTimestamp - message.createdTimestamp}ms.`
-        );
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        });
     }
 }

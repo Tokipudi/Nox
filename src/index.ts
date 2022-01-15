@@ -21,6 +21,7 @@ const client = new NoxClient({
             url: 'https://github.com/Tokipudi/Nox'
         }]
     },
+    loadMessageCommandListeners: true,
     defaultPrefix: process.env.COMMAND_PREFIX,
 });
 

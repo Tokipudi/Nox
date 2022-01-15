@@ -4,7 +4,9 @@ import { resetAllSkinsByGuildId } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { toTitleCase } from '@sapphire/utilities';
+import { CommandInteraction, Message, MessageReaction, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Resets the game and start a new season.',
@@ -13,25 +15,34 @@ import { Message } from 'discord.js';
 })
 export class Ragnarock extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const { user } = member;
+        const author = user;
+
         const prefix = this.container.client.options.defaultPrefix;
 
-        await message.reply(`Are you sure you wish to start a new season on this server? This will remove all players acquired skins, wished skins and restart the game.\nType \`${prefix}yes\` to agree, or \`${prefix}no\` otherwise.`)
+        const reply = await interaction.reply({
+            content: `Are you sure you wish to start a new season on this server? This will remove all players acquired skins, wished skins and restart the game.\nReact to this message to accept or deny the exchange.`,
+            fetchReply: true
+        }) as Message;
+        await reply.react('✅');
+        await reply.react('🚫');
 
-        const filter = (m: Message) => {
-            return m.author.id === author.id && (m.content === `${prefix}yes` || m.content === `${prefix}no`);
+        const filter = (reaction: MessageReaction, user: User) => {
+            return author.id === user.id
+                && (reaction.emoji.name == '✅' || reaction.emoji.name == '🚫');
         };
-        const collector = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
+        const collector = reply.createReactionCollector({ filter, time: 120000 /* 2min */ });
 
-        collector.on('collect', async (m: Message) => {
-            if (m.content === `${prefix}no`) {
-                await message.reply('NoxCommand aborted.');
+        collector.on('collect', async (react: MessageReaction) => {
+            if (react.emoji.name === '🚫') {
+                await interaction.editReply(`**${toTitleCase(this.name)} aborted.**`);
                 collector.stop();
-            } else if (m.content === `${prefix}yes`) {
+            } else if (react.emoji.name === '✅') {
                 collector.stop();
 
-                const reply = await m.reply('`Starting the new season...`');
+                const reply = await interaction.editReply('`Starting the new season...`');
 
                 let guild: Guilds = await this.container.prisma.guilds.findUnique({
                     where: {
@@ -41,7 +52,7 @@ export class Ragnarock extends NoxCommand {
 
                 const { season } = await this.startNewSeason(guild);
 
-                await reply.edit(`Game has been reset.\nThe current season is now **${season}**.`);
+                await interaction.editReply(`Game has been reset.\nThe current season is now **${season}**.`);
             }
         });
     }
@@ -92,7 +103,7 @@ export class Ragnarock extends NoxCommand {
                         favoriteSkinId = playerSkin.skinId;
                     }
                 }
-                
+
                 data.push({
                     playerId: player.id,
                     season: guild.season,
@@ -146,5 +157,14 @@ export class Ragnarock extends NoxCommand {
                 }
             });
         }
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+        }, {
+            guildIds: this.guildIds
+        });
     }
 }

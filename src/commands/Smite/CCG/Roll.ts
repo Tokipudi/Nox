@@ -3,7 +3,8 @@ import { connectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageEmbed } from 'discord.js';
 import moment from 'moment';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -11,14 +12,16 @@ import moment from 'moment';
     cooldownLimit: 1,
     cooldownDelay: 5000,
     cooldownScope: 0,
-    preconditions: ['playerExists', 'canPlayerRoll']
+    preconditions: [
+        'playerExists',
+        'canPlayerRoll'
+    ]
 })
 export class Roll extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const { author, guildId } = message;
-
-        const msg = await message.reply('Fetching data...');
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
         const skins: any = await this.container.prisma.$queryRawUnsafe(
             `select "Skins".*, "Gods"."name" as godname, "SkinsObtainability"."name" as obtainabilityname ` +
@@ -35,7 +38,7 @@ export class Roll extends NoxCommand {
         );
 
         if (skins.length <= 0) {
-            return await msg.edit('No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.');
+            return await interaction.reply('No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.');
         }
 
         const player = await getPlayerByUserId(author.id, guildId);
@@ -46,10 +49,15 @@ export class Roll extends NoxCommand {
 
         let embed = new MessageEmbed()
             .setTitle(skin.name)
-            .setAuthor(skin.godname, skin.godIconUrl)
+            .setAuthor({
+                name: skin.godname,
+                iconURL: skin.godIconUrl
+            })
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
             .setImage(skin.godSkinUrl)
-            .setFooter(`${skin.obtainabilityname} card`);
+            .setFooter({
+                text: `${skin.obtainabilityname} card`
+            });
 
         switch (skin.obtainabilityname) {
             case 'Clan Reward':
@@ -69,20 +77,22 @@ export class Roll extends NoxCommand {
         }
 
         await addRoll(player.id);
-        await msg.edit('React with any emoji to claim.');
-        await msg.edit({ embeds: [embed] });
+        const reply = await interaction.reply({
+            content: 'React with any emoji to claim.',
+            embeds: [embed],
+            fetchReply: true
+        }) as Message;
 
-        const collector = msg.createReactionCollector({ time: 45000 });
+        const collector = reply.createReactionCollector({ time: 45000 });
 
         collector.on('collect', async (reaction, user) => {
             const player = await getPlayerByUserId(user.id, guildId);
             const canClaim = await canPlayerClaimRoll(player.id);
             if (player && player.isBanned) {
-                message.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
+                interaction.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
             } else if (!canClaim) {
                 const duration = await getTimeLeftBeforeClaim(player.id);
-
-                message.channel.send(`${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
+                interaction.channel.send(`${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
             } else {
                 collector.stop();
 
@@ -125,7 +135,7 @@ export class Roll extends NoxCommand {
                     });
                 }
 
-                msg.reply(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
+                interaction.channel.send(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
                 this.container.logger.info(`Player ${player.id} collected ${skin.name} ${skin.godname}<${skin.id}>.`);
             }
         });
@@ -151,11 +161,20 @@ export class Roll extends NoxCommand {
             for (let wishedPlayer of wishedPlayers) {
                 let user = await this.container.client.users.fetch(wishedPlayer.player.user.id);
                 try {
-                    await user.send('A card from your wishlist is available for grab! ' + msg.url);
+                    await user.send('A card from your wishlist is available for grab! ' + reply.url);
                 } catch (e) {
                     this.container.logger.error(e);
                 }
             }
         }
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        }, {
+            guildIds: this.guildIds
+        });
     }
 }

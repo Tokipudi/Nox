@@ -1,35 +1,35 @@
-import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { disconnectWishlistSkin, getSkinOwner, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageActionRow } from 'discord.js';
+import { ApplicationCommandRegistry, Args, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    name: 'wishlist',
-    description: 'List the cards in your wishlist.',
-    usage: '[@user]',
-    examples: [
-        '',
-        '@User#1234'
-    ],
-    preconditions: ['playerExists']
+    description: 'Shows your wishlist or the wishlist of another player.',
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists',
+        'targetIsNotBanned'
+    ]
 })
 export class Wishlist extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user as User;
 
-        const userArgument = await args.peek('user').catch(() => author);
-        if (userArgument.bot) return message.reply('Bots do not have a wishlist!');
+        let user = interaction.options.getUser('user');
+        if (user == null) {
+            user = author;
+        }
 
-        const player = await args.pick('player').catch(async error => {
-            if (error.identifier === 'argsMissing') return await getPlayerByUserId(author.id, guildId);
-        });
-        if (!player) return message.reply('An error occured when trying to load the player.');
+        const player = await createPlayerIfNotExists(user.id, guildId);
+        if (player == null) return interaction.reply('An error occured when trying to load the player.');
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -37,26 +37,27 @@ export class Wishlist extends NoxCommand {
 
         let skins = await getSkinWishlist(player.id);
         if (!skins || skins.length === 0) {
-            return userArgument.id === author.id
-                ? message.reply('Your wishlist is empty!')
-                : message.reply(`${userArgument}'s wishlist is empty!`)
+            return user.id === author.id
+                ? interaction.reply('Your wishlist is empty!')
+                : interaction.reply(`${user}'s wishlist is empty!`)
         }
 
         skins.length <= 1
             ? forwardButton.setDisabled(true)
             : forwardButton.setDisabled(false);
 
-        const reply = await message.reply({
-            content: 'Here is your wishlist.',
+        const reply = await interaction.reply({
+            content: `${user}'s wishlist:`,
             embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
             components: [
                 new MessageActionRow({
-                    components: userArgument.id === author.id
+                    components: user.id === author.id
                         ? [...([backButton]), ...([selectButton]), ...([forwardButton])]
                         : [...([backButton]), ...([forwardButton])]
                 })
-            ]
-        });
+            ],
+            fetchReply: true
+        }) as Message;
 
         const collector = reply.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
@@ -88,13 +89,13 @@ export class Wishlist extends NoxCommand {
                     embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
                     components: [
                         new MessageActionRow({
-                            components: userArgument.id === author.id
+                            components: user.id === author.id
                                 ? [...([backButton]), ...([selectButton]), ...([forwardButton])]
                                 : [...([backButton]), ...([forwardButton])]
                         })
                     ]
                 })
-            } else if (interaction.customId === selectButton.customId && userArgument.id === author.id) {
+            } else if (interaction.customId === selectButton.customId && user.id === author.id) {
                 let skinName = interaction.message.embeds[0].title;
 
                 let skinId = 0;
@@ -106,7 +107,7 @@ export class Wishlist extends NoxCommand {
                 }
 
                 let playerWishedSkin = await disconnectWishlistSkin(skinId, player.id);
-                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was removed from the wishlist of ${userArgument.username}#${userArgument.discriminator}<${userArgument.id}>!`);
+                this.container.logger.info(`The card ${skinName}<${playerWishedSkin.skinId}> was removed from the wishlist of ${user.username}#${user.discriminator}<${user.id}>!`);
                 skins = await getSkinWishlist(player.id);
 
                 if (skins == null || skins.length === 0) {
@@ -140,6 +141,23 @@ export class Wishlist extends NoxCommand {
                     components: []
                 });
             }
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The user you want to check the wishlist of. Defaults to the current user if not specified.',
+                    required: false,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: this.guildIds
         });
     }
 

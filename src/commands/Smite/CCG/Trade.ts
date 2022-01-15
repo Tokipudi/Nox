@@ -1,37 +1,38 @@
-import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { getSkinsByPlayer, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Args } from '@sapphire/framework';
-import { Message, MessageActionRow } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Exchanges a card you own to a user of your choice. The specified user will have to validate the exchange with the same NoxCommand.',
-    usage: '<@user>',
-    examples: [
-        '@User#1234'
-    ],
-    preconditions: ['playerExists']
+    description: 'Start a trade another player.',
+    preconditions: [
+        'targetIsNotABot',
+        'playerExists',
+        'targetPlayerExists',
+        'targetIsNotBanned'
+    ]
 })
-export class Exchange extends NoxCommand {
+export class Trade extends NoxCommand {
 
-    public async messageRun(message: Message, args: Args) {
-        const { author, guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { member, guildId } = interaction;
+        const author = member.user;
 
-        const user = await args.peek('user');
+        const user = interaction.options.getUser('user', true);
 
-        if (!user) return message.reply('The first argument **must** be a user.');
-        if (user.id === author.id) return message.reply('You cannot exchange a card with yourself!');
-        if (user.bot) return message.reply('You cannot exchange a card with a bot!');
+        if (user.id === author.id) return interaction.reply('You cannot trade a card with yourself!');
+        if (user.bot) return interaction.reply('You cannot trade a card with a bot!');
 
-        const userPlayer = await args.pick('player');
-        if (!userPlayer) return message.reply(`An error occured when trying to load ${user}'s player.`);
+        const userPlayer = await createPlayerIfNotExists(user.id, guildId);
+        if (!userPlayer) return interaction.reply(`An error occured when trying to load ${user}'s player.`);
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
-        if (!authorPlayer) return message.reply(`An error occured when trying to load ${author}'s player.`);
+        if (!authorPlayer) return interaction.reply(`An error occured when trying to load ${author}'s player.`);
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -39,11 +40,11 @@ export class Exchange extends NoxCommand {
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
-            return message.reply('You currently don\'t own any card!');
+            return interaction.reply('You currently don\'t own any card!');
         }
         const skins2 = await getSkinsByPlayer(userPlayer.id);
         if (!skins2 || skins2.length === 0) {
-            return message.reply(`${user} does not own any card!`);
+            return interaction.reply(`${user} does not own any card!`);
         }
 
         // Send the embed with the first skin
@@ -51,15 +52,16 @@ export class Exchange extends NoxCommand {
         skins1.length <= 1
             ? forwardButton.setDisabled(true)
             : forwardButton.setDisabled(false);
-        const embedMessage1 = await message.reply({
-            content: 'Select the card you wish to exchange.',
+        const embedMessage1 = await interaction.reply({
+            content: 'Select the card you wish to trade.',
             embeds: [generateSkinEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
                     components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
                 })
-            ]
-        })
+            ],
+            fetchReply: true
+        }) as Message;
 
         // Collect button interactions (when a user clicks a button),
         // but only when the button as clicked by the original message author
@@ -101,7 +103,11 @@ export class Exchange extends NoxCommand {
             } else if (interaction.customId === selectButton.customId) {
                 skinName1 = interaction.message.embeds[0].title;
                 godName1 = interaction.message.embeds[0].author.name;
-                await embedMessage1.delete();
+                await interaction.reply({
+                    content: `You selected **${skinName1} ${godName1}**`,
+                    components: [],
+                    embeds: []
+                });
                 collector1.stop();
             }
         });
@@ -110,14 +116,14 @@ export class Exchange extends NoxCommand {
         let godName2 = '';
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                message.reply('You did not select a card. The exchange is canceled.');
+                interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
             } else {
                 currentIndex = 0
                 backButton.setDisabled(true);
                 skins2.length <= 1
                     ? forwardButton.setDisabled(true)
                     : forwardButton.setDisabled(false);
-                const embedMessage2 = await message.reply({
+                const embedMessage2 = await interaction.channel.send({
                     content: `Select the card you wish to get from ${user}.`,
                     embeds: [generateSkinEmbed(skins2, currentIndex)],
                     components: [
@@ -165,28 +171,31 @@ export class Exchange extends NoxCommand {
                         skinName2 = interaction.message.embeds[0].title;
                         godName2 = interaction.message.embeds[0].author.name;
                         await embedMessage2.delete();
-                        await message.channel.send(`An exchange was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nType \`${this.container.client.options.defaultPrefix}accept\` to agree to the exchange, or \`${this.container.client.options.defaultPrefix}deny\` otherwise.`);
                         collector2.stop();
                     }
                 });
 
                 collector2.on('end', async collected => {
                     if (skinName2 === '') {
-                        message.reply(`You did not select a card. The exchange is canceled.`);
+                        interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
                     } else {
-                        const prefix = this.container.client.options.defaultPrefix;
-                        const filter = (m: Message) => {
-                            return m.author.id === user.id && (m.content.startsWith(`${prefix}accept`) || m.content.startsWith(`${prefix}deny`));
+                        const reply = await interaction.channel.send(`A trade was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nReact to this message to accept or deny the trade.`);
+                        await reply.react('✅');
+                        await reply.react('🚫');
+
+                        const filter = (reaction: MessageReaction, u: User) => {
+                            return user.id === u.id
+                                && (reaction.emoji.name == '✅' || reaction.emoji.name == '🚫');
                         };
-                        const collector3 = message.channel.createMessageCollector({ filter, time: 120000 /* 2min */ });
+                        const collector3 = reply.createReactionCollector({ filter, time: 120000 /* 2min */ });
 
                         let isValidated = false;
-                        collector3.on('collect', async (m: Message) => {
-                            if (m.content.startsWith(`${prefix}deny`)) {
-                                message.reply(`${user} has rejected your exchange offer.`)
+                        collector3.on('collect', async (react: MessageReaction) => {
+                            if (react.emoji.name === '🚫') {
+                                interaction.channel.send(`${user} has rejected your trade offer.`)
                                 isValidated = true;
                                 collector3.stop();
-                            } else if (m.content.startsWith(`${prefix}accept`)) {
+                            } else if (react.emoji.name === '✅') {
                                 let skinId1 = 0;
                                 for (let i = 0; i < skins1.length; i++) {
                                     if (skins1[i].name === skinName1) {
@@ -220,8 +229,8 @@ export class Exchange extends NoxCommand {
                                     });
 
 
-                                    this.container.logger.info(`The card ${skinName1}<${skinId1}> was exchanged to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was exchanged to ${author.username}#${author.discriminator}<${author.id}>!`)
-                                    message.reply(`${author} The card **${skinName1} ${godName1}** was successfully exchanged against **${skinName2} ${godName2}** with ${user}!`);
+                                    this.container.logger.info(`The card ${skinName1}<${skinId1}> was given to ${user.username}#${user.discriminator}<${user.id}> and the card ${skinName2}<${skinId2}> was given to ${author.username}#${author.discriminator}<${author.id}>!`)
+                                    interaction.channel.send(`${author} The card **${skinName1} ${godName1}** was successfully traded against **${skinName2} ${godName2}** with ${user}!`);
                                     isValidated = true;
                                     collector3.stop();
                                 }
@@ -230,6 +239,23 @@ export class Exchange extends NoxCommand {
                     }
                 });
             }
+        });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description,
+            options: [
+                {
+                    name: 'user',
+                    description: 'The you user you wish to trade with.',
+                    required: true,
+                    type: 'USER'
+                }
+            ]
+        }, {
+            guildIds: this.guildIds
         });
     }
 }

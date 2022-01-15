@@ -3,15 +3,16 @@ import { getSkins, getSkinsByObtainability } from '@lib/database/utils/SkinsUtil
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Message, MessageEmbed } from 'discord.js';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
+import { CommandInteraction, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the amount of skins left to claim by rarity.'
 })
 export class Left extends NoxCommand {
 
-    public async messageRun(message: Message) {
-        const { guildId } = message;
+    public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
+        const { guildId } = interaction;
 
         const skins = await getSkins();
         const skinsTotal = skins.length;
@@ -54,6 +55,15 @@ export class Left extends NoxCommand {
         }
         embed.setDescription(`There are a total of \`${skinsTotal}\` skins total, of which \`${totalClaimedSkins} (${percentageClaimed}%)\` are already claimed.`);
 
-        return message.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
+        registry.registerChatInputCommand({
+            name: this.name,
+            description: this.description
+        }, {
+            guildIds: this.guildIds
+        });
     }
 }
