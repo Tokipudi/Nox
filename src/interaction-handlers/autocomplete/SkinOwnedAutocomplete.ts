@@ -17,13 +17,13 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
         const focusedOption = interaction.options.getFocused(true);
         if (focusedOption.name !== 'skin_owned') return this.none();
 
-        const query = focusedOption.value.toString();
+        const query = focusedOption.value.toString().replace('"', '');
         const words = query.split(' ');
         const searchQueryArray = [];
         for (let word of words) {
             word = word.trim();
             if (word != null) {
-                searchQueryArray.push(word);
+                searchQueryArray.push(word.trim());
             }
         }
         let searchQuery = searchQueryArray.join(' | ');
@@ -85,9 +85,10 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
 
         const parsedData = [];
         for (let skin of skins) {
+            const skinFullName = `"${skin.name}" ${skin.god.name}`;
             parsedData.push({
-                name: `"${skin.name}" ${skin.god.name}`,
-                value: skin.id
+                name: skinFullName,
+                value: skinFullName
             });
         }
 

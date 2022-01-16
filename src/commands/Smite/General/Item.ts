@@ -1,4 +1,5 @@
 import { isItemDescription } from '@lib/database/utils/ItemsUtils';
+import { getItemByName } from '@lib/database/utils/ItemUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -12,13 +13,9 @@ import { CommandInteraction, MessageEmbed } from 'discord.js';
 export class Item extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
-        const itemId = interaction.options.getNumber('item', true);
-        const item = await this.container.prisma.items.findUnique({
-            where: {
-                id: itemId
-            }
-        });
-        if (item == null) return interaction.reply('An error occured when trying to load the item.');
+        const itemName = interaction.options.getString('item', true);
+        const item = await getItemByName(itemName);
+        if (item == null) return interaction.reply(`No item found with the name \`${itemName}\`.`);
 
         const embed = new MessageEmbed()
             .setAuthor({
@@ -66,7 +63,7 @@ export class Item extends NoxCommand {
                     name: 'item',
                     description: 'The item you wish to get the information of.',
                     required: true,
-                    type: 'NUMBER',
+                    type: 'STRING',
                     autocomplete: true
                 }
             ]

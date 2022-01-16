@@ -1,4 +1,4 @@
-import { getGodById } from '@lib/database/utils/GodsUtils';
+import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { getPlayerByUserId, isSkinInWishlist } from '@lib/database/utils/PlayersUtils';
 import { addSkinToWishlist, getSkinOwner, getSkinsByGodId } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
@@ -19,8 +19,9 @@ export class Skins extends NoxCommand {
         const { member, guildId } = interaction;
         const author = member.user;
 
-        const godId = interaction.options.getNumber('god', true);
-        const god = await getGodById(godId);
+        const godName = interaction.options.getString('god', true);
+        const god = await getGodByName(godName);
+        if (god == null) return await interaction.reply(`No god found with the name \`${godName}\`.`)
 
         const player = await getPlayerByUserId(author.id, guildId);
 
@@ -28,7 +29,7 @@ export class Skins extends NoxCommand {
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Wish', 'SUCCESS');
 
-        let skins = await getSkinsByGodId(godId);
+        let skins = await getSkinsByGodId(god.id);
 
         let currentIndex = 0
 
@@ -117,7 +118,7 @@ export class Skins extends NoxCommand {
                     name: 'god',
                     description: 'The god you want to check the skins of.',
                     required: true,
-                    type: 'NUMBER',
+                    type: 'STRING',
                     autocomplete: true
                 }
             ]

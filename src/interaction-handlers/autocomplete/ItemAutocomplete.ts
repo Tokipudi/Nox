@@ -16,6 +16,8 @@ export class ItemAutocomplete extends InteractionHandler {
         const focusedOption = interaction.options.getFocused(true);
         if (focusedOption.name !== 'item') return this.none();
 
+        const query = focusedOption.value.toString().trim();
+
         const items = await this.container.prisma.items.findMany({
             select: {
                 name: true,
@@ -25,13 +27,14 @@ export class ItemAutocomplete extends InteractionHandler {
                 OR: [
                     {
                         name: {
-                            contains: focusedOption.value.toString(),
+                            contains: query,
                             mode: 'insensitive'
                         }
                     },
                     {
                         name: {
-                            search: focusedOption.value.toString().trim().replace(/\s+/g, ' | ')
+                            search: query.replace(/\s+/g, ' | '),
+                            mode: 'insensitive'
                         }
                     }
                 ],
@@ -43,7 +46,7 @@ export class ItemAutocomplete extends InteractionHandler {
         for (let item of items.slice(0, 25)) {
             parsedData.push({
                 name: item.name,
-                value: item.id
+                value: item.name
             });
         }
 
