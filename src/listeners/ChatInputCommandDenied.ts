@@ -27,8 +27,14 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
         }
 
         return interaction.replied
-            ? interaction.channel.send(errMsg)
-            : interaction.reply(errMsg);
+            ? interaction.followUp({
+                content: errMsg,
+                ephemeral: true
+            })
+            : interaction.reply({
+                content: errMsg,
+                ephemeral: true
+            });
     }
 
     private getTimeLeftBeforeRoll(milliseconds: number) {
