@@ -1,7 +1,7 @@
 import { container } from '@sapphire/framework';
 
 export async function getGodByName(name: string) {
-    return await container.prisma.gods.findUnique({
+    return await container.prisma.gods.findFirst({
         include: {
             pantheon: true,
             skins: {
@@ -11,7 +11,10 @@ export async function getGodByName(name: string) {
             }
         },
         where: {
-            name: name
+            name: {
+                equals: name,
+                mode: 'insensitive'
+            }
         }
     });
 }

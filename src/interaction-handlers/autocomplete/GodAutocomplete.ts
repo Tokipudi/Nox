@@ -16,6 +16,8 @@ export class GodAutocomplete extends InteractionHandler {
         const focusedOption = interaction.options.getFocused(true);
         if (focusedOption.name !== 'god') return this.none();
 
+        const query = focusedOption.value.toString().trim();
+
         const gods = await this.container.prisma.gods.findMany({
             select: {
                 name: true,
@@ -25,13 +27,14 @@ export class GodAutocomplete extends InteractionHandler {
                 OR: [
                     {
                         name: {
-                            contains: focusedOption.value.toString(),
+                            contains: query,
                             mode: 'insensitive'
                         }
                     },
                     {
                         name: {
-                            search: focusedOption.value.toString().trim().replace(/\s+/g, ' | ')
+                            search: query.replace(/\s+/g, ' | '),
+                            mode: 'insensitive'
                         }
                     }
                 ]
@@ -42,7 +45,7 @@ export class GodAutocomplete extends InteractionHandler {
         for (let god of gods.slice(0, 25)) {
             parsedData.push({
                 name: god.name,
-                value: god.id
+                value: god.name
             });
         }
 

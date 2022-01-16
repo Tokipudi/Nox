@@ -17,7 +17,7 @@ export class SkinAutocomplete extends InteractionHandler {
         const focusedOption = interaction.options.getFocused(true);
         if (focusedOption.name !== 'skin') return this.none();
 
-        const query = focusedOption.value.toString();
+        const query = focusedOption.value.toString().replace('"', '');
 
         const skins: GodSkinsFullNames = await this.container.prisma.$queryRaw`with similarityresults as
         (
@@ -37,7 +37,7 @@ export class SkinAutocomplete extends InteractionHandler {
         for (let skin of skins) {
             parsedData.push({
                 name: skin.fullName,
-                value: skin.skinId
+                value: skin.fullName
             });
         }
 

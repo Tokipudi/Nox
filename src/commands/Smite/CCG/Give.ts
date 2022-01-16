@@ -2,6 +2,7 @@ import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/
 import { getSkinOwner, giveSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { getSkinIdFromStringParameter } from '@lib/utils/interaction-handlers/AutocompleteUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
 import { CommandInteraction } from 'discord.js';
@@ -27,7 +28,9 @@ export class Give extends NoxCommand {
         const player = await createPlayerIfNotExists(user.id, guildId);
         if (player == null) return interaction.reply('An error occured when trying to load the player.');
 
-        const skinId = interaction.options.getNumber('skin_owned', true);
+        const skinFullName = interaction.options.getString('skin_owned', true);
+        const skinId = await getSkinIdFromStringParameter(skinFullName);
+        if (!skinId) return await interaction.reply(`No skin found with the name \`${skinFullName}\`.`);
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
 
@@ -56,7 +59,7 @@ export class Give extends NoxCommand {
                     name: 'skin_owned',
                     description: 'The skin you wish to give.',
                     required: true,
-                    type: 'NUMBER',
+                    type: 'STRING',
                     autocomplete: true
                 }
             ]

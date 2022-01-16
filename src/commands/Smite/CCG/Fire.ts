@@ -2,6 +2,7 @@ import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { getSkinIdFromStringParameter } from '@lib/utils/interaction-handlers/AutocompleteUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
 import { CommandInteraction } from 'discord.js';
@@ -17,7 +18,10 @@ export class Fire extends NoxCommand {
         const author = member.user;
 
         const player = await getPlayerByUserId(author.id, guildId);
-        const skinId = interaction.options.getNumber('skin_owned', true);
+
+        const skinFullName = interaction.options.getString('skin_owned', true);
+        const skinId = await getSkinIdFromStringParameter(skinFullName);
+        if (!skinId) return await interaction.reply(`No skin found with the name \`${skinFullName}\`.`);
 
         const skin = await this.container.prisma.skins.findFirst({
             where: {
@@ -57,7 +61,7 @@ export class Fire extends NoxCommand {
                     name: 'skin_owned',
                     description: 'The skin you wish to fire from your team.',
                     required: true,
-                    type: 'NUMBER',
+                    type: 'STRING',
                     autocomplete: true
                 }
             ]

@@ -12,7 +12,7 @@ ORDER BY 3 DESC;
 
 CREATE OR REPLACE VIEW GodSkinsFullNames
 AS
-select "Skins"."name" || ' ' || "Gods"."name" as "fullName", "Gods"."id" as "godId", "Skins"."id" as "skinId"
+select '"' || "Skins"."name" || '" ' || "Gods"."name" as "fullName", "Gods"."id" as "godId", "Skins"."id" as "skinId"
 from "Skins", "Gods"
 where "Skins"."godId" = "Gods"."id"
 group by "Gods"."name", "Skins"."name", "Skins"."id", "Gods"."id"

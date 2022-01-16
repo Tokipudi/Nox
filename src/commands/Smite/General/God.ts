@@ -1,4 +1,4 @@
-import { getGodById } from '@lib/database/utils/GodsUtils';
+import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton } from '@lib/utils/PaginationUtils';
@@ -16,9 +16,9 @@ export class God extends NoxCommand {
         const { member } = interaction;
         const author = member.user;
 
-        const godId = interaction.options.getNumber('god', true);
-        const god = await getGodById(godId);
-        if (!god) interaction.reply('Unabled to find a god with the name **' + godId + '**');
+        const godName = interaction.options.getString('god', true);
+        const god = await getGodByName(godName);
+        if (god == null) return await interaction.reply(`No god found with the name \`${godName}\`.`)
 
         const ability1 = JSON.parse(god.ability1);
         const ability2 = JSON.parse(god.ability2);
@@ -145,7 +145,7 @@ export class God extends NoxCommand {
                     name: 'god',
                     description: 'The god you want to check the skins of.',
                     required: true,
-                    type: 'NUMBER',
+                    type: 'STRING',
                     autocomplete: true
                 }
             ]
