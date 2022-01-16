@@ -367,11 +367,16 @@ export async function addSkinToWishlist(playerId: number, skinId: number) {
     });
 }
 
-export async function getSkinOwner(skinId: number) {
+export async function getSkinOwner(skinId: number, guildId: Snowflake) {
     return await container.prisma.playersSkins.findFirst({
         where: {
             skin: {
                 id: skinId
+            },
+            player: {
+                guild: {
+                    id: guildId
+                }
             }
         },
         include: {

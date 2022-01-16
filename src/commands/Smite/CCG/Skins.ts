@@ -7,7 +7,7 @@ import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/Pag
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Message, MessageActionRow } from 'discord.js';
+import { CommandInteraction, Message, MessageActionRow, Snowflake } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'List the skins of a given god.',
@@ -41,7 +41,7 @@ export class Skins extends NoxCommand {
         let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await interaction.reply({
             content: `Here are the cards for ${god.name}.`,
-            embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
+            embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
                     components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -76,7 +76,7 @@ export class Skins extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -101,7 +101,7 @@ export class Skins extends NoxCommand {
                 // Disable the wish button
                 selectButton.disabled = true;
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -130,10 +130,10 @@ export class Skins extends NoxCommand {
         });
     }
 
-    protected async generateGodSkinEmbed(skins, index, playerId: number) {
+    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
         const embed = generateSkinEmbed(skins, index);
 
-        const owner = await getSkinOwner(skins[index].id);
+        const owner = await getSkinOwner(skins[index].id, guildId);
         if (owner !== null) {
             const user = await this.container.client.users.fetch(owner.player.user.id);
             if (user === null) {

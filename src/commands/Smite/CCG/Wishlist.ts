@@ -7,7 +7,7 @@ import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/Pag
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Message, MessageActionRow, User } from 'discord.js';
+import { CommandInteraction, Message, MessageActionRow, Snowflake, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows your wishlist or the wishlist of another player.',
@@ -56,9 +56,10 @@ export class Wishlist extends NoxCommand {
             ? forwardButton.setDisabled(true)
             : forwardButton.setDisabled(false);
 
+        let currentIndex = 0
         const reply = await interaction.reply({
             content: `${user}'s wishlist:`,
-            embeds: [await this.generateGodSkinEmbed(skins, 0, player.id)],
+            embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
                     components: user.id === author.id
@@ -71,9 +72,7 @@ export class Wishlist extends NoxCommand {
 
         const collector = reply.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id
-        })
-
-        let currentIndex = 0
+        });
         collector.on('collect', async interaction => {
             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
                 // Increase/decrease index
@@ -96,7 +95,7 @@ export class Wishlist extends NoxCommand {
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
+                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
                             components: user.id === author.id
@@ -132,7 +131,7 @@ export class Wishlist extends NoxCommand {
                     backButton.disabled = currentIndex === 0;
 
                     await interaction.update({
-                        embeds: [await this.generateGodSkinEmbed(skins, currentIndex, player.id)],
+                        embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
                         components: [
                             new MessageActionRow({
                                 components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
@@ -171,10 +170,10 @@ export class Wishlist extends NoxCommand {
         });
     }
 
-    protected async generateGodSkinEmbed(skins, index, playerId: number) {
+    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
         const embed = generateSkinEmbed(skins, index);
 
-        const owner = await getSkinOwner(skins[index].id);
+        const owner = await getSkinOwner(skins[index].id, guildId);
         if (owner !== null) {
             const user = await this.container.client.users.fetch(owner.player.user.id);
             if (user === null) {

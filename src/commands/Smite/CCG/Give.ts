@@ -41,7 +41,7 @@ export class Give extends NoxCommand {
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
 
-        const skinOwner = await getSkinOwner(skinId);
+        const skinOwner = await getSkinOwner(skinId, guildId);
         if (skinOwner.playerId != authorPlayer.id) {
             return await interaction.reply({
                 content: 'The chosen skin does not belong to you.',
