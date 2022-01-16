@@ -5,7 +5,8 @@ import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { AutocompleteInteraction, CommandInteraction } from 'discord.js';
+import { toTitleCase } from '@sapphire/utilities';
+import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Releases either half or all of a player\'s cards.',
@@ -18,8 +19,8 @@ import { AutocompleteInteraction, CommandInteraction } from 'discord.js';
 })
 export class Strife extends NoxCommand {
 
-    private _halfAmountId = 1;
-    private _allAmountId = 2;
+    private _halfAmountId = 'half';
+    private _allAmountId = 'all';
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
         const { guildId } = interaction;
@@ -32,7 +33,7 @@ export class Strife extends NoxCommand {
             guildId: guildId
         });
 
-        let amount = interaction.options.getNumber('amount', true);
+        let amount = interaction.options.getString('amount', true);
 
         const skins = await getSkinsByPlayer(player.id);
         if (!skins || !skins.length) return interaction.reply({
@@ -48,6 +49,8 @@ export class Strife extends NoxCommand {
             case this._allAmountId:
                 skinsToRelease = skins.length;
                 break;
+            default:
+            // Do nothing
         }
 
         let skinsReleased = [];
@@ -72,26 +75,6 @@ export class Strife extends NoxCommand {
         interaction.reply(msg);
     }
 
-    public override async autocompleteRun(interaction: AutocompleteInteraction) {
-        const focusedOption = interaction.options.getFocused(true);
-        switch (focusedOption.name) {
-            case 'amount':
-                interaction.respond([
-                    {
-                        name: 'Half',
-                        value: this._halfAmountId
-                    },
-                    {
-                        name: 'All',
-                        value: this._allAmountId
-                    }
-                ]);
-                break;
-            default:
-            // Do Nothing
-        }
-    }
-
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
         registry.registerChatInputCommand({
             name: this.name,
@@ -107,8 +90,18 @@ export class Strife extends NoxCommand {
                     name: 'amount',
                     description: 'The amount of cards to randomly remove from a user\'s team.',
                     required: true,
-                    type: 'NUMBER',
-                    autocomplete: true
+                    type: 'STRING',
+                    choices: [
+                        {
+                            name: toTitleCase(this._halfAmountId),
+                            value: this._halfAmountId
+                        },
+                        {
+                            name: toTitleCase(this._allAmountId),
+                            value: this._allAmountId
+                        }
+                    ]
+
                 }
             ]
         }, {
