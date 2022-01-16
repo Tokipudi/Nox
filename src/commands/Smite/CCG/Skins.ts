@@ -1,6 +1,7 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { getPlayerByUserId, isSkinInWishlist } from '@lib/database/utils/PlayersUtils';
 import { addSkinToWishlist, getSkinOwner, getSkinsByGodId } from '@lib/database/utils/SkinsUtils';
+import { QueryNotFoundError } from '@lib/structures/errors/QueryNotFoundError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -21,10 +22,9 @@ export class Skins extends NoxCommand {
 
         const godName = interaction.options.getString('god', true);
         const god = await getGodByName(godName);
-        if (god == null) return await interaction.reply({
-            content: `No god found with the name \`${godName}\`.`,
-            ephemeral: true
-        })
+        if (god == null) throw new QueryNotFoundError({
+            query: godName
+        });
 
         const player = await getPlayerByUserId(author.id, guildId);
 

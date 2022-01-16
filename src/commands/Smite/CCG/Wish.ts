@@ -1,5 +1,6 @@
 import { getPlayerByUserId, isSkinInWishlist } from '@lib/database/utils/PlayersUtils';
 import { addSkinToWishlist } from '@lib/database/utils/SkinsUtils';
+import { QueryNotFoundError } from '@lib/structures/errors/QueryNotFoundError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getSkinIdFromStringParameter } from '@lib/utils/interaction-handlers/AutocompleteUtils';
@@ -19,9 +20,8 @@ export class Wish extends NoxCommand {
 
         const skinFullName = interaction.options.getString('skin', true);
         const skinId = await getSkinIdFromStringParameter(skinFullName);
-        if (!skinId) return await interaction.reply({
-            content: `No skin found with the name \`${skinFullName}\`.`,
-            ephemeral: true
+        if (!skinId) throw new QueryNotFoundError({
+            query: skinFullName
         });
 
         const skin = await this.container.prisma.skins.findUnique({

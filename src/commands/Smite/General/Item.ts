@@ -1,5 +1,6 @@
 import { isItemDescription } from '@lib/database/utils/ItemsUtils';
 import { getItemByName } from '@lib/database/utils/ItemUtils';
+import { QueryNotFoundError } from '@lib/structures/errors/QueryNotFoundError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -15,9 +16,8 @@ export class Item extends NoxCommand {
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
         const itemName = interaction.options.getString('item', true);
         const item = await getItemByName(itemName);
-        if (item == null) return interaction.reply({
-            content: `No item found with the name \`${itemName}\`.`,
-            ephemeral: true
+        if (item == null) throw new QueryNotFoundError({
+            query: itemName
         });
 
         const embed = new MessageEmbed()
