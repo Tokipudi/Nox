@@ -26,10 +26,12 @@ export class Team extends NoxCommand {
         if (user == null) {
             user = author;
         }
-        if (user.bot) return await interaction.reply('You cannot use this command on a bot.');
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -38,7 +40,10 @@ export class Team extends NoxCommand {
 
         const skins = await getSkinsByPlayer(player.id);
         if (!skins || skins.length === 0) {
-            return interaction.reply(`${user} currently does not own any card!`);
+            return interaction.reply({
+                content: `${user} currently does not own any card!`,
+                ephemeral: true
+            });
         }
 
         if (skins[0].playersSkins[0].isFavorite) {

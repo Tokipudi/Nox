@@ -38,7 +38,10 @@ export class Roll extends NoxCommand {
         );
 
         if (skins.length <= 0) {
-            return await interaction.reply('No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.');
+            return await interaction.reply({
+                content: 'No skin found in the database. Please contact an administrator.\n Your roll was not deducted from your available rolls.',
+                ephemeral: true
+            });
         }
 
         const player = await getPlayerByUserId(author.id, guildId);
@@ -89,10 +92,16 @@ export class Roll extends NoxCommand {
             const player = await getPlayerByUserId(user.id, guildId);
             const canClaim = await canPlayerClaimRoll(player.id);
             if (player && player.isBanned) {
-                interaction.channel.send(`${user} You have been banned from playing and cannot claim any card.`);
+                interaction.followUp({
+                    content: `${user} You have been banned from playing and cannot claim any card.`,
+                    ephemeral: true
+                });
             } else if (!canClaim) {
                 const duration = await getTimeLeftBeforeClaim(player.id);
-                interaction.channel.send(`${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`);
+                interaction.followUp({
+                    content: `${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`,
+                    ephemeral: true
+                });
             } else {
                 collector.stop();
 
@@ -135,7 +144,7 @@ export class Roll extends NoxCommand {
                     });
                 }
 
-                interaction.channel.send(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
+                interaction.followUp(`${user} has added **${skin.name} ${skin.godname}** to their collection.`);
                 this.container.logger.info(`Player ${player.id} collected ${skin.name} ${skin.godname}<${skin.id}>.`);
             }
         });

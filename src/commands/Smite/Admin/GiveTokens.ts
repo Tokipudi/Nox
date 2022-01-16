@@ -22,10 +22,12 @@ export class GiveTokens extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const tokens = interaction.options.getNumber('tokens', true);
-        if (!tokens) return interaction.reply('You have to specify the amount of tokens you want to give the user.');
 
         this.container.prisma.players.update({
             data: {
@@ -40,7 +42,10 @@ export class GiveTokens extends NoxCommand {
             interaction.reply(`\`${tokens}\` tokens have been given to ${user}.`);
         }).catch(e => {
             this.container.logger.error(e);
-            interaction.reply(`An error occured when trying to execute this command.`);
+            interaction.reply({
+                content: `An error occured when trying to execute this command.`,
+                ephemeral: true
+            });
         });
     }
 

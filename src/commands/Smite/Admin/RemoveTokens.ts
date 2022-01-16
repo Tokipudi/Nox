@@ -22,10 +22,12 @@ export class RemoveTokens extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         let tokens = interaction.options.getNumber('tokens', true);
-        if (!tokens) return interaction.reply('You have to specify the amount of tokens you want to give the user.');
 
         tokens = tokens > player.tokens
             ? player.tokens
@@ -44,7 +46,10 @@ export class RemoveTokens extends NoxCommand {
             interaction.reply(`\`${tokens}\` tokens have been removed from ${user}.`);
         }).catch(e => {
             this.container.logger.error(e);
-            interaction.reply(`An error occured when trying to execute this command.`);
+            interaction.reply({
+                content: `An error occured when trying to execute this command.`,
+                ephemeral: true
+            });
         });
     }
 

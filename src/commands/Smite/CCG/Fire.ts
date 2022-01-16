@@ -21,7 +21,10 @@ export class Fire extends NoxCommand {
 
         const skinFullName = interaction.options.getString('skin_owned', true);
         const skinId = await getSkinIdFromStringParameter(skinFullName);
-        if (!skinId) return await interaction.reply(`No skin found with the name \`${skinFullName}\`.`);
+        if (!skinId) return await interaction.reply({
+            content: `No skin found with the name \`${skinFullName}\`.`,
+            ephemeral: true
+        });
 
         const skin = await this.container.prisma.skins.findFirst({
             where: {
@@ -44,7 +47,10 @@ export class Fire extends NoxCommand {
                 }
             }
         });
-        if (!skin) return interaction.reply('The card **' + skin.name + ' ' + skin.god.name + '** does not exist or does not belong to you!');
+        if (!skin) return interaction.reply({
+            content: 'The card **' + skin.name + ' ' + skin.god.name + '** does not exist or does not belong to you!',
+            ephemeral: true
+        });
 
         await disconnectSkin(skin.id, player.id);
 

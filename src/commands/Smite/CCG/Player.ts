@@ -24,10 +24,12 @@ export class Player extends NoxCommand {
         if (user == null) {
             user = author;
         }
-        if (user.bot) return await interaction.reply('You cannot use this command on a bot.');
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const skins = await getSkinsByPlayer(player.id);
 

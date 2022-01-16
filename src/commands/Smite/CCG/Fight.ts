@@ -13,6 +13,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageEmbed, MessageRea
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fight against another player.',
     preconditions: [
+        'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',
@@ -29,11 +30,11 @@ export class Fight extends NoxCommand {
 
         const userArgument = interaction.options.getUser('user', true);
 
-        if (userArgument.id === author.id) return interaction.reply('You cannot fight against yourself!');
-        if (userArgument.bot) return interaction.reply('You cannot fight against a bot!');
-
         const userPlayer = await createPlayerIfNotExists(userArgument.id, guildId);
-        if (!userPlayer) return interaction.reply(`An error occured when trying to load ${userArgument}'s player.`);
+        if (!userPlayer) return interaction.reply({
+            content: `An error occured when trying to load ${userArgument}'s player.`,
+            ephemeral: true
+        });
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
         if (!authorPlayer) return interaction.reply(`An error occured when trying to load ${author}'s player.`);
@@ -45,7 +46,10 @@ export class Fight extends NoxCommand {
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
-            return interaction.reply('You currently don\'t own any cards!');
+            return interaction.reply({
+                content: 'You currently don\'t own any cards!',
+                ephemeral: true
+            });
         }
         let allExhausted = true;
         for (let i in skins1) {
@@ -55,12 +59,18 @@ export class Fight extends NoxCommand {
             }
         }
         if (allExhausted) {
-            return interaction.reply('All of your fighters are currently exhausted!');
+            return interaction.reply({
+                content: 'All of your fighters are currently exhausted!',
+                ephemeral: true
+            });
         }
 
         const skins2 = await getSkinsByPlayer(userPlayer.id);
         if (!skins2 || skins2.length === 0) {
-            return interaction.reply(`${userArgument} does not own any cards!`);
+            return interaction.reply({
+                content: `${userArgument} does not own any cards!`,
+                ephemeral: true
+            });
         }
         allExhausted = true;
         for (let i in skins2) {
@@ -70,13 +80,19 @@ export class Fight extends NoxCommand {
             }
         }
         if (allExhausted) {
-            return interaction.reply(`All of ${userArgument}'s cards are currently exhausted!`);
+            return interaction.reply({
+                content: `All of ${userArgument}'s cards are currently exhausted!`,
+                ephemeral: true
+            });
         }
 
         // Add channel ID to prevent multiple fights at the same time
         const runningInIndex = this._channelIds.indexOf(interaction.channel.id);
         if (runningInIndex >= 0) {
-            return interaction.reply(`There is already an ongoing fight in this channel. Please try again once it is over.`);
+            return interaction.reply({
+                content: `There is already an ongoing fight in this channel. Please try again once it is over.`,
+                ephemeral: true
+            });
         }
 
         this._channelIds.push(interaction.channel.id);

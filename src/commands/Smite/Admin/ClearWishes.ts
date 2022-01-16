@@ -23,10 +23,16 @@ export class ClearWishes extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const skins = await getSkinWishlist(player.id);
-        if (!skins || !skins.length) return interaction.reply(`${user} has no cards in their wishlist.`);
+        if (!skins || !skins.length) return interaction.reply({
+            content: `${user} has no cards in their wishlist.`,
+            ephemeral: true
+        });
 
         for (let skin of skins) {
             await disconnectWishlistSkin(skin.id, player.id);

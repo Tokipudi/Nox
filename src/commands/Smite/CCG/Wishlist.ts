@@ -1,11 +1,11 @@
-import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
 import { disconnectWishlistSkin, getSkinOwner, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
-import { ApplicationCommandRegistry, Args, ChatInputCommand } from '@sapphire/framework';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
 import { CommandInteraction, Message, MessageActionRow, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -29,7 +29,10 @@ export class Wishlist extends NoxCommand {
         }
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -38,8 +41,14 @@ export class Wishlist extends NoxCommand {
         let skins = await getSkinWishlist(player.id);
         if (!skins || skins.length === 0) {
             return user.id === author.id
-                ? interaction.reply('Your wishlist is empty!')
-                : interaction.reply(`${user}'s wishlist is empty!`)
+                ? interaction.reply({
+                    content: 'Your wishlist is empty!',
+                    ephemeral: true
+                })
+                : interaction.reply({
+                    content: `${user}'s wishlist is empty!`,
+                    ephemeral: true
+                })
         }
 
         skins.length <= 1

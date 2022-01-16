@@ -26,7 +26,10 @@ export class Rise extends NoxCommand {
         }
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         await this.container.prisma.players.update({
             data: {

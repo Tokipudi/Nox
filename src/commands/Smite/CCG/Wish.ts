@@ -19,7 +19,10 @@ export class Wish extends NoxCommand {
 
         const skinFullName = interaction.options.getString('skin', true);
         const skinId = await getSkinIdFromStringParameter(skinFullName);
-        if (!skinId) return await interaction.reply(`No skin found with the name \`${skinFullName}\`.`);
+        if (!skinId) return await interaction.reply({
+            content: `No skin found with the name \`${skinFullName}\`.`,
+            ephemeral: true
+        });
 
         const skin = await this.container.prisma.skins.findUnique({
             where: {
@@ -33,12 +36,18 @@ export class Wish extends NoxCommand {
                 }
             }
         });
-        if (!skin) return interaction.reply('An error occured when trying to load the skin.');
+        if (!skin) return interaction.reply({
+            content: 'An error occured when trying to load the skin.',
+            ephemeral: true
+        });
 
         const player = await getPlayerByUserId(author.id, guildId);
 
         const isInWishlist = await isSkinInWishlist(skinId, player.id);
-        if (isInWishlist) return interaction.reply('This skin already is in your wishlist.');
+        if (isInWishlist) return interaction.reply({
+            content: 'This skin already is in your wishlist.',
+            ephemeral: true
+        });
 
         await addSkinToWishlist(player.id, skin.id);
 

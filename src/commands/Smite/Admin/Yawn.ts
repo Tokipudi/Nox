@@ -23,7 +23,10 @@ export class Yawn extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         await setPlayerAsBanned(player.id, 1440);
 

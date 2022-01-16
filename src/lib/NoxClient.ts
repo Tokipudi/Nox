@@ -28,6 +28,7 @@ declare module '@sapphire/pieces' {
 
 declare module '@sapphire/framework' {
     interface Preconditions {
+        authorIsNotTarget: never,
         canPlayerRoll: never,
         playerExists: never,
         playerIsNotBanned: never,

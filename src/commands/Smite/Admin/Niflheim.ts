@@ -22,11 +22,14 @@ export class Niflheim extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         await setPlayerAsBanned(player.id);
 
-        return interaction.reply(`${user} is banned from the Smite CCG.`);
+        return interaction.reply(`${user} is now banned from the Smite CCG.`);
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {

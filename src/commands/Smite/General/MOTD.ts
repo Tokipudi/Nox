@@ -105,7 +105,10 @@ export class MOTD extends NoxCommand {
             }
         }
 
-        return interaction.reply('No MOTD found for the given date `' + date + '`\nMake sure the date is using the following format `MM/DD/YYYY`.');
+        return interaction.reply({
+            content: 'No MOTD found for the given date `' + date + '`\nMake sure the date is using the following format `MM/DD/YYYY`.',
+            ephemeral: true
+        });
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {

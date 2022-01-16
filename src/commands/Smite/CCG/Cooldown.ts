@@ -24,10 +24,12 @@ export class Cooldown extends NoxCommand {
         if (user == null) {
             user = author;
         }
-        if (user.bot) return await interaction.reply('The user cannot be a bot.');
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return await interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return await interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const embed = new MessageEmbed()
             .setAuthor({

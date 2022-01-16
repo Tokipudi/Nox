@@ -26,12 +26,18 @@ export class Strife extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply('An error occured when trying to load the player.');
+        if (!player) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         let amount = interaction.options.getNumber('amount', true);
 
         const skins = await getSkinsByPlayer(player.id);
-        if (!skins || !skins.length) return interaction.reply(`${user} does not have any cards!`);
+        if (!skins || !skins.length) return interaction.reply({
+            content: `${user} does not have any cards!`,
+            ephemeral: true
+        });
 
         let skinsToRelease = 0;
         switch (amount) {

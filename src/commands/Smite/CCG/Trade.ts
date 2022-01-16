@@ -11,6 +11,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Start a trade another player.',
     preconditions: [
+        'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',
@@ -25,14 +26,17 @@ export class Trade extends NoxCommand {
 
         const user = interaction.options.getUser('user', true);
 
-        if (user.id === author.id) return interaction.reply('You cannot trade a card with yourself!');
-        if (user.bot) return interaction.reply('You cannot trade a card with a bot!');
-
         const userPlayer = await createPlayerIfNotExists(user.id, guildId);
-        if (!userPlayer) return interaction.reply(`An error occured when trying to load ${user}'s player.`);
+        if (!userPlayer) return interaction.reply({
+            content: `An error occured when trying to load ${user}'s player.`,
+            ephemeral: true
+        });
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
-        if (!authorPlayer) return interaction.reply(`An error occured when trying to load ${author}'s player.`);
+        if (!authorPlayer) return interaction.reply({
+            content: `An error occured when trying to load ${author}'s player.`,
+            ephemeral: true
+        });
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
@@ -40,11 +44,17 @@ export class Trade extends NoxCommand {
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
-            return interaction.reply('You currently don\'t own any card!');
+            return interaction.reply({
+                content: 'You currently don\'t own any card!',
+                ephemeral: true
+            });
         }
         const skins2 = await getSkinsByPlayer(userPlayer.id);
         if (!skins2 || skins2.length === 0) {
-            return interaction.reply(`${user} does not own any card!`);
+            return interaction.reply({
+                content: `${user} does not own any card!`,
+                ephemeral: true
+            });
         }
 
         // Send the embed with the first skin

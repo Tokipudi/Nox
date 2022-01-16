@@ -13,25 +13,29 @@ import { CommandInteraction } from 'discord.js';
 export class ImportDatabase extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
-        await interaction.reply('Importing gods from Smite\'s servers...');
+        const reply = await interaction.reply({
+            content: 'Importing gods from Smite\'s servers...',
+            ephemeral: true,
+            fetchReply: true
+        });
 
         this.container.logger.info('Importing gods from Smite\'s servers...');
         await importGods();
 
-        interaction.editReply('Gods imported. Importing skins...');
+        interaction.editReply(`${reply.content}\nGods imported. Importing skins...`);
         this.container.logger.info('Gods imported. Importing skins...');
         await importSkins();
 
-        interaction.editReply('Skins imported. Importing missing data from <https://smite.fandom.com/>');
+        interaction.editReply(`${reply.content}\nSkins imported. Importing missing data from <https://smite.fandom.com/>...`);
         this.container.logger.info('Skins imported. Importing missing data from https://smite.fandom.com/');
         await importFandomMissingData();
 
-        interaction.editReply('Fandom data imported. Importing items....');
+        interaction.editReply(`${reply.content}\nFandom data imported. Importing items...`);
         this.container.logger.info('Fandom data imported. Importing items...');
         await importItems();
 
         this.container.logger.info('Data imported to the database.');
-        return interaction.editReply('Data imported to the database.');
+        return interaction.editReply(`${reply.content}\n**Data imported.**`);
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {

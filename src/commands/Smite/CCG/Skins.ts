@@ -21,7 +21,10 @@ export class Skins extends NoxCommand {
 
         const godName = interaction.options.getString('god', true);
         const god = await getGodByName(godName);
-        if (god == null) return await interaction.reply(`No god found with the name \`${godName}\`.`)
+        if (god == null) return await interaction.reply({
+            content: `No god found with the name \`${godName}\`.`,
+            ephemeral: true
+        })
 
         const player = await getPlayerByUserId(author.id, guildId);
 

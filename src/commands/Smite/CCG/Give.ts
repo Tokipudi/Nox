@@ -10,6 +10,7 @@ import { CommandInteraction } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Gives a card you own to a user of your choice.',
     preconditions: [
+        'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',
@@ -23,20 +24,28 @@ export class Give extends NoxCommand {
         const author = member.user;
 
         const user = interaction.options.getUser('user', true);
-        if (user.bot) return await interaction.reply('You cannot use this command on a bot.');
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply('An error occured when trying to load the player.');
+        if (player == null) return interaction.reply({
+            content: 'An error occured when trying to load the player.',
+            ephemeral: true
+        });
 
         const skinFullName = interaction.options.getString('skin_owned', true);
         const skinId = await getSkinIdFromStringParameter(skinFullName);
-        if (!skinId) return await interaction.reply(`No skin found with the name \`${skinFullName}\`.`);
+        if (!skinId) return await interaction.reply({
+            content: `No skin found with the name \`${skinFullName}\`.`,
+            ephemeral: true
+        });
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
 
         const skinOwner = await getSkinOwner(skinId);
         if (skinOwner.playerId != authorPlayer.id) {
-            return await interaction.reply('The chosen skin does not belong to you.')
+            return await interaction.reply({
+                content: 'The chosen skin does not belong to you.',
+                ephemeral: true
+            })
         }
 
         const skin = await giveSkin(player.id, guildId, skinId, false);

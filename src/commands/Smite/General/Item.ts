@@ -15,7 +15,10 @@ export class Item extends NoxCommand {
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
         const itemName = interaction.options.getString('item', true);
         const item = await getItemByName(itemName);
-        if (item == null) return interaction.reply(`No item found with the name \`${itemName}\`.`);
+        if (item == null) return interaction.reply({
+            content: `No item found with the name \`${itemName}\`.`,
+            ephemeral: true
+        });
 
         const embed = new MessageEmbed()
             .setAuthor({
