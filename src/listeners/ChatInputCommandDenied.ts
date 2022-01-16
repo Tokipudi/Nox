@@ -10,8 +10,6 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
     public async run(error: PreconditionError, payload: ChatInputCommandDeniedPayload) {
         const { interaction } = payload;
 
-        this.container.logger.error(error);
-
         let errMsg = '';
         switch (error.identifier) {
             case 'preconditionCooldown':
@@ -22,6 +20,7 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
                 if (error instanceof PreconditionError) {
                     errMsg = error.message;
                 } else {
+                    this.container.logger.error(error);
                     errMsg = `You can't do that right now.`;
                 }
         }
