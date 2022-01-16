@@ -20,8 +20,6 @@ export class Ragnarock extends NoxCommand {
         const { user } = member;
         const author = user;
 
-        const prefix = this.container.client.options.defaultPrefix;
-
         const reply = await interaction.reply({
             content: `Are you sure you wish to start a new season on this server? This will remove all players acquired skins, wished skins and restart the game.\nReact to this message to accept or deny the exchange.`,
             fetchReply: true
