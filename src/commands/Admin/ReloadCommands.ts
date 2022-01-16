@@ -11,7 +11,10 @@ import type { CommandInteraction } from 'discord.js';
 export class ReloadCommands extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
-        await interaction.reply(`Reloading commands...`);
+        await interaction.reply({
+            content: `Reloading commands...`,
+            ephemeral: true
+        });
 
         const commandName = interaction.options.getString('command');
         if (commandName) {
@@ -46,7 +49,8 @@ export class ReloadCommands extends NoxCommand {
             options: [{
                 name: 'command',
                 description: 'The command\'s name',
-                type: 'STRING'
+                type: 'STRING',
+                autocomplete: true
             }]
         }, {
             guildIds: this.guildIds
