@@ -1,5 +1,6 @@
 import { createPlayerIfNotExists, setFavoriteSkin } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -28,9 +29,9 @@ export class Team extends NoxCommand {
         }
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply({
-            content: 'An error occured when trying to load the player.',
-            ephemeral: true
+        if (player == null) throw new PlayerNotLoadedError({
+            userId: user.id,
+            guildId: guildId
         });
 
         const backButton = getBackButton();

@@ -1,4 +1,5 @@
 import { getPlayerByUserId, setPlayerAsBanned } from '@lib/database/utils/PlayersUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -22,9 +23,9 @@ export class Niflheim extends NoxCommand {
         let user = interaction.options.getUser('user', true);
 
         const player = await getPlayerByUserId(user.id, guildId);
-        if (!player) return interaction.reply({
-            content: 'An error occured when trying to load the player.',
-            ephemeral: true
+        if (!player) throw new PlayerNotLoadedError({
+            userId: user.id,
+            guildId: guildId
         });
 
         await setPlayerAsBanned(player.id);

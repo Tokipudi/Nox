@@ -1,5 +1,6 @@
 import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
 import { getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -26,9 +27,9 @@ export class Player extends NoxCommand {
         }
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply({
-            content: 'An error occured when trying to load the player.',
-            ephemeral: true
+        if (player == null) throw new PlayerNotLoadedError({
+            userId: user.id,
+            guildId: guildId
         });
 
         const skins = await getSkinsByPlayer(player.id);

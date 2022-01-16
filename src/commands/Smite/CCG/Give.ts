@@ -1,5 +1,6 @@
 import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { getSkinOwner, giveSkin } from '@lib/database/utils/SkinsUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getSkinIdFromStringParameter } from '@lib/utils/interaction-handlers/AutocompleteUtils';
@@ -26,9 +27,9 @@ export class Give extends NoxCommand {
         const user = interaction.options.getUser('user', true);
 
         const player = await createPlayerIfNotExists(user.id, guildId);
-        if (player == null) return interaction.reply({
-            content: 'An error occured when trying to load the player.',
-            ephemeral: true
+        if (player == null) throw new PlayerNotLoadedError({
+            userId: user.id,
+            guildId: guildId
         });
 
         const skinFullName = interaction.options.getString('skin_owned', true);

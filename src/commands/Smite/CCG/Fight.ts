@@ -1,6 +1,7 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { addLoss, addWin, connectSkin, disconnectSkin, exhaustSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
@@ -31,13 +32,16 @@ export class Fight extends NoxCommand {
         const userArgument = interaction.options.getUser('user', true);
 
         const userPlayer = await createPlayerIfNotExists(userArgument.id, guildId);
-        if (!userPlayer) return interaction.reply({
-            content: `An error occured when trying to load ${userArgument}'s player.`,
-            ephemeral: true
+        if (!userPlayer) throw new PlayerNotLoadedError({
+            userId: userArgument.id,
+            guildId: guildId
         });
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
-        if (!authorPlayer) return interaction.reply(`An error occured when trying to load ${author}'s player.`);
+        if (!authorPlayer) throw new PlayerNotLoadedError({
+            userId: author.id,
+            guildId: guildId
+        });
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
