@@ -216,17 +216,17 @@ export class Trade extends NoxCommand {
                                 collector3.stop();
                             } else if (react.emoji.name === '✅') {
                                 let skinId1 = 0;
-                                for (let i = 0; i < skins1.length; i++) {
-                                    if (skins1[i].name === skinName1) {
-                                        skinId1 = skins1[i].id;
+                                for (let skin of skins1) {
+                                    if (skin.name === skinName1 && skin.god.name === godName1) {
+                                        skinId1 = skin.id;
                                         break;
                                     }
                                 }
 
                                 let skinId2 = 0;
-                                for (let i = 0; i < skins2.length; i++) {
-                                    if (skins2[i].name === skinName2) {
-                                        skinId2 = skins2[i].id;
+                                for (let skin of skins2) {
+                                    if (skin.name === skinName2 && skin.god.name === godName2) {
+                                        skinId2 = skin.id;
                                         break;
                                     }
                                 }
