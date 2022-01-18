@@ -127,7 +127,7 @@ export class Fight extends NoxCommand {
         // but only when the button as clicked by the original message author
         const collector1 = embedMessage1.createMessageComponentCollector({
             filter: ({ user }) => user.id === author.id,
-            time: 45000
+            time: 120000
         })
 
         const player1 = await getPlayerByUserId(author.id, guildId);
@@ -254,7 +254,7 @@ export class Fight extends NoxCommand {
                         // but only when the button as clicked by the original message author
                         const collector3 = await embedMessage3.createMessageComponentCollector({
                             filter: ({ user }) => user.id === userArgument.id,
-                            time: 45000
+                            time: 120000
                         });
                         collector3.on('collect', async interaction => {
                             if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
