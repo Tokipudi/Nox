@@ -126,7 +126,10 @@ export class Trade extends NoxCommand {
         let godName2 = '';
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
+                const errMsg = `${author} You did not select a card. The trade is canceled.`;
+                interaction.replied
+                    ? await interaction.followUp(errMsg)
+                    : await interaction.reply(errMsg);
             } else {
                 currentIndex = 0
                 backButton.setDisabled(true);
@@ -187,7 +190,10 @@ export class Trade extends NoxCommand {
 
                 collector2.on('end', async collected => {
                     if (skinName2 === '') {
-                        interaction.channel.send(`${author} You did not select a card. The trade is canceled.`);
+                        const errMsg = `${author} You did not select a card. The trade is canceled.`;
+                        interaction.replied
+                            ? await interaction.followUp(errMsg)
+                            : await interaction.reply(errMsg);
                     } else {
                         const reply = await interaction.channel.send(`A trade was started between ${author}'s **${skinName1} ${godName1}** and ${user}'s **${skinName2} ${godName2}**.\nReact to this message to accept or deny the trade.`);
                         await reply.react('✅');
@@ -202,7 +208,10 @@ export class Trade extends NoxCommand {
                         let isValidated = false;
                         collector3.on('collect', async (react: MessageReaction) => {
                             if (react.emoji.name === '🚫') {
-                                interaction.channel.send(`${user} has rejected your trade offer.`)
+                                const errMsg = `${user} has rejected your trade offer.`;
+                                interaction.replied
+                                    ? await interaction.followUp(errMsg)
+                                    : await interaction.reply(errMsg);
                                 isValidated = true;
                                 collector3.stop();
                             } else if (react.emoji.name === '✅') {
