@@ -4,20 +4,6 @@ A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework)
 
 ![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
 
-## Pre-requisites
-
-* Node >= 16
-* A Postgresql Database
-* Hirez developer API credentials (you can request them [here](https://fs12.formsite.com/HiRez/form48/secure_index.html))
-
-## Installation
-
-* Rename `.env.example` to `.env` and configure it properly
-* Install the node application: `npm install`
-* Setup the database: `npx prisma migrate`
-* Compile typescript files: `npm run build`
-* Start the bot: `npm start`
-
 ## Features
 
 ### Smite Commands
@@ -50,3 +36,23 @@ Each player can pick one of its cards to challenge another player to a fight wit
 The loser's fighter will be exhausted, and will not be able to fight anymore for a certain length of time. If its owner want to fight again, they will have to use another fighter!
 
 ![Fight Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/fight.gif)
+
+### How to run
+
+If you want to clone this project and run it on your end, here are the first steps you want to take.
+
+**WARNING: This bot was not meant to be ran by anyone else than me. It is extremely likely that you will encounter errors when trying to make it run for the first time.**
+
+## Pre-requisites
+
+* Node >= 16
+* A Postgresql Database
+* Hirez developer API credentials (you can request them [here](https://fs12.formsite.com/HiRez/form48/secure_index.html))
+
+## Installation
+
+* Rename `.env.example` to `.env` and configure it properly
+* Install the node application: `npm install`
+* Setup the database: `npx prisma migrate`
+* Compile typescript files: `npm run build`
+* Start the bot: `npm start`
