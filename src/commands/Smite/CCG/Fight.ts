@@ -193,7 +193,10 @@ export class Fight extends NoxCommand {
 
         collector1.on('end', async collected => {
             if (skinName1 === '') {
-                await interaction.channel.send('You did not select a fighter in the given time. The fight is canceled.');
+                const errMsg = 'You did not select a fighter in the given time. The fight is canceled.';
+                interaction.replied
+                    ? await interaction.followUp(errMsg)
+                    : await interaction.reply(errMsg);
                 this._channelIds.splice(runningInIndex, 1);
             } else {
                 let replyMessage = `${userArgument} You have been challenged to fight against **${skinName1} ${godName1} *(${rarity1})* ${player1.isBoosted ? ' <Boosted>' : ''}**!\nReact to this message to accept or deny the fight.`;
@@ -222,7 +225,10 @@ export class Fight extends NoxCommand {
 
                 collector2.on('end', async collected => {
                     if (!isAboutToFight) {
-                        await interaction.channel.send(`${userArgument} does not want to fight you or did not answer in time.`);
+                        const errMsg = `${userArgument} does not want to fight you or did not answer in time.`;
+                        interaction.replied
+                            ? await interaction.followUp(errMsg)
+                            : await interaction.reply(errMsg);
                         this._channelIds.splice(runningInIndex, 1);
                     } else {
                         currentIndex = 0
@@ -306,7 +312,10 @@ export class Fight extends NoxCommand {
 
                         collector3.on('end', async collected => {
                             if (skinName2 === '') {
-                                await interaction.channel.send(`${userArgument} you did not select a fighter in time. The fight is canceled.`);
+                                const errMsg = `${userArgument} you did not select a fighter in time. The fight is canceled.`;
+                                interaction.replied
+                                    ? await interaction.followUp(errMsg)
+                                    : await interaction.reply(errMsg);
                             } else {
                                 let god1Health = god1.health;
                                 let god2Health = god2.health;
