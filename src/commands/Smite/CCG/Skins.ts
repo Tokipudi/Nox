@@ -1,10 +1,11 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
 import { getPlayerByUserId, isSkinInWishlist } from '@lib/database/utils/PlayersUtils';
-import { addSkinToWishlist, getSkinOwner, getSkinsByGodId } from '@lib/database/utils/SkinsUtils';
+import { addSkinToWishlist, disconnectWishlistSkin, getSkinOwner, getSkinsByGodId } from '@lib/database/utils/SkinsUtils';
 import { QueryNotFoundError } from '@lib/structures/errors/QueryNotFoundError';
+import { WrongInteractionError } from '@lib/structures/errors/WrongInteractionError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getEndButton, getForwardButton, getRemoveFromWishlistButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
@@ -31,20 +32,27 @@ export class Skins extends NoxCommand {
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Wish', 'SUCCESS');
+        const removeFromWishlistButton = getRemoveFromWishlistButton();
+        const endButton = getEndButton();
+        const startButton = getStartButton();
 
         let skins = await getSkinsByGodId(god.id);
 
         let currentIndex = 0
 
-        selectButton.disabled = await isSkinInWishlist(skins[currentIndex].id, player.id);
+        let isSkinInPlayerWishlist = await isSkinInWishlist(skins[currentIndex].id, player.id);
+        selectButton.disabled = isSkinInPlayerWishlist;
+        removeFromWishlistButton.disabled = !isSkinInPlayerWishlist;
 
-        let uniqueSkin = skins.length <= 1;
         const embedMessage1 = await interaction.reply({
             content: `Here are the cards for ${god.name}.`,
             embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
-                    components: uniqueSkin ? [...([selectButton])] : [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                }),
+                new MessageActionRow({
+                    components: [...(isSkinInPlayerWishlist ? [removeFromWishlistButton] : [selectButton])]
                 })
             ],
             fetchReply: true
@@ -54,61 +62,68 @@ export class Skins extends NoxCommand {
             filter: ({ user }) => user.id === author.id
         })
         collector.on('collect', async interaction => {
-            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
-                // Increase/decrease index
-                switch (interaction.customId) {
-                    case backButton.customId:
-                        if (currentIndex > 0) {
-                            currentIndex -= 1;
-                        }
-                        break;
-                    case forwardButton.customId:
-                        if (currentIndex < skins.length - 1) {
-                            currentIndex += 1;
-                        }
-                        break;
-                }
-
-                // Disable the buttons if they cannot be used
-                forwardButton.disabled = currentIndex === skins.length - 1;
-                backButton.disabled = currentIndex === 0;
-                selectButton.disabled = await isSkinInWishlist(skins[currentIndex].id, player.id);
-
-                // Respond to interaction by updating message with new embed
-                await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
-                    components: [
-                        new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
-                        })
-                    ]
-                })
-            } else if (interaction.customId === selectButton.customId) {
-                let skinName = interaction.message.embeds[0].title;
-
-                let skinId = 0;
-                for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === skinName) {
-                        skinId = skins[i].id;
-                        break;
+            // Increase/decrease index
+            switch (interaction.customId) {
+                case startButton.customId:
+                    currentIndex = 0;
+                    break;
+                case backButton.customId:
+                    if (currentIndex > 0) {
+                        currentIndex -= 1;
                     }
-                }
-
-
-                let playerWishedSkin = await addSkinToWishlist(player.id, skinId);
-                this.container.logger.debug(`The card ${skinName}<${playerWishedSkin.skinId}> was added to the wishlist of ${author.username}#${author.discriminator}<${author.id}>!`);
-
-                // Disable the wish button
-                selectButton.disabled = true;
-                await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
-                    components: [
-                        new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
-                        })
-                    ]
-                })
+                    break;
+                case forwardButton.customId:
+                    if (currentIndex < skins.length - 1) {
+                        currentIndex += 1;
+                    }
+                    break;
+                case endButton.customId:
+                    currentIndex = skins.length - 1;
+                    break;
+                case selectButton.customId:
+                    for (let skin of skins) {
+                        if (skin.name === interaction.message.embeds[0].title && skin.god.name === interaction.message.embeds[0].author.name) {
+                            await addSkinToWishlist(player.id, skin.id)
+                            break;
+                        }
+                    }
+                    break;
+                case removeFromWishlistButton.customId:
+                    for (let skin of skins) {
+                        if (skin.name === interaction.message.embeds[0].title && skin.god.name === interaction.message.embeds[0].author.name) {
+                            await disconnectWishlistSkin(skin.id, player.id)
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    throw new WrongInteractionError({
+                        interaction: interaction
+                    });
             }
+
+            // Disable the buttons if they cannot be used
+            startButton.disabled = currentIndex === 0;
+            forwardButton.disabled = currentIndex === skins.length - 1;
+            backButton.disabled = currentIndex === 0;
+            endButton.disabled = currentIndex >= skins.length - 1;
+
+            isSkinInPlayerWishlist = await isSkinInWishlist(skins[currentIndex].id, player.id);
+            selectButton.disabled = isSkinInPlayerWishlist;
+            removeFromWishlistButton.disabled = !isSkinInPlayerWishlist;
+
+            // Respond to interaction by updating message with new embed
+            await interaction.update({
+                embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
+                components: [
+                    new MessageActionRow({
+                        components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                    }),
+                    new MessageActionRow({
+                        components: [...(isSkinInPlayerWishlist ? [removeFromWishlistButton] : [selectButton])]
+                    })
+                ]
+            });
         });
     }
 

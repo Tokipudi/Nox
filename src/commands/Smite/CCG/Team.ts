@@ -1,9 +1,10 @@
 import { createPlayerIfNotExists, setFavoriteSkin } from '@lib/database/utils/PlayersUtils';
 import { disconnectSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
+import { WrongInteractionError } from '@lib/structures/errors/WrongInteractionError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getFavoriteButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getEndButton, getFavoriteButton, getForwardButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
@@ -38,8 +39,10 @@ export class Team extends NoxCommand {
         const forwardButton = getForwardButton();
         const favoriteButton = getFavoriteButton();
         const selectButton = getSelectButton('Fire', 'DANGER');
+        const endButton = getEndButton();
+        const startButton = getStartButton();
 
-        const skins = await getSkinsByPlayer(player.id);
+        let skins = await getSkinsByPlayer(player.id);
         if (!skins || skins.length === 0) {
             return interaction.reply({
                 content: `${user} currently does not own any card!`,
@@ -47,27 +50,30 @@ export class Team extends NoxCommand {
             });
         }
 
-        if (skins[0].playersSkins[0].isFavorite) {
-            favoriteButton.setEmoji('💔');
-        } else {
-            favoriteButton.setEmoji('❤️');
-        }
+        skins[0].playersSkins[0].isFavorite
+            ? favoriteButton.setEmoji('💔')
+            : favoriteButton.setEmoji('❤️');
 
-        let uniqueSkin = skins.length <= 1;
+        const messageActionRows = user.id === author.id
+            ? [
+                new MessageActionRow({
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                }),
+                new MessageActionRow({
+                    components: [...([selectButton]), ...([favoriteButton])]
+                })
+            ]
+            : [
+                new MessageActionRow({
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                })
+            ];
+
+        let currentIndex = 0
         const embedMessage1 = await interaction.reply({
             content: `${user}'s team:`,
-            embeds: [await this.generateEmbed(skins, 0, guildId)],
-            components: [
-                new MessageActionRow({
-                    components: uniqueSkin
-                        ? user.id === author.id
-                            ? [...([selectButton]), ...([favoriteButton])]
-                            : []
-                        : user.id === author.id
-                            ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
-                            : [...([backButton]), ...([forwardButton])]
-                })
-            ],
+            embeds: [await this.generateEmbed(skins, currentIndex, guildId)],
+            components: messageActionRows,
             fetchReply: true
         }) as Message;
 
@@ -77,92 +83,89 @@ export class Team extends NoxCommand {
 
         let skinName = '';
         let godName = '';
-        let currentIndex = 0
         collector.on('collect', async interaction => {
-            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
-                // Increase/decrease index
-                switch (interaction.customId) {
-                    case backButton.customId:
-                        if (currentIndex > 0) {
-                            currentIndex -= 1;
+            // Increase/decrease index
+            switch (interaction.customId) {
+                case startButton.customId:
+                    currentIndex = 0;
+                    break;
+                case backButton.customId:
+                    if (currentIndex > 0) {
+                        currentIndex -= 1;
+                    }
+                    break;
+                case forwardButton.customId:
+                    if (currentIndex < skins.length - 1) {
+                        currentIndex += 1;
+                    }
+                    break;
+                case endButton.customId:
+                    currentIndex = skins.length - 1;
+                    break;
+                case selectButton.customId:
+                    for (let skin of skins) {
+                        if (skin.name === interaction.message.embeds[0].title && skin.god.name === interaction.message.embeds[0].author.name) {
+                            await disconnectSkin(skin.id, player.id);
+                            break;
                         }
-                        break;
-                    case forwardButton.customId:
-                        if (currentIndex < skins.length - 1) {
-                            currentIndex += 1;
-                        }
-                        break;
-                }
-
-                // Disable the buttons if they cannot be used
-                forwardButton.disabled = currentIndex === skins.length - 1;
-                backButton.disabled = currentIndex === 0;
-
-                const embed = await this.generateEmbed(skins, currentIndex, guildId);
-                for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
-                        if (skins[i].playersSkins[0].isFavorite) {
+                    }
+                    if (currentIndex != 0 && currentIndex === skins.length - 1) {
+                        currentIndex--;
+                    }
+                    skins = await getSkinsByPlayer(player.id)
+                    break;
+                case favoriteButton.customId:
+                    for (let skin of skins) {
+                        if (skin.name === interaction.message.embeds[0].title && skin.god.name === interaction.message.embeds[0].author.name) {
+                            await setFavoriteSkin(player.id, skin.id);
+                            skin.playersSkins[0].isFavorite = true;
                             favoriteButton.setEmoji('💔');
                         } else {
-                            favoriteButton.setEmoji('❤️');
+                            skin.playersSkins[0].isFavorite = false;
                         }
-                        break;
                     }
-                }
+                    break;
+                default:
+                    throw new WrongInteractionError({
+                        interaction: interaction
+                    });
+            }
 
-                await interaction.update({
-                    embeds: [embed],
-                    components: [
-                        new MessageActionRow({
-                            components: user.id === author.id
-                                ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
-                                : [...([backButton]), ...([forwardButton])]
-                        })
-                    ]
-                });
-            } else if (interaction.customId === favoriteButton.customId) {
-                const embed = await this.generateEmbed(skins, currentIndex, guildId);
-
-                for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === embed.title && skins[i].god.name === embed.author.name) {
-                        await setFavoriteSkin(player.id, skins[i].id);
-                        skins[i].playersSkins[0].isFavorite = true;
-                        favoriteButton.setEmoji('💔');
-                    } else {
-                        skins[i].playersSkins[0].isFavorite = false;
-                    }
-                }
-                await interaction.update({
-                    embeds: [embed],
-                    components: [
-                        new MessageActionRow({
-                            components: user.id === author.id
-                                ? [...([backButton]), ...([selectButton]), ...([favoriteButton]), ...([forwardButton])]
-                                : [...([backButton]), ...([forwardButton])]
-                        })
-                    ]
-                });
-            } else if (interaction.customId === selectButton.customId) {
-                skinName = interaction.message.embeds[0].title;
-                godName = interaction.message.embeds[0].author.name;
+            if (skins == null || skins.length <= 0) {
                 collector.stop();
+            } else {
+                // Disable the buttons if they cannot be used
+                startButton.disabled = currentIndex === 0;
+                forwardButton.disabled = currentIndex === skins.length - 1;
+                backButton.disabled = currentIndex === 0;
+                endButton.disabled = currentIndex >= skins.length - 1;
+
+                const messageActionRows = user.id === author.id
+                    ? [
+                        new MessageActionRow({
+                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                        }),
+                        new MessageActionRow({
+                            components: [...([selectButton]), ...([favoriteButton])]
+                        })
+                    ]
+                    : [
+                        new MessageActionRow({
+                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                        })
+                    ];
+
+                await interaction.update({
+                    embeds: [await this.generateEmbed(skins, currentIndex, guildId)],
+                    components: messageActionRows
+                });
             }
         });
 
         collector.on('end', async collected => {
-            if (skinName) {
-                let skinId = 0;
-                for (let i = 0; i < skins.length; i++) {
-                    if (skins[i].name === skinName && skins[i].god.name === godName) {
-                        skinId = skins[i].id;
-                        break;
-                    }
-                }
-                let skin = await disconnectSkin(skinId, player.id);
-
-                this.container.logger.info(`The card ${skinName}<${skin.id}> was fired from the team of ${author.username}#${author.discriminator}<${author.id}>!`)
+            if (skins == null || skins.length <= 0) {
                 embedMessage1.edit({
-                    content: `The card **${skinName}** was successfully fired from your team!`,
+                    content: `Your team is now empty!`,
                     embeds: [],
                     components: []
                 });

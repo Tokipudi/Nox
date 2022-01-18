@@ -1,8 +1,9 @@
 import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { getSkinsByPlayer, giveSkin } from '@lib/database/utils/SkinsUtils';
+import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getEndButton, getForwardButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
@@ -27,20 +28,22 @@ export class Trade extends NoxCommand {
         const user = interaction.options.getUser('user', true);
 
         const userPlayer = await createPlayerIfNotExists(user.id, guildId);
-        if (!userPlayer) return interaction.reply({
-            content: `An error occured when trying to load ${user}'s player.`,
-            ephemeral: true
+        if (!userPlayer) throw new PlayerNotLoadedError({
+            userId: user.id,
+            guildId: guildId
         });
 
         const authorPlayer = await getPlayerByUserId(author.id, guildId);
-        if (!authorPlayer) return interaction.reply({
-            content: `An error occured when trying to load ${author}'s player.`,
-            ephemeral: true
+        if (!authorPlayer) throw new PlayerNotLoadedError({
+            userId: author.id,
+            guildId: guildId
         });
 
         const backButton = getBackButton();
         const forwardButton = getForwardButton();
         const selectButton = getSelectButton('Select', 'SUCCESS');
+        const endButton = getEndButton();
+        const startButton = getStartButton();
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
@@ -59,15 +62,22 @@ export class Trade extends NoxCommand {
 
         // Send the embed with the first skin
         let currentIndex = 0;
-        skins1.length <= 1
-            ? forwardButton.setDisabled(true)
-            : forwardButton.setDisabled(false);
+        if (skins1.length <= 1) {
+            forwardButton.setDisabled(true);
+            endButton.setDisabled(true);
+        } else {
+            forwardButton.setDisabled(false);
+            endButton.setDisabled(false);
+        }
         const embedMessage1 = await interaction.reply({
             content: 'Select the card you wish to trade.',
             embeds: [generateSkinEmbed(skins1, currentIndex)],
             components: [
                 new MessageActionRow({
-                    components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                }),
+                new MessageActionRow({
+                    components: [...([selectButton])]
                 })
             ],
             fetchReply: true
@@ -82,9 +92,17 @@ export class Trade extends NoxCommand {
         let skinName1 = '';
         let skinName2 = '';
         collector1.on('collect', async interaction => {
-            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+            if (
+                interaction.customId === startButton.customId
+                || interaction.customId === backButton.customId
+                || interaction.customId === forwardButton.customId
+                || interaction.customId === endButton.customId
+            ) {
                 // Increase/decrease index
                 switch (interaction.customId) {
+                    case startButton.customId:
+                        currentIndex = 0;
+                        break;
                     case backButton.customId:
                         if (currentIndex > 0) {
                             currentIndex -= 1;
@@ -95,18 +113,26 @@ export class Trade extends NoxCommand {
                             currentIndex += 1;
                         }
                         break;
+                    case endButton.customId:
+                        currentIndex = skins1.length - 1;
+                        break;
                 }
 
                 // Disable the buttons if they cannot be used
-                forwardButton.disabled = currentIndex === skins1.length - 1;
+                startButton.disabled = currentIndex === 0;
                 backButton.disabled = currentIndex === 0;
+                forwardButton.disabled = currentIndex === skins1.length - 1;
+                endButton.disabled = currentIndex >= skins1.length - 1;
 
                 // Respond to interaction by updating message with new embed
                 await interaction.update({
                     embeds: [generateSkinEmbed(skins1, currentIndex)],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                        }),
+                        new MessageActionRow({
+                            components: [...([selectButton])]
                         })
                     ]
                 })
@@ -132,16 +158,24 @@ export class Trade extends NoxCommand {
                     : await interaction.reply(errMsg);
             } else {
                 currentIndex = 0
+                startButton.setDisabled(true);
                 backButton.setDisabled(true);
-                skins2.length <= 1
-                    ? forwardButton.setDisabled(true)
-                    : forwardButton.setDisabled(false);
+                if (skins2.length <= 1) {
+                    forwardButton.setDisabled(true);
+                    endButton.setDisabled(true);
+                } else {
+                    forwardButton.setDisabled(false);
+                    endButton.setDisabled(false);
+                }
                 const embedMessage2 = await interaction.channel.send({
                     content: `Select the card you wish to get from ${user}.`,
                     embeds: [generateSkinEmbed(skins2, currentIndex)],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                        }),
+                        new MessageActionRow({
+                            components: [...([selectButton])]
                         })
                     ]
                 })
@@ -152,9 +186,17 @@ export class Trade extends NoxCommand {
                     filter: ({ user }) => user.id === author.id
                 })
                 collector2.on('collect', async interaction => {
-                    if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                    if (
+                        interaction.customId === startButton.customId
+                        || interaction.customId === backButton.customId
+                        || interaction.customId === forwardButton.customId
+                        || interaction.customId === endButton.customId
+                    ) {
                         // Increase/decrease index
                         switch (interaction.customId) {
+                            case startButton.customId:
+                                currentIndex = 0;
+                                break;
                             case backButton.customId:
                                 if (currentIndex > 0) {
                                     currentIndex -= 1;
@@ -165,18 +207,26 @@ export class Trade extends NoxCommand {
                                     currentIndex += 1;
                                 }
                                 break;
+                            case endButton.customId:
+                                currentIndex = skins2.length - 1;
+                                break;
                         }
 
                         // Disable the buttons if they cannot be used
-                        forwardButton.disabled = currentIndex === skins2.length - 1;
+                        startButton.disabled = currentIndex === 0;
                         backButton.disabled = currentIndex === 0;
+                        forwardButton.disabled = currentIndex === skins2.length - 1;
+                        endButton.disabled = currentIndex >= skins2.length - 1;
 
                         // Respond to interaction by updating message with new embed
                         await interaction.update({
                             embeds: [generateSkinEmbed(skins2, currentIndex)],
                             components: [
                                 new MessageActionRow({
-                                    components: [...([backButton]), ...([selectButton]), ...([forwardButton])]
+                                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                                }),
+                                new MessageActionRow({
+                                    components: [...([selectButton])]
                                 })
                             ]
                         })
