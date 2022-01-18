@@ -4,7 +4,7 @@ import { addLoss, addWin, connectSkin, disconnectSkin, exhaustSkin, getSkinsByPl
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getButton, getForwardButton, getSelectButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getButton, getEndButton, getForwardButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { getRandomIntInclusive } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -47,6 +47,8 @@ export class Fight extends NoxCommand {
         const forwardButton = getForwardButton();
         const fightButton = getSelectButton('Fight', 'SUCCESS', '⚔');
         const allInButton = getButton('allin', 'All In', 'DANGER', '💀');
+        const endButton = getEndButton();
+        const startButton = getStartButton();
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
@@ -56,8 +58,8 @@ export class Fight extends NoxCommand {
             });
         }
         let allExhausted = true;
-        for (let i in skins1) {
-            if (!skins1[i].playersSkins[0].isExhausted) {
+        for (let skin of skins1) {
+            if (!skin.playersSkins[0].isExhausted) {
                 allExhausted = false;
                 break;
             }
@@ -77,8 +79,8 @@ export class Fight extends NoxCommand {
             });
         }
         allExhausted = true;
-        for (let i in skins2) {
-            if (!skins2[i].playersSkins[0].isExhausted) {
+        for (let skin of skins2) {
+            if (!skin.playersSkins[0].isExhausted) {
                 allExhausted = false;
                 break;
             }
@@ -103,9 +105,14 @@ export class Fight extends NoxCommand {
 
         // Send the embed with the first skin
         let currentIndex = 0;
-        skins1.length <= 1
-            ? forwardButton.setDisabled(true)
-            : forwardButton.setDisabled(false);
+        if (skins1.length <= 1) {
+            forwardButton.setDisabled(true);
+            endButton.setDisabled(true);
+        } else {
+            forwardButton.setDisabled(false);
+            endButton.setDisabled(false);
+        }
+
         fightButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
         allInButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
 
@@ -114,7 +121,7 @@ export class Fight extends NoxCommand {
             embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
-                    components: [...([backButton]), ...([forwardButton])]
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                 }),
                 new MessageActionRow({
                     components: [...([fightButton]), ...([allInButton])]
@@ -142,9 +149,17 @@ export class Fight extends NoxCommand {
         let rarity2 = '';
         let god1, god2, skin1, skin2;
         collector1.on('collect', async interaction => {
-            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+            if (
+                interaction.customId === startButton.customId
+                || interaction.customId === backButton.customId
+                || interaction.customId === forwardButton.customId
+                || interaction.customId === endButton.customId
+            ) {
                 // Increase/decrease index
                 switch (interaction.customId) {
+                    case startButton.customId:
+                        currentIndex = 0;
+                        break;
                     case backButton.customId:
                         if (currentIndex > 0) {
                             currentIndex -= 1;
@@ -155,11 +170,16 @@ export class Fight extends NoxCommand {
                             currentIndex += 1;
                         }
                         break;
+                    case endButton.customId:
+                        currentIndex = skins1.length - 1;
+                        break;
                 }
 
                 // Disable the buttons if they cannot be used
-                forwardButton.disabled = currentIndex === skins1.length - 1;
+                startButton.disabled = currentIndex === 0;
                 backButton.disabled = currentIndex === 0;
+                forwardButton.disabled = currentIndex === skins1.length - 1;
+                endButton.disabled = currentIndex >= skins1.length - 1;
                 fightButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
                 allInButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
 
@@ -168,7 +188,7 @@ export class Fight extends NoxCommand {
                     embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
-                            components: [...([backButton]), ...([forwardButton])]
+                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                         }),
                         new MessageActionRow({
                             components: [...([fightButton]), ...([allInButton])]
@@ -232,10 +252,16 @@ export class Fight extends NoxCommand {
                         this._channelIds.splice(runningInIndex, 1);
                     } else {
                         currentIndex = 0
+                        startButton.setDisabled(true);
                         backButton.setDisabled(true);
-                        skins2.length <= 1
-                            ? forwardButton.setDisabled(true)
-                            : forwardButton.setDisabled(false);
+                        if (skins2.length <= 1) {
+                            forwardButton.setDisabled(true);
+                            endButton.setDisabled(true);
+                        } else {
+                            forwardButton.setDisabled(false);
+                            endButton.setDisabled(false);
+                        }
+
                         fightButton.disabled = skins2[currentIndex].playersSkins[0].isExhausted;
                         allInButton.disabled = skins2[currentIndex].playersSkins[0].isExhausted;
 
@@ -248,7 +274,7 @@ export class Fight extends NoxCommand {
                             embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                             components: [
                                 new MessageActionRow({
-                                    components: [...([backButton]), ...([forwardButton])]
+                                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                                 }),
                                 new MessageActionRow({
                                     components: fightComponents
@@ -263,9 +289,17 @@ export class Fight extends NoxCommand {
                             time: 120000
                         });
                         collector3.on('collect', async interaction => {
-                            if (interaction.customId === backButton.customId || interaction.customId === forwardButton.customId) {
+                            if (
+                                interaction.customId === startButton.customId
+                                || interaction.customId === backButton.customId
+                                || interaction.customId === forwardButton.customId
+                                || interaction.customId === endButton.customId
+                            ) {
                                 // Increase/decrease index
                                 switch (interaction.customId) {
+                                    case startButton.customId:
+                                        currentIndex = 0;
+                                        break;
                                     case backButton.customId:
                                         if (currentIndex > 0) {
                                             currentIndex -= 1;
@@ -276,11 +310,16 @@ export class Fight extends NoxCommand {
                                             currentIndex += 1;
                                         }
                                         break;
+                                    case endButton.customId:
+                                        currentIndex = skins2.length - 1;
+                                        break;
                                 }
 
                                 // Disable the buttons if they cannot be used
-                                forwardButton.disabled = currentIndex === skins2.length - 1;
+                                startButton.disabled = currentIndex === 0;
                                 backButton.disabled = currentIndex === 0;
+                                forwardButton.disabled = currentIndex === skins2.length - 1;
+                                endButton.disabled = currentIndex >= skins2.length - 1;
                                 fightButton.disabled = skins2[currentIndex].playersSkins[0].isExhausted;
                                 allInButton.disabled = skins2[currentIndex].playersSkins[0].isExhausted;
 
@@ -289,7 +328,7 @@ export class Fight extends NoxCommand {
                                     embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                                     components: [
                                         new MessageActionRow({
-                                            components: [...([backButton]), ...([forwardButton])]
+                                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                                         }),
                                         new MessageActionRow({
                                             components: fightComponents
@@ -321,19 +360,19 @@ export class Fight extends NoxCommand {
                                 let god2Health = god2.health;
 
                                 let skinId1 = 0;
-                                for (let i = 0; i < skins1.length; i++) {
-                                    if (skins1[i].name === skinName1 && skins1[i].god.name === godName1) {
-                                        skinId1 = skins1[i].id;
-                                        skin1 = skins1[i];
+                                for (let skin of skins1) {
+                                    if (skin.name === skinName1 && skin.god.name === godName1) {
+                                        skinId1 = skin.id;
+                                        skin1 = skin;
                                         break;
                                     }
                                 }
 
                                 let skinId2 = 0;
-                                for (let i = 0; i < skins2.length; i++) {
-                                    if (skins2[i].name === skinName2 && skins2[i].god.name === godName2) {
-                                        skinId2 = skins2[i].id;
-                                        skin2 = skins2[i];
+                                for (let skin of skins2) {
+                                    if (skin.name === skinName2 && skin.god.name === godName2) {
+                                        skinId2 = skin.id;
+                                        skin2 = skin;
                                         break;
                                     }
                                 }

@@ -35,6 +35,13 @@ export function getFavoriteButton(
 ) {
     return getButton(customId, label, style, '🤍');
 }
+export function getRemoveFromWishlistButton(
+    label: string = 'Unwish',
+    customId: string = 'removewishlist',
+    style: MessageButtonStyle | null = 'DANGER'
+) {
+    return getButton(customId, label, style);
+}
 export function getSelectButton(
     label: string | null = null,
     style: MessageButtonStyle | null = null,
