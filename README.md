@@ -1,8 +1,10 @@
 # Nox
 
-A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework)
+A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework).
 
-![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
+This bot is up and running on [Pattedevelour](https://www.twitch.tv/pattedevelours)'s Discord server.
+
+[![Discord Banner 2](https://discordapp.com/api/guilds/451391692176752650/widget.png?style=banner2)](https://discord.gg/UE5PueNHsK)
 
 ## Features
 
@@ -14,6 +16,12 @@ Multiple features are available, and many more are still being worked on:
 * Get Smite's server status
 * Get the current MOTD _(Match Of The Day)_
 * etc...
+
+![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
+
+![Item Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/item.gif)
+
+![MOTD Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/motd.gif)
 
 ### Smite CCG _(Collectible Card Game)_
 
@@ -36,6 +44,12 @@ Each player can pick one of its cards to challenge another player to a fight wit
 The loser's fighter will be exhausted, and will not be able to fight anymore for a certain length of time. If its owner want to fight again, they will have to use another fighter!
 
 ![Fight Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/fight.gif)
+
+#### Player statistics / Achievements
+
+Check how well you're doing with the `/player` command, and try to unlock achievements to get rewards for the next season!
+
+![Achievements Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/achievements.gif)
 
 ### How to run
 
