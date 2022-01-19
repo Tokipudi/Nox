@@ -1,3 +1,5 @@
+import { getGuildById } from '@lib/database/utils/GuildsUtils';
+import { delay } from '@lib/utils/Utils';
 import { container } from '@sapphire/framework';
 import { Piece, PieceContext } from '@sapphire/pieces';
 import { Snowflake } from 'discord-api-types';
@@ -21,37 +23,32 @@ export abstract class Achievement extends Piece implements AchievementInterface 
     async deliverAchievement(guildId: Snowflake): Promise<void> {
         const playerIds = await this.getCurrentPlayerIds(guildId);
 
+        await this.removeAchievementRole(guildId);
         if (playerIds.length > 0) {
-            await this.addAchievementRoleByPlayerIds(playerIds);
+            await this.addAchievementRoleByPlayerIds(playerIds, guildId);
 
             if (this.tokens != null && this.tokens > 0) {
-                // Update tokens
-                await this.container.prisma.players.updateMany({
-                    data: {
-                        tokens: {
-                            increment: this.tokens
-                        }
-                    },
-                    where: {
-                        id: {
-                            in: playerIds
-                        }
-                    }
-                });
-
-                // Update achievements archive
                 const achievement = await this.container.prisma.achievements.findUnique({
                     where: {
                         name: this.label
                     }
                 });
-                const guild = await this.container.prisma.guilds.findUnique({
-                    where: {
-                        id: guildId
-                    }
-                });
+                const guild = await getGuildById(guildId)
 
+                // Update tokens
                 for (let playerId of playerIds) {
+                    await this.container.prisma.players.update({
+                        data: {
+                            tokens: {
+                                increment: this.tokens
+                            }
+                        },
+                        where: {
+                            id: playerId
+                        }
+                    });
+
+                    // Update achievements archive
                     await this.container.prisma.playersSeasonsAchievements.create({
                         data: {
                             achievementId: achievement.id,
@@ -67,15 +64,18 @@ export abstract class Achievement extends Piece implements AchievementInterface 
     /**
      * Adds the achievement role to the users
      * 
-     * @param userIds the users to give the achievement to
+     * @param playerIds the users to give the achievement to
      * @param guildId the guild the users belong to
      */
-    async addAchievementRoleByPlayerIds(playerIds: number[]): Promise<void> {
+    async addAchievementRoleByPlayerIds(playerIds: number[], guildId: Snowflake): Promise<void> {
         try {
             const players = await this.container.prisma.players.findMany({
                 where: {
                     id: {
                         in: playerIds
+                    },
+                    guild: {
+                        id: guildId
                     }
                 },
                 include: {
@@ -99,6 +99,42 @@ export abstract class Achievement extends Piece implements AchievementInterface 
             }
 
 
+        } catch (e) {
+            container.logger.error(e);
+        }
+    }
+
+    /**
+     * Remove the achievement for all users in the guild
+     * 
+     * @param guildId the guild the users belong to
+     */
+    async removeAchievementRole(guildId: Snowflake): Promise<void> {
+        try {
+            const players = await this.container.prisma.players.findMany({
+                where: {
+                    guild: {
+                        id: guildId
+                    }
+                },
+                include: {
+                    user: true,
+                    guild: true
+                }
+            });
+
+            for (let player of players) {
+                const guild = await container.client.guilds.fetch(player.guild.id);
+                let role = (await guild.roles.fetch()).find(role => role.name === this.label);
+                if (role != null) {
+                    const user = await guild.members.fetch(player.user.id);
+                    if (user.roles.cache.some(r => r.id === role.id)) {
+                        await user.roles.remove(role);
+                        await delay(500);
+                        container.logger.info(`Player ${player.id} was removed the role ${this.label}.`);
+                    }
+                }
+            }
         } catch (e) {
             container.logger.error(e);
         }

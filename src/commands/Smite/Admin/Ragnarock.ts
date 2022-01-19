@@ -1,12 +1,15 @@
 import { Guilds, PlayersSeasonsArchive } from '.prisma/client';
 import { fetchAchievements } from '@lib/achievements/AchievementUtils';
+import { setGuildActive, setGuildInactive } from '@lib/database/utils/GuildsUtils';
 import { resetAllSkinsByGuildId } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { delay } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
 import { toTitleCase } from '@sapphire/utilities';
 import { CommandInteraction, Message, MessageReaction, User } from 'discord.js';
+import moment from 'moment';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Resets the game and start a new season.',
@@ -38,9 +41,10 @@ export class Ragnarock extends NoxCommand {
                 await interaction.editReply(`**${toTitleCase(this.name)} aborted.**`);
                 collector.stop();
             } else if (react.emoji.name === '✅') {
+                await setGuildInactive(guildId);
                 collector.stop();
 
-                const reply = await interaction.editReply('`Starting the new season...`');
+                await interaction.editReply('`Starting the new season...`');
 
                 let guild: Guilds = await this.container.prisma.guilds.findUnique({
                     where: {
@@ -50,6 +54,7 @@ export class Ragnarock extends NoxCommand {
 
                 const { season } = await this.startNewSeason(guild);
 
+                await setGuildActive(guildId);
                 await interaction.editReply(`Game has been reset.\nThe current season is now **${season}**.`);
             }
         });
@@ -87,14 +92,14 @@ export class Ragnarock extends NoxCommand {
             const data: PlayersSeasonsArchive[] = [];
             const playerIds = [];
 
+            const now = moment().utc().toDate();
             for (let player of players) {
                 playerIds.push(player.id);
 
                 let wins = 0;
                 let losses = 0;
                 let favoriteSkinId = null;
-                for (let j in player.playersSkins) {
-                    const playerSkin = player.playersSkins[j];
+                for (let playerSkin of player.playersSkins) {
                     wins += playerSkin.win;
                     losses += playerSkin.loss;
                     if (playerSkin.isFavorite) {
@@ -117,7 +122,8 @@ export class Ragnarock extends NoxCommand {
                     cardsReceived: player.cardsReceived,
                     favoriteSkinId: favoriteSkinId,
                     allInLoss: player.allInLoss,
-                    allInWins: player.allInWins
+                    allInWins: player.allInWins,
+                    archiveDate: now
                 });
             }
 
@@ -126,6 +132,7 @@ export class Ragnarock extends NoxCommand {
             const achievements = fetchAchievements();
             for (const achievement of achievements) {
                 await achievement.deliverAchievement(guild.id);
+                await delay(3000);
             }
 
             await resetAllSkinsByGuildId(guild.id);

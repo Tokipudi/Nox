@@ -13,7 +13,10 @@ import { CommandInteraction, Message, MessageActionRow, Snowflake } from 'discor
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'List the skins of a given god.',
-    preconditions: ['playerExists']
+    preconditions: [
+        'guildIsActive',
+        'playerExists'
+    ]
 })
 export class Skins extends NoxCommand {
 

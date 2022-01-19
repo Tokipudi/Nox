@@ -12,6 +12,7 @@ import { CommandInteraction } from 'discord.js';
     description: 'Releases either half or all of a player\'s cards.',
     requiredUserPermissions: 'BAN_MEMBERS',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'

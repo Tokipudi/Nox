@@ -12,6 +12,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Start a trade another player.',
     preconditions: [
+        'guildIsActive',
         'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',

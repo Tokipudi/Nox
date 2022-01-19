@@ -13,6 +13,7 @@ import { CommandInteraction, Message, MessageActionRow, User } from 'discord.js'
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows your team or the team of another player.',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'

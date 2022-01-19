@@ -30,6 +30,7 @@ declare module '@sapphire/framework' {
     interface Preconditions {
         authorIsNotTarget: never,
         canPlayerRoll: never,
+        guildIsActive: never,
         playerExists: never,
         playerIsNotBanned: never,
         targetIsNotABot: never,

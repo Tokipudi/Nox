@@ -10,7 +10,10 @@ import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fire a card from your collection.',
-    preconditions: ['playerExists']
+    preconditions: [
+        'guildIsActive',
+        'playerExists'
+    ]
 })
 export class Fire extends NoxCommand {
 

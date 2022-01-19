@@ -7,7 +7,10 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Shows the amount of skins left to claim by rarity.'
+    description: 'Shows the amount of skins left to claim by rarity.',
+    preconditions: [
+        'guildIsActive'
+    ]
 })
 export class Left extends NoxCommand {
 

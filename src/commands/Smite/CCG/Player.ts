@@ -1,15 +1,19 @@
-import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
+import { getGuildById } from '@lib/database/utils/GuildsUtils';
+import { createPlayerIfNotExists, getPlayerSeasonArchive } from '@lib/database/utils/PlayersUtils';
 import { getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
+import { PlayerSeasonArchiveNotFoundError } from '@lib/structures/errors/PlayerSeasonArchiveNotFoundError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
+import { Players } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, User } from 'discord.js';
+import { CommandInteraction, Guild, Message, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows a player\'s statistics.',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'
@@ -32,6 +36,20 @@ export class Player extends NoxCommand {
             guildId: guildId
         });
 
+        let season = interaction.options.getNumber('season');
+        const guild = await getGuildById(guildId);
+
+        let embed = null;
+        if (season == null || season == guild.season) {
+            embed = await this.getCurrentSeasonEmbed(user, player, guild.season)
+        } else {
+            embed = await this.getPastSeasonEmbed(user, player, season);
+        }
+
+        return interaction.reply({ embeds: [embed] });
+    }
+
+    private async getCurrentSeasonEmbed(user: User, player: Players, season: number) {
         const skins = await getSkinsByPlayer(player.id);
 
         let favoriteSkin = null;
@@ -47,6 +65,7 @@ export class Player extends NoxCommand {
                 name: `${user.username}#${user.discriminator}`,
                 iconURL: user.displayAvatarURL()
             })
+            .setTitle(`Season ${season} *(current)*`)
             .setDescription(`Tokens: \`${player.tokens}\``)
             .setColor('DARK_PURPLE')
             .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -89,7 +108,68 @@ export class Player extends NoxCommand {
 
         embed.addField('Fights', fightDescription, true);
 
-        return interaction.reply({ embeds: [embed] });
+        return embed;
+    }
+
+    private async getPastSeasonEmbed(user: User, player: Players, season: number) {
+        const playerSeasonsArchive = await getPlayerSeasonArchive(player.id, season);
+        if (playerSeasonsArchive == null) {
+            throw new PlayerSeasonArchiveNotFoundError({
+                playerId: player.id,
+                season: season
+            });
+        }
+
+        const favoriteSkin = playerSeasonsArchive.favoriteSkinId != null
+            ? await this.container.prisma.skins.findUnique({
+                where: {
+                    id: playerSeasonsArchive.favoriteSkinId
+                }
+            })
+            : null;
+
+        const embed = new MessageEmbed()
+            .setAuthor({
+                name: `${user.username}#${user.discriminator}`,
+                iconURL: user.displayAvatarURL()
+            })
+            .setTitle(`Season ${season}`)
+            .setColor('DARK_PURPLE')
+            .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
+            .setTimestamp(playerSeasonsArchive.archiveDate)
+            .setFooter({
+                text: `#${player.id}`
+            });
+
+        if (favoriteSkin !== null) {
+            embed.setImage(favoriteSkin.godSkinUrl);
+        }
+
+        embed.addField(
+            'Cards',
+            `Rolled: \`${playerSeasonsArchive.rolls}\`\n` +
+            `Claimed: \`${playerSeasonsArchive.claimedCards}\`\n` +
+            `Stolen: \`${playerSeasonsArchive.cardsStolen}\`\n` +
+            `Given: \`${playerSeasonsArchive.cardsGiven}\`\n` +
+            `Exchanged: \`${playerSeasonsArchive.cardsExchanged}\``,
+            true
+        );
+
+        let fightDescription =
+            `Wins: \`${playerSeasonsArchive.win}\`\n` +
+            `Losses: \`${playerSeasonsArchive.loss}\`\n` +
+            `Highest Winning Streak: \`${playerSeasonsArchive.highestWinningStreak}\`\n` +
+            `Highest Losing Streak: \`${playerSeasonsArchive.highestLosingStreak}\`\n` +
+            `All Ins Won: \`${playerSeasonsArchive.allInWins}\`\n` +
+            `All Ins Lost: \`${playerSeasonsArchive.allInLoss}\`\n`;
+
+        if (playerSeasonsArchive.win > 0 || playerSeasonsArchive.loss > 0) {
+            fightDescription += `Winrate: \`${Math.round(((playerSeasonsArchive.win / (playerSeasonsArchive.win + playerSeasonsArchive.loss)) * 100))}%\`\n`;
+        }
+
+        embed.addField('Fights', fightDescription, true);
+
+        return embed;
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -99,9 +179,16 @@ export class Player extends NoxCommand {
             options: [
                 {
                     name: 'user',
-                    description: 'The user you want to check the statistics of. Defaults to the current user if not specified.',
+                    description: 'The user you want to check the statistics of. Defaults to the current user if empty.',
                     required: false,
                     type: 'USER'
+                },
+                {
+                    name: 'season',
+                    description: 'The season you wish to get the player statistics from. Defaults to the current season if empty.',
+                    required: false,
+                    type: 'NUMBER',
+                    autocomplete: true
                 }
             ]
         }, {

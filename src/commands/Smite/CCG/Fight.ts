@@ -14,6 +14,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageEmbed, MessageRea
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fight against another player.',
     preconditions: [
+        'guildIsActive',
         'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',

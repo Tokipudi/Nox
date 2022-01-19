@@ -10,6 +10,7 @@ import { CommandInteraction } from 'discord.js';
     description: 'Bans a player for 24h.',
     requiredUserPermissions: 'BAN_MEMBERS',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',

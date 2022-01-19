@@ -7,7 +7,10 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Shows all of the different skins rarity.'
+    description: 'Shows all of the different skins rarity.',
+    preconditions: [
+        'guildIsActive'
+    ]
 })
 export class Rarity extends NoxCommand {
 

@@ -9,7 +9,10 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, Guild, Message, MessageActionRow, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Shows the achievements for the CCG.'
+    description: 'Shows the achievements for the CCG.',
+    preconditions: [
+        'guildIsActive'
+    ]
 })
 export class Achievements extends NoxCommand {
 

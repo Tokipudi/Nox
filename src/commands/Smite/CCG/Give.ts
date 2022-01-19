@@ -11,6 +11,7 @@ import { CommandInteraction } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Gives a card you own to a user of your choice.',
     preconditions: [
+        'guildIsActive',
         'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',

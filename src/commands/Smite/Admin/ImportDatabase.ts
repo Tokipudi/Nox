@@ -8,7 +8,10 @@ import { CommandInteraction } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     name: 'importdatabase',
     description: 'Import data to the database.',
-    requiredUserPermissions: 'ADMINISTRATOR'
+    requiredUserPermissions: 'ADMINISTRATOR',
+    preconditions: [
+        'guildIsActive'
+    ]
 })
 export class ImportDatabase extends NoxCommand {
 

@@ -10,6 +10,7 @@ import { CommandInteraction, User } from 'discord.js';
     description: 'Unbans a player.',
     requiredUserPermissions: 'BAN_MEMBERS',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'
