@@ -1,8 +1,10 @@
 # Nox
 
-A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework)
+A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework).
 
-![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
+This bot is up and running on Pattedevelour's Discord server.
+
+[![Discord Banner 2](https://discordapp.com/api/guilds/451391692176752650/widget.png?style=banner2)](https://discord.gg/UE5PueNHsK)
 
 ## Features
 
@@ -14,6 +16,8 @@ Multiple features are available, and many more are still being worked on:
 * Get Smite's server status
 * Get the current MOTD _(Match Of The Day)_
 * etc...
+
+![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
 
 ### Smite CCG _(Collectible Card Game)_
 
