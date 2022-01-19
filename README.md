@@ -2,7 +2,7 @@
 
 A Smite CCG bot made with [Sapphire](https://github.com/sapphiredev/framework).
 
-This bot is up and running on Pattedevelour's Discord server.
+This bot is up and running on [Pattedevelour](https://www.twitch.tv/pattedevelours)'s Discord server.
 
 [![Discord Banner 2](https://discordapp.com/api/guilds/451391692176752650/widget.png?style=banner2)](https://discord.gg/UE5PueNHsK)
 
