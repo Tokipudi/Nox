@@ -19,6 +19,10 @@ Multiple features are available, and many more are still being worked on:
 
 ![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
 
+![Item Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/item.gif)
+
+![MOTD Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/motd.gif)
+
 ### Smite CCG _(Collectible Card Game)_
 
 The main reason why this bot was created in the first place.
@@ -40,6 +44,12 @@ Each player can pick one of its cards to challenge another player to a fight wit
 The loser's fighter will be exhausted, and will not be able to fight anymore for a certain length of time. If its owner want to fight again, they will have to use another fighter!
 
 ![Fight Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/fight.gif)
+
+#### Player statistics / Achievements
+
+Check how well you're doing with the `/player` command, and try to unlock achievements to get rewards for the next season!
+
+![Achievements Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/achievements.gif)
 
 ### How to run
 
