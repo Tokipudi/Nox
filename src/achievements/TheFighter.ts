@@ -11,7 +11,6 @@ import { Snowflake } from "discord-api-types";
 export class TheFighter extends Achievement {
 
     async getCurrentPlayerIds(guildId: Snowflake): Promise<number[]> {
-
         const players = await container.prisma.players.findMany({
             select: {
                 id: true,
