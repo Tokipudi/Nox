@@ -13,19 +13,22 @@ This bot is up and running on [Pattedevelour](https://www.twitch.tv/pattedevelou
 Multiple features are available, and many more are still being worked on:
 
 * Get a god's details
-* Get Smite's server status
-* Get the current MOTD _(Match Of The Day)_
-* etc...
 
 ![God Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/god.gif)
 
+* Get information about an item
+
 ![Item Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/item.gif)
+
+* Get the MOTD for a given day
 
 ![MOTD Command](https://github.com/Tokipudi/Nox/blob/main/src/media/readme/motd.gif)
 
+And many more!
+
 ### Smite CCG _(Collectible Card Game)_
 
-The main reason why this bot was created in the first place.
+**The main reason why this bot was created in the first place.**
 
 Inspired by [Mudae](https://mudae.fandom.com/wiki/Mudae_Wiki)'s Harem mini-game, this bot will let you claim cards that you will then be able to give, exchange, or fight against other players cards.
 
