@@ -13,6 +13,7 @@ import moment from 'moment';
     cooldownDelay: 5000,
     cooldownScope: 0,
     preconditions: [
+        'guildIsActive',
         'playerExists',
         'canPlayerRoll'
     ]

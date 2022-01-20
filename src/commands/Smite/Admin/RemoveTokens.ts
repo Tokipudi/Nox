@@ -10,6 +10,7 @@ import { CommandInteraction } from 'discord.js';
     description: 'Removes tokens from a user.',
     requiredUserPermissions: 'ADMINISTRATOR',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'

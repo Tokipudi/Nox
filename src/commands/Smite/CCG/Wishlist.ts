@@ -13,6 +13,7 @@ import { CommandInteraction, Message, MessageActionRow, Snowflake, User } from '
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows your wishlist or the wishlist of another player.',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',

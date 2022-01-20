@@ -10,7 +10,10 @@ import { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Add a skin to your wishlist and get notified when it is rolled.',
-    preconditions: ['playerExists']
+    preconditions: [
+        'guildIsActive',
+        'playerExists'
+    ]
 })
 export class Wish extends NoxCommand {
 

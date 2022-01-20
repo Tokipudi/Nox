@@ -10,7 +10,10 @@ import { CommandInteraction, Message, MessageActionRow, MessageEmbed } from 'dis
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the rewards available.',
-    preconditions: ['playerExists']
+    preconditions: [
+        'guildIsActive',
+        'playerExists'
+    ]
 })
 export class Rewards extends NoxCommand {
 

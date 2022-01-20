@@ -4,7 +4,7 @@ import { addLoss, addWin, connectSkin, disconnectSkin, exhaustSkin, getSkinsByPl
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getButton, getEndButton, getForwardButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
+import { getBackButton, getButton, getEndButton, getForwardButton, getRandomButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
 import { getRandomIntInclusive } from '@lib/utils/Utils';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -14,6 +14,7 @@ import { CommandInteraction, Message, MessageActionRow, MessageEmbed, MessageRea
 @ApplyOptions<NoxCommandOptions>({
     description: 'Fight against another player.',
     preconditions: [
+        'guildIsActive',
         'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',
@@ -49,6 +50,7 @@ export class Fight extends NoxCommand {
         const allInButton = getButton('allin', 'All In', 'DANGER', '💀');
         const endButton = getEndButton();
         const startButton = getStartButton();
+        const randomButton = getRandomButton();
 
         const skins1 = await getSkinsByPlayer(authorPlayer.id);
         if (!skins1 || skins1.length === 0) {
@@ -113,6 +115,7 @@ export class Fight extends NoxCommand {
             endButton.setDisabled(false);
         }
 
+        randomButton.disabled = skins1.length <= 1;
         fightButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
         allInButton.disabled = skins1[currentIndex].playersSkins[0].isExhausted;
 
@@ -121,7 +124,7 @@ export class Fight extends NoxCommand {
             embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
             components: [
                 new MessageActionRow({
-                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                    components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
                 }),
                 new MessageActionRow({
                     components: [...([fightButton]), ...([allInButton])]
@@ -154,6 +157,7 @@ export class Fight extends NoxCommand {
                 || interaction.customId === backButton.customId
                 || interaction.customId === forwardButton.customId
                 || interaction.customId === endButton.customId
+                || interaction.customId === randomButton.customId
             ) {
                 // Increase/decrease index
                 switch (interaction.customId) {
@@ -173,6 +177,9 @@ export class Fight extends NoxCommand {
                     case endButton.customId:
                         currentIndex = skins1.length - 1;
                         break;
+                    case randomButton.customId:
+                        currentIndex = Math.floor(Math.random() * skins1.length);
+                        break;
                 }
 
                 // Disable the buttons if they cannot be used
@@ -188,7 +195,7 @@ export class Fight extends NoxCommand {
                     embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
                     components: [
                         new MessageActionRow({
-                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                            components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
                         }),
                         new MessageActionRow({
                             components: [...([fightButton]), ...([allInButton])]
@@ -274,7 +281,7 @@ export class Fight extends NoxCommand {
                             embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                             components: [
                                 new MessageActionRow({
-                                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                                    components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
                                 }),
                                 new MessageActionRow({
                                     components: fightComponents
@@ -294,6 +301,7 @@ export class Fight extends NoxCommand {
                                 || interaction.customId === backButton.customId
                                 || interaction.customId === forwardButton.customId
                                 || interaction.customId === endButton.customId
+                                || interaction.customId === randomButton.customId
                             ) {
                                 // Increase/decrease index
                                 switch (interaction.customId) {
@@ -313,6 +321,9 @@ export class Fight extends NoxCommand {
                                     case endButton.customId:
                                         currentIndex = skins2.length - 1;
                                         break;
+                                    case randomButton.customId:
+                                        currentIndex = Math.floor(Math.random() * skins2.length);
+                                        break;
                                 }
 
                                 // Disable the buttons if they cannot be used
@@ -328,7 +339,7 @@ export class Fight extends NoxCommand {
                                     embeds: [await this.generateEmbed(skins2, currentIndex, guildId)],
                                     components: [
                                         new MessageActionRow({
-                                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                                            components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
                                         }),
                                         new MessageActionRow({
                                             components: fightComponents

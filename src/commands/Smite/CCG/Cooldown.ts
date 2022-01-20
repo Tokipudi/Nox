@@ -9,6 +9,7 @@ import { CommandInteraction, MessageEmbed, User } from 'discord.js';
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the remaining cooldown of a given user before being able to claim another card.',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',

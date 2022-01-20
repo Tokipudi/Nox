@@ -10,6 +10,7 @@ import { CommandInteraction } from 'discord.js';
     description: 'Gives tokens to a user.',
     requiredUserPermissions: 'ADMINISTRATOR',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'

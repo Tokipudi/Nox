@@ -11,6 +11,7 @@ import { CommandInteraction } from 'discord.js';
     description: 'Empties the wishlist of a user.',
     requiredUserPermissions: 'BAN_MEMBERS',
     preconditions: [
+        'guildIsActive',
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists'

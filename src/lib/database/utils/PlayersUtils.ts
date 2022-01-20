@@ -120,6 +120,17 @@ export async function setFavoriteSkin(playerId: number, skinId: number) {
     });
 }
 
+export async function getPlayerSeasonArchive(playerId: number, seasonId: number) {
+    return await container.prisma.playersSeasonsArchive.findUnique({
+        where: {
+            playerId_season: {
+                playerId: playerId,
+                season: seasonId
+            }
+        }
+    });
+}
+
 export async function isSkinInWishlist(skinId: number, playerId: number) {
     const wishlist = await getSkinWishlist(playerId);
     for (let skin of wishlist) {

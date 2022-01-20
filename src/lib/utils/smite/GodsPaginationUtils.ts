@@ -15,7 +15,7 @@ export function generateGodDetailsEmbed(god: Gods | any) {
             name: god.name,
             iconURL: god.godIconUrl
         })
-        .setColor('BLUE')
+        .setColor('DARK_PURPLE')
         .addField('Class', god.roles, true)
         .addField('Type', god.type, true)
         .addField('Pros', god.pros, false)
@@ -44,7 +44,7 @@ export function generateGodLoreEmbed(god: Gods | any) {
             name: god.name,
             iconURL: god.godIconUrl
         })
-        .setColor('BLUE')
+        .setColor('DARK_PURPLE')
         .setTitle(god.title)
         .setDescription(god.lore.replaceAll('\\n', '\n'))
         .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
@@ -59,7 +59,7 @@ export function generateGodAbilityEmbed(title, god: Gods | any, ability) {
             name: god.name,
             iconURL: god.godIconUrl
         })
-        .setColor('BLUE')
+        .setColor('DARK_PURPLE')
         .setTitle(title)
         .setDescription(ability.Description.itemDescription.description.replaceAll('\\n', '\n'))
         .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')

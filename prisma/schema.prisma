@@ -18,10 +18,11 @@ model Users {
 }
 
 model Guilds {
-    id      String    @id
-    season  Int       @default(1)
-    users   Users[]
-    players Players[]
+    id       String    @id
+    season   Int       @default(1)
+    isActive Boolean   @default(true)
+    users    Users[]
+    players  Players[]
 }
 
 model Items {
@@ -173,6 +174,7 @@ model PlayersSeasonsArchive {
     favoriteSkin               Skins?                       @relation(fields: [favoriteSkinId], references: [id])
     favoriteSkinId             Int?
     PlayersSeasonsAchievements PlayersSeasonsAchievements[]
+    archiveDate                DateTime?                    @default(now())
 
     @@id([playerId, season])
 }
