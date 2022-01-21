@@ -51,6 +51,8 @@ export class Team extends NoxCommand {
             });
         }
 
+        let currentIndex = 0
+
         skins[0].playersSkins[0].isFavorite
             ? favoriteButton.setEmoji('💔')
             : favoriteButton.setEmoji('❤️');
@@ -70,7 +72,6 @@ export class Team extends NoxCommand {
                 })
             ];
 
-        let currentIndex = 0
         const embedMessage1 = await interaction.reply({
             content: `${user}'s team:`,
             embeds: [await this.generateEmbed(skins, currentIndex, guildId)],
@@ -140,6 +141,9 @@ export class Team extends NoxCommand {
                 forwardButton.disabled = currentIndex === skins.length - 1;
                 backButton.disabled = currentIndex === 0;
                 endButton.disabled = currentIndex >= skins.length - 1;
+                skins[currentIndex].playersSkins[0].isFavorite
+                    ? favoriteButton.setEmoji('💔')
+                    : favoriteButton.setEmoji('❤️');
 
                 const messageActionRows = user.id === author.id
                     ? [
