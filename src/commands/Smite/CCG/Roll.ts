@@ -100,8 +100,7 @@ export class Roll extends NoxCommand {
             } else if (!canClaim) {
                 const duration = await getTimeLeftBeforeClaim(player.id);
                 interaction.followUp({
-                    content: `${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`,
-                    ephemeral: true
+                    content: `${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`
                 });
             } else {
                 collector.stop();
