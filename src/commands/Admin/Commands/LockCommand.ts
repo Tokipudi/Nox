@@ -32,7 +32,8 @@ export class LockCommand extends NoxCommand {
                 const children = channel.children.map(child => child.id);
                 let isAllChildrenInParent = true;
                 for (let channelId of children) {
-                    if (!authorizedChannelIds.includes(channelId)) {
+                    const channel = await this.container.client.channels.fetch(channelId);
+                    if (channel.type === 'GUILD_TEXT' && !authorizedChannelIds.includes(channelId)) {
                         authorizedChannelIds.push(channelId);
                         isAllChildrenInParent = false;
                     }
@@ -89,7 +90,7 @@ export class LockCommand extends NoxCommand {
         const replyMsg = channels.length > 0
             ? `The command \`${command.name}\` is now locked to the following channels:\n  • ${channels.join('\n  • ')}`
             : `The command \`${command.name}\` is now available in every channels.`
-            
+
         return await interaction.reply(replyMsg);
     }
 

@@ -1,4 +1,4 @@
-import { isCommandAuthorizedInChannel } from '@lib/database/utils/CommandsUtils';
+import { getCommandAuthorizedChannels, isCommandAuthorizedInChannel } from '@lib/database/utils/CommandsUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { AsyncPreconditionResult, ChatInputCommand, ContextMenuCommand, Precondition, PreconditionOptions } from '@sapphire/framework';
 import type { CommandInteraction, ContextMenuInteraction } from 'discord.js';
@@ -11,8 +11,9 @@ export class CommandIsAuthorizedInChannel extends Precondition {
 
     public override async chatInputRun(interaction: CommandInteraction, command: ChatInputCommand, context: Precondition.Context): AsyncPreconditionResult {
         if (!(await this.commandIsAuthorized(interaction))) {
+            const channels = await getCommandAuthorizedChannels(command.name, interaction.guildId);
             return this.error({
-                message: await this.getChannelsAvailableMessage(interaction)
+                message: `This command can only be used in the following channels:\n  • ${channels.join('\n  • ')}`
             });
         }
 
@@ -21,30 +22,13 @@ export class CommandIsAuthorizedInChannel extends Precondition {
 
     public override async contextMenuRun(interaction: ContextMenuInteraction, command: ContextMenuCommand, context: Precondition.Context) {
         if (!(await this.commandIsAuthorized(interaction))) {
+            const channels = await getCommandAuthorizedChannels(command.name, interaction.guildId);
             return this.error({
-                message: await this.getChannelsAvailableMessage(interaction)
+                message: `This command can only be used in the following channels:\n  • ${channels.join('\n  • ')}`
             });
         }
 
         return this.ok();
-    }
-
-    private async getChannelsAvailableMessage(interaction: CommandInteraction | ContextMenuInteraction) {
-        const guildCommand = await this.container.prisma.guildsCommands.findUnique({
-            where: {
-                guildId_commandName: {
-                    commandName: interaction.commandName,
-                    guildId: interaction.guildId
-                }
-            }
-        });
-
-        const channels = [];
-        for (let channelId of guildCommand.authorizedChannelIds) {
-            channels.push(await this.container.client.channels.fetch(channelId));
-        }
-
-        return `This command can only be used in the following channels:\n  • ${channels.join('\n  • ')}`
     }
 
     private async commandIsAuthorized(interaction: CommandInteraction | ContextMenuInteraction): Promise<boolean> {

@@ -10,7 +10,7 @@ export async function isCommandAuthorizedInChannel(commandName: string, guildId:
             }
         }
     });
-    
+
     return guildCommand.authorizedChannelIds == null
         || guildCommand.authorizedChannelIds.length <= 0
         || guildCommand.authorizedChannelIds.includes(channelId);
@@ -65,4 +65,22 @@ export async function createIfNotExists(commandName: string, guildId: Snowflake)
     }
 
     return guildCommand;
+}
+
+export async function getCommandAuthorizedChannels(commandName: string, guildId: Snowflake) {
+    const guildCommand = await container.prisma.guildsCommands.findUnique({
+        where: {
+            guildId_commandName: {
+                commandName: commandName,
+                guildId: guildId
+            }
+        }
+    });
+
+    const channels = [];
+    for (let channelId of guildCommand.authorizedChannelIds) {
+        channels.push(await container.client.channels.fetch(channelId));
+    }
+
+    return channels;
 }
