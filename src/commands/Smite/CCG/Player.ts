@@ -8,7 +8,7 @@ import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { Players } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Guild, Message, MessageEmbed, User } from 'discord.js';
+import { CommandInteraction, MessageEmbed, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows a player\'s statistics.',
@@ -84,6 +84,7 @@ export class Player extends NoxCommand {
             `Claimed: \`${player.claimedCards}\`\n` +
             `Stolen: \`${player.cardsStolen}\`\n` +
             `Given: \`${player.cardsGiven}\`\n` +
+            `Received: \`${player.cardsReceived}\`\n` +
             `Exchanged: \`${player.cardsExchanged}\``,
             true
         );
@@ -151,6 +152,7 @@ export class Player extends NoxCommand {
             `Claimed: \`${playerSeasonsArchive.claimedCards}\`\n` +
             `Stolen: \`${playerSeasonsArchive.cardsStolen}\`\n` +
             `Given: \`${playerSeasonsArchive.cardsGiven}\`\n` +
+            `Received: \`${playerSeasonsArchive.cardsReceived}\`\n` +
             `Exchanged: \`${playerSeasonsArchive.cardsExchanged}\``,
             true
         );
