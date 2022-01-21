@@ -10,7 +10,10 @@ export async function isCommandAuthorizedInChannel(commandName: string, guildId:
             }
         }
     });
-    return guildCommand.authorizedChannelIds.includes(channelId);
+    
+    return guildCommand.authorizedChannelIds == null
+        || guildCommand.authorizedChannelIds.length <= 0
+        || guildCommand.authorizedChannelIds.includes(channelId);
 }
 
 export async function getGuildCommand(commandName: string, guildId: Snowflake) {
