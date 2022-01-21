@@ -18,11 +18,27 @@ model Users {
 }
 
 model Guilds {
-    id       String    @id
-    season   Int       @default(1)
-    isActive Boolean   @default(true)
-    users    Users[]
-    players  Players[]
+    id             String           @id
+    season         Int              @default(1)
+    isActive       Boolean          @default(true)
+    users          Users[]
+    players        Players[]
+    GuildsCommands GuildsCommands[]
+}
+
+model Commands {
+    name           String           @id
+    GuildsCommands GuildsCommands[]
+}
+
+model GuildsCommands {
+    guild                Guilds   @relation(fields: [guildId], references: [id])
+    guildId              String
+    command              Commands @relation(fields: [commandName], references: [name])
+    commandName          String
+    authorizedChannelIds String[]
+
+    @@id([guildId, commandName])
 }
 
 model Items {

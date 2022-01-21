@@ -1,7 +1,7 @@
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { ApplyOptions } from '@sapphire/decorators';
-import { ApplicationCommandRegistry, ChatInputCommand, RegisterBehavior } from '@sapphire/framework';
+import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
 import type { CommandInteraction } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
@@ -46,12 +46,14 @@ export class ReloadCommands extends NoxCommand {
         registry.registerChatInputCommand({
             name: this.name,
             description: this.description,
-            options: [{
-                name: 'command',
-                description: 'The command\'s name',
-                type: 'STRING',
-                autocomplete: true
-            }]
+            options: [
+                {
+                    name: 'command',
+                    description: 'The command\'s name',
+                    type: 'STRING',
+                    autocomplete: true
+                }
+            ]
         }, {
             guildIds: this.guildIds
         });
