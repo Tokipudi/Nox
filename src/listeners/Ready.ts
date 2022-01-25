@@ -24,6 +24,7 @@ export class Ready extends  Listener<typeof Events.ClientReady> {
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('achievements').size + ' achievements.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('arguments').size + ' arguments.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('commands').size + ' commands.');
+        this.container.logger.info('|_ Loaded ' + this.container.stores.get('interaction-handlers').size + ' interaction handlers.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('listeners').size + ' listeners.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('preconditions').size + ' preconditions.');
         this.container.logger.info('|_ Loaded ' + this.container.stores.get('rewards').size + ' rewards.');
