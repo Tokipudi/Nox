@@ -13,3 +13,17 @@ export interface GodSkinsFullNamesRow {
     skinId: number
 }
 export interface GodSkinsFullNames extends Array<GodSkinsFullNamesRow> { }
+
+export interface PlayerSkinsAmountByGodRow {
+    playerId: number,
+    godId: number,
+    skinsAmount: number
+}
+export interface PlayerSkinsAmountByGod extends Array<PlayerSkinsAmountByGodRow> { }
+
+export interface GodsRoleByPlayersRow {
+    guildId: Snowflake,
+    playerId: number,
+    godsAmount: number
+}
+export interface GodsRoleByPlayers extends Array<GodsRoleByPlayersRow> { }

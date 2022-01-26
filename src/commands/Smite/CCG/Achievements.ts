@@ -58,7 +58,7 @@ export class Achievements extends NoxCommand {
                     }
                     break;
                 case forwardButton.customId:
-                    if (index < achievements.length - 6) {
+                    if (index < achievements.length - 5) {
                         index += 5;
                     }
                     break;
@@ -68,7 +68,7 @@ export class Achievements extends NoxCommand {
             }
 
             // Disable the buttons if they cannot be used
-            forwardButton.disabled = index > achievements.length - 6;
+            forwardButton.disabled = index > achievements.length - 5;
             backButton.disabled = index < 5;
             startButton.disabled = index === 0;
             endButton.disabled = index >= achievements.length - 5;
@@ -96,10 +96,18 @@ export class Achievements extends NoxCommand {
             })
             .setTitle('Achievements')
             .setColor('DARK_PURPLE')
-            .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011')
-            .setFooter({
-                text: `Showing achievements ${index + 1}..${index + 5} out of ${achievements.length}`
-            });
+            .setThumbnail('https://static.wikia.nocookie.net/smite_gamepedia/images/5/5c/SmiteLogo.png/revision/latest/scale-to-width-down/150?cb=20180503190011');
+
+        const maxIndex = index + 5 >= achievements.length
+            ? achievements.length
+            : index + 5;
+        const achievementPaginatedStr = index + 1 === achievements.length
+            ? achievements.length
+            : `${index + 1}..${maxIndex}`;
+            
+        embed.setFooter({
+            text: `Showing achievements ${achievementPaginatedStr} out of ${achievements.length}`
+        });
 
         for (const achievement of achievements.slice(index, index + 5)) {
             const playerIds = await achievement.getCurrentPlayerIds(guild.id);
