@@ -6,7 +6,7 @@ import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
 import { getBackButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Guild, Message, MessageActionRow, MessageEmbed } from 'discord.js';
+import { CommandInteraction, Guild, Message, MessageActionRow, MessageComponentInteraction, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the achievements for the CCG.',
@@ -20,6 +20,10 @@ export class Achievements extends NoxCommand {
         const { member, guildId } = interaction;
         const author = member.user;
 
+        const reply = await interaction.deferReply({
+            fetchReply: true
+        }) as Message;
+
         const guild = await this.container.client.guilds.fetch(guildId);
 
         const achievements = fetchAchievements();
@@ -30,7 +34,7 @@ export class Achievements extends NoxCommand {
         const startButton = getStartButton();
 
         let index = 0;
-        const embed = await interaction.reply({
+        await interaction.editReply({
             embeds: [await this.generateEmbed(achievements, index, guild)],
             components: achievements.length > 5
                 ? [
@@ -38,17 +42,20 @@ export class Achievements extends NoxCommand {
                         components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
                     })
                 ]
-                : [],
-            fetchReply: true
+                : []
         }) as Message;
 
-        const collector = embed.createMessageComponentCollector({
-            filter: ({ user }) => user.id === author.id
+        const filter = async (i: MessageComponentInteraction) => {
+            await i.deferUpdate();
+            return i.user.id === author.id
+        }
+        const collector = reply.createMessageComponentCollector({
+            filter: filter
         });
 
-        collector.on('collect', async interaction => {
+        collector.on('collect', async i => {
             // Increase/decrease index
-            switch (interaction.customId) {
+            switch (i.customId) {
                 case startButton.customId:
                     index = 0;
                     break;
@@ -74,7 +81,7 @@ export class Achievements extends NoxCommand {
             endButton.disabled = index >= achievements.length - 5;
 
             // Respond to interaction by updating message with new embed
-            await interaction.update({
+            await interaction.editReply({
                 embeds: [await this.generateEmbed(achievements, index, guild)],
                 components: achievements.length > 5
                     ? [
@@ -104,7 +111,7 @@ export class Achievements extends NoxCommand {
         const achievementPaginatedStr = index + 1 === achievements.length
             ? achievements.length
             : `${index + 1}..${maxIndex}`;
-            
+
         embed.setFooter({
             text: `Showing achievements ${achievementPaginatedStr} out of ${achievements.length}`
         });
