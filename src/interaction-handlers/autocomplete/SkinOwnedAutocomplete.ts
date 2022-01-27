@@ -2,6 +2,7 @@ import { getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
 import { AutocompleteInteraction } from 'discord.js';
+import { matchSorter } from 'match-sorter';
 
 @ApplyOptions<InteractionHandlerOptions>({
     interactionHandlerType: InteractionHandlerTypes.Autocomplete,
@@ -9,7 +10,7 @@ import { AutocompleteInteraction } from 'discord.js';
 })
 export class SkinOwnedAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -18,15 +19,6 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
         if (focusedOption.name !== 'skin_owned') return this.none();
 
         const query = focusedOption.value.toString().replace('"', '');
-        const words = query.split(' ');
-        const searchQueryArray = [];
-        for (let word of words) {
-            word = word.trim();
-            if (word != null) {
-                searchQueryArray.push(word.trim());
-            }
-        }
-        let searchQuery = searchQueryArray.join(' | ');
 
         const player = await getPlayerByUserId(interaction.member.user.id, interaction.guildId);
 
@@ -42,36 +34,6 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
                 }
             },
             where: {
-                OR: [
-                    {
-                        name: {
-                            search: searchQuery,
-                            mode: 'insensitive'
-                        },
-                    },
-                    {
-                        name: {
-                            contains: query,
-                            mode: 'insensitive'
-                        }
-                    },
-                    {
-                        god: {
-                            name: {
-                                search: searchQuery,
-                                mode: 'insensitive'
-                            }
-                        },
-                    },
-                    {
-                        god: {
-                            name: {
-                                contains: query,
-                                mode: 'insensitive'
-                            }
-                        },
-                    }
-                ],
                 playersSkins: {
                     some: {
                         player: {
@@ -79,11 +41,10 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
                         }
                     }
                 }
-            },
-            take: 25
+            }
         });
 
-        const parsedData = [];
+        let parsedData = [];
         for (let skin of skins) {
             const skinFullName = `"${skin.name}" ${skin.god.name}`;
             parsedData.push({
@@ -92,11 +53,7 @@ export class SkinOwnedAutocomplete extends InteractionHandler {
             });
         }
 
-        parsedData.sort((a, b) => {
-            if (a.name < b.name) return -1;
-            if (a.name > b.name) return 1;
-            return 0;
-        });
+        parsedData = matchSorter(parsedData, query, { keys: ['name'] }).slice(0, 25);
 
         return this.some(parsedData);
     }

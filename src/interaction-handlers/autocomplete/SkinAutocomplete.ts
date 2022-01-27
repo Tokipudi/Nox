@@ -9,7 +9,7 @@ import { AutocompleteInteraction } from 'discord.js';
 })
 export class SkinAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -40,12 +40,6 @@ export class SkinAutocomplete extends InteractionHandler {
                 value: skin.fullName
             });
         }
-
-        parsedData.sort((a, b) => {
-            if (a.name < b.name) return -1;
-            if (a.name > b.name) return 1;
-            return 0;
-        });
 
         return this.some(parsedData);
     }
