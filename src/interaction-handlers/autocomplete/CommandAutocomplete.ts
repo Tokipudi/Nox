@@ -9,7 +9,7 @@ import { matchSorter } from 'match-sorter';
 })
 export class CommandAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -20,9 +20,6 @@ export class CommandAutocomplete extends InteractionHandler {
         const query = focusedOption.value.toString().trim();
 
         let commandNames = this.container.stores.get('commands').map((cmd) => cmd.name);
-        if (query.length > 0) {
-            commandNames = matchSorter(commandNames, query).slice(0, 25)
-        }
 
         const parsedData = [];
         for (let commandName of matchSorter(commandNames, query).slice(0, 25)) {

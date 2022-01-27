@@ -9,7 +9,7 @@ import { matchSorter } from 'match-sorter';
 })
 export class SeasonAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -37,8 +37,6 @@ export class SeasonAutocomplete extends InteractionHandler {
                 value: season
             });
         }
-
-        parsedData.sort((a, b) => a - b);
 
         return this.some(parsedData);
     }

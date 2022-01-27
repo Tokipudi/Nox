@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
 import { AutocompleteInteraction } from 'discord.js';
+import { matchSorter } from 'match-sorter';
 
 @ApplyOptions<InteractionHandlerOptions>({
     interactionHandlerType: InteractionHandlerTypes.Autocomplete,
@@ -8,7 +9,7 @@ import { AutocompleteInteraction } from 'discord.js';
 })
 export class GodAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -20,40 +21,17 @@ export class GodAutocomplete extends InteractionHandler {
 
         const gods = await this.container.prisma.gods.findMany({
             select: {
-                name: true,
-                id: true
-            },
-            where: {
-                OR: [
-                    {
-                        name: {
-                            contains: query,
-                            mode: 'insensitive'
-                        }
-                    },
-                    {
-                        name: {
-                            search: query.replace(/\s+/g, ' | '),
-                            mode: 'insensitive'
-                        }
-                    }
-                ]
+                name: true
             }
         });
 
         const parsedData = [];
-        for (let god of gods.slice(0, 25)) {
+        for (let god of matchSorter(gods, query, { keys: ['name'] }).slice(0, 25)) {
             parsedData.push({
                 name: god.name,
                 value: god.name
             });
         }
-
-        parsedData.sort((a, b) => {
-            if (a.name < b.name) return -1;
-            if (a.name > b.name) return 1;
-            return 0;
-        });
 
         return this.some(parsedData);
     }

@@ -1,6 +1,7 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerOptions, InteractionHandlerTypes } from '@sapphire/framework';
 import { AutocompleteInteraction } from 'discord.js';
+import { matchSorter } from 'match-sorter';
 import moment from 'moment';
 
 @ApplyOptions<InteractionHandlerOptions>({
@@ -9,7 +10,7 @@ import moment from 'moment';
 })
 export class DateAutocomplete extends InteractionHandler {
 
-    public async run(interaction: AutocompleteInteraction, parsedData) {
+    public async run(interaction: AutocompleteInteraction, parsedData: Array<{ name: string, value: string }>) {
         await interaction.respond(parsedData);
     }
 
@@ -23,18 +24,18 @@ export class DateAutocomplete extends InteractionHandler {
         const dates = [];
         for (let i = 0; i < 7; i++) {
             const dateStr = date.format('MM/DD/YYYY').trim();
-            dates.push({
-                name: dateStr,
-                value: dateStr
-            })
+            dates.push(dateStr)
             date = date.add(1, 'day');
         }
 
-        dates.filter((item) => {
-            return item.name
-                .includes(query)
-        });
+        const parsedData = [];
+        for (let date of matchSorter(dates, query).slice(0, 25)) {
+            parsedData.push({
+                name: date,
+                value: date
+            });
+        }
 
-        return this.some(dates);
+        return this.some(parsedData);
     }
 }
