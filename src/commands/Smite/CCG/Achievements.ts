@@ -33,20 +33,26 @@ export class Achievements extends NoxCommand {
         const endButton = getEndButton();
         const startButton = getStartButton();
 
+        const embeds = await this.getEmbeds(achievements, guild);
+
         let index = 0;
+
+        // Disable the buttons if they cannot be used
+        forwardButton.disabled = index >= embeds.length - 1;
+        endButton.disabled = index >= embeds.length - 1;
+        backButton.disabled = index === 0;
+        startButton.disabled = index === 0;
+
         await interaction.editReply({
-            embeds: [await this.generateEmbed(achievements, index, guild)],
-            components: achievements.length > 5
-                ? [
-                    new MessageActionRow({
-                        components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                    })
-                ]
-                : []
+            embeds: [embeds[index]],
+            components: [
+                new MessageActionRow({
+                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                })
+            ]
         }) as Message;
 
-        const filter = async (i: MessageComponentInteraction) => {
-            await i.deferUpdate();
+        const filter = (i: MessageComponentInteraction) => {
             return i.user.id === author.id
         }
         const collector = reply.createMessageComponentCollector({
@@ -60,41 +66,56 @@ export class Achievements extends NoxCommand {
                     index = 0;
                     break;
                 case backButton.customId:
-                    if (index >= 5) {
-                        index -= 5;
+                    if (index > 0) {
+                        index -= 1;
                     }
                     break;
                 case forwardButton.customId:
-                    if (index < achievements.length - 5) {
-                        index += 5;
+                    if (index < embeds.length - 1) {
+                        index += 1;
                     }
                     break;
                 case endButton.customId:
-                    index = achievements.length - (achievements.length % 5);
+                    index = embeds.length - 1;
                     break;
             }
 
             // Disable the buttons if they cannot be used
-            forwardButton.disabled = index > achievements.length - 5;
-            backButton.disabled = index < 5;
+            forwardButton.disabled = index >= embeds.length - 1;
+            endButton.disabled = index >= embeds.length - 1;
+            backButton.disabled = index === 0;
             startButton.disabled = index === 0;
-            endButton.disabled = index >= achievements.length - 5;
 
             // Respond to interaction by updating message with new embed
-            await interaction.editReply({
-                embeds: [await this.generateEmbed(achievements, index, guild)],
-                components: achievements.length > 5
-                    ? [
-                        new MessageActionRow({
-                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                        })
-                    ]
-                    : []
+            await i.update({
+                embeds: [embeds[index]],
+                components: [
+                    new MessageActionRow({
+                        components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
+                    })
+                ]
             });
         });
     }
 
-    private async generateEmbed(achievements: Achievement[], index: number, guild: Guild) {
+    private async getEmbeds(achievements: Achievement[], guild: Guild): Promise<MessageEmbed[]> {
+        const embeds = [];
+        let i = 0;
+        for (let achievement of achievements) {
+            if (i === 0) {
+                embeds.push(await this.generateEmbed(achievements, achievements.indexOf(achievement), guild));
+                i++;
+            } else if (i === 4) {
+                i = 0;
+            } else {
+                i++;
+            }
+        }
+
+        return embeds;
+    }
+
+    private async generateEmbed(achievements: Achievement[], index: number, guild: Guild): Promise<MessageEmbed> {
         const embed = new MessageEmbed()
             .setAuthor({
                 name: this.container.client.user.username,
