@@ -1,5 +1,5 @@
 import { getGodByName } from '@lib/database/utils/GodsUtils';
-import { createPlayerIfNotExists, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
+import { createPlayerIfNotExists, getMaxSkinsPerTeam, getPlayerByUserId } from '@lib/database/utils/PlayersUtils';
 import { addLoss, addWin, connectSkin, disconnectSkin, exhaustSkin, getSkinsByPlayer, getTimeLeftBeforeExhaustEnd } from '@lib/database/utils/SkinsUtils';
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
@@ -152,6 +152,44 @@ export class Fight extends NoxCommand {
         let rarity2 = '';
         let god1, god2, skin1, skin2;
         collector1.on('collect', async interaction => {
+            if (interaction.customId === allInButton.customId) {
+                if (player1.playersSkins.length >= getMaxSkinsPerTeam()) {
+                    await interaction.update({
+                        embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
+                        components: [
+                            new MessageActionRow({
+                                components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
+                            }),
+                            new MessageActionRow({
+                                components: [...([fightButton]), ...([allInButton])]
+                            })
+                        ]
+                    });
+                    await interaction.followUp({
+                        content: `You cannot start an All-In battle, because you already have a full team.`,
+                        ephemeral: true
+                    });
+                } else if (player2.playersSkins.length >= getMaxSkinsPerTeam()) {
+                    await interaction.update({
+                        embeds: [await this.generateEmbed(skins1, currentIndex, guildId)],
+                        components: [
+                            new MessageActionRow({
+                                components: [...([startButton]), ...([backButton]), ...([randomButton]), ...([forwardButton]), ...([endButton])]
+                            }),
+                            new MessageActionRow({
+                                components: [...([fightButton]), ...([allInButton])]
+                            })
+                        ]
+                    });
+                    await interaction.followUp({
+                        content: `You cannot start an All-In battle, because your opponent already has a full team.`,
+                        ephemeral: true
+                    });
+                } else {
+                    allIn = true;
+                }
+            }
+
             if (
                 interaction.customId === startButton.customId
                 || interaction.customId === backButton.customId
@@ -202,10 +240,7 @@ export class Fight extends NoxCommand {
                         })
                     ]
                 })
-            } else if (interaction.customId === fightButton.customId || interaction.customId === allInButton.customId) {
-                if (interaction.customId === allInButton.customId) {
-                    allIn = true;
-                }
+            } else if (interaction.customId === fightButton.customId || allIn) {
                 skinName1 = interaction.message.embeds[0].title;
                 godName1 = interaction.message.embeds[0].author.name;
                 rarity1 = interaction.message.embeds[0].description.replace(/^\*+|\*+$/g, '');

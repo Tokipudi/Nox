@@ -16,7 +16,8 @@ import { CommandInteraction } from 'discord.js';
         'targetIsNotABot',
         'playerExists',
         'targetPlayerExists',
-        'targetIsNotBanned'
+        'targetIsNotBanned',
+        'targetPlayerTeamAmountNotMax'
     ]
 })
 export class Give extends NoxCommand {

@@ -1,4 +1,4 @@
-import { addRoll, canPlayerClaimRoll, getPlayerByUserId, getTimeLeftBeforeClaim, substractAvailableRolls } from '@lib/database/utils/PlayersUtils';
+import { addRoll, canPlayerClaimRoll, getMaxSkinsPerTeam, getPlayerByUserId, getTimeLeftBeforeClaim, substractAvailableRolls } from '@lib/database/utils/PlayersUtils';
 import { connectSkin } from '@lib/database/utils/SkinsUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -94,14 +94,15 @@ export class Roll extends NoxCommand {
             const canClaim = await canPlayerClaimRoll(player.id);
             if (player && player.isBanned) {
                 interaction.followUp({
-                    content: `${user} You have been banned from playing and cannot claim any card.`,
-                    ephemeral: true
+                    content: `${user} You have been banned from playing and cannot claim any card.`
                 });
             } else if (!canClaim) {
                 const duration = await getTimeLeftBeforeClaim(player.id);
                 interaction.followUp({
                     content: `${user} You have to wait \`${duration.hours()} hour(s), ${duration.minutes()} minutes and ${duration.seconds()} seconds\` before claiming a new card again.`
                 });
+            } else if (player.playersSkins.length >= getMaxSkinsPerTeam()) {
+                await interaction.followUp(`${user} You already have a full team and cannot claim any more skins right now.`);
             } else {
                 collector.stop();
 

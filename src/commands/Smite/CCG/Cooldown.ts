@@ -1,4 +1,5 @@
-import { canPlayerClaimRoll, canPlayerRoll, createPlayerIfNotExists, getTimeLeftBeforeClaim, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
+import { canPlayerClaimRoll, canPlayerRoll, createPlayerIfNotExists, getMaxSkinsPerTeam, getTimeLeftBeforeClaim, getTimeLeftBeforeRoll } from '@lib/database/utils/PlayersUtils';
+import { getSkinsByPlayer } from '@lib/database/utils/SkinsUtils';
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
@@ -60,6 +61,10 @@ export class Cooldown extends NoxCommand {
         } else {
             const duration = await getTimeLeftBeforeClaim(player.id);
             cdMsg = `\`${duration.hours()}h ${duration.minutes()}min ${duration.seconds()}s\``;
+        }
+        const skins = await getSkinsByPlayer(player.id);
+        if (skins.length >= getMaxSkinsPerTeam()) {
+            cdMsg += `\n*Cannot claim because team is full.*`;
         }
         embed.addField('Claims', cdMsg, true);
 

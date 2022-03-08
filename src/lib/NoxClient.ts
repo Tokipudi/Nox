@@ -33,9 +33,11 @@ declare module '@sapphire/framework' {
         guildIsActive: never,
         playerExists: never,
         playerIsNotBanned: never,
+        playerTeamAmountNotMax: never,
         targetIsNotABot: never,
         targetIsNotBanned: never,
-        targetPlayerExists: never
+        targetPlayerExists: never,
+        targetPlayerTeamAmountNotMax: never
     }
     interface ArgType {
         player: Players
