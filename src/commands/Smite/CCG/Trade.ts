@@ -16,10 +16,8 @@ import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } 
         'authorIsNotTarget',
         'targetIsNotABot',
         'playerExists',
-        'playerTeamAmountNotMax',
         'targetPlayerExists',
-        'targetIsNotBanned',
-        'targetPlayerTeamAmountNotMax'
+        'targetIsNotBanned'
     ]
 })
 export class Trade extends NoxCommand {
