@@ -35,7 +35,7 @@ export class ChatInputCommandError extends Listener<typeof Events.ChatInputComma
 
         this.container.logger.error(error);
 
-        return interaction.replied
+        return interaction.replied || interaction.deferred
             ? interaction.followUp({
                 content: errMsg,
                 ephemeral: true

@@ -37,25 +37,29 @@ export abstract class Achievement extends Piece implements AchievementInterface 
 
                 // Update tokens
                 for (let playerId of playerIds) {
-                    await this.container.prisma.players.update({
-                        data: {
-                            tokens: {
-                                increment: this.tokens
+                    try {
+                        await this.container.prisma.players.update({
+                            data: {
+                                tokens: {
+                                    increment: this.tokens
+                                }
+                            },
+                            where: {
+                                id: playerId
                             }
-                        },
-                        where: {
-                            id: playerId
-                        }
-                    });
-
-                    // Update achievements archive
-                    await this.container.prisma.playersSeasonsAchievements.create({
-                        data: {
-                            achievementId: achievement.id,
-                            playerId: playerId,
-                            season: guild.season
-                        }
-                    });
+                        });
+    
+                        // Update achievements archive
+                        await this.container.prisma.playersSeasonsAchievements.create({
+                            data: {
+                                achievementId: achievement.id,
+                                playerId: playerId,
+                                season: guild.season
+                            }
+                        });
+                    } catch (e) {
+                        this.container.logger.error(e, playerId);
+                    }
                 }
             }
         }

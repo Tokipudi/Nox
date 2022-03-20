@@ -27,7 +27,7 @@ export class ContextMenuCommandError extends Listener<typeof Events.ContextMenuC
 
         this.container.logger.error(error);
 
-        return interaction.replied
+        return interaction.replied || interaction.deferred
             ? interaction.followUp({
                 content: errMsg,
                 ephemeral: true
