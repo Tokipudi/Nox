@@ -240,3 +240,7 @@ export async function getTimeLeftBeforeClaim(playerId: number) {
     const timeLeft = claimableDate - now;
     return moment.duration(timeLeft * 1000, 'milliseconds');
 }
+
+export function getMaxSkinsPerTeam() {
+    return parseInt(process.env.MAX_SKINS_PER_TEAM || '');
+}

@@ -10,7 +10,7 @@ import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framewor
 import { CommandInteraction, Message, MessageActionRow, MessageReaction, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
-    description: 'Start a trade another player.',
+    description: 'Start a trade with another player.',
     preconditions: [
         'guildIsActive',
         'authorIsNotTarget',
