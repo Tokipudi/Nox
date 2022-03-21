@@ -25,7 +25,7 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
                 }
         }
 
-        return interaction.replied
+        return interaction.replied || interaction.deferred
             ? interaction.followUp({
                 content: errMsg,
                 ephemeral: true

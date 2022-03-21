@@ -12,7 +12,7 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ContextMenuCo
         this.container.logger.error(error);
 
         const errMsg = `You are missing the required permissions to run this command.`;
-        return interaction.replied
+        return interaction.replied || interaction.deferred
             ? interaction.followUp({
                 content: errMsg,
                 ephemeral: true

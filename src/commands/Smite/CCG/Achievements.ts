@@ -145,8 +145,13 @@ export class Achievements extends NoxCommand {
             const users = [];
             for (let playerId of playerIds) {
                 const player = await getPlayer(playerId);
-                const user = await guild.members.fetch(player.user.id);
-                users.push(user);
+                let user;
+                try {
+                    user = await guild.members.fetch(player.user.id);
+                    users.push(user);
+                } catch (e) {
+                    this.container.logger.error(e, achievement.name, playerId);
+                }
             }
 
             if (users.length > 0) {

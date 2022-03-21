@@ -143,6 +143,8 @@ export class Ragnarock extends NoxCommand {
                     highestWinningStreak: 0,
                     losingStreak: 0,
                     winningStreak: 0,
+                    allInWins: 0,
+                    allInLoss: 0,
                     rolls: 0,
                     cardsExchanged: 0,
                     cardsGiven: 0,
