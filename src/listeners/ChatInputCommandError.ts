@@ -33,7 +33,7 @@ export class ChatInputCommandError extends Listener<typeof Events.ChatInputComma
             }
         }
 
-        this.container.logger.error(error);
+        this.container.logger.error(error, payload);
 
         return interaction.replied || interaction.deferred
             ? interaction.followUp({

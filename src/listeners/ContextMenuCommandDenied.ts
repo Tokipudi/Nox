@@ -9,7 +9,7 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ContextMenuCo
     public async run(error: PreconditionError, payload: ContextMenuCommandDeniedPayload) {
         const { interaction } = payload;
 
-        this.container.logger.error(error);
+        this.container.logger.error(error, payload);
 
         const errMsg = `You are missing the required permissions to run this command.`;
         return interaction.replied || interaction.deferred

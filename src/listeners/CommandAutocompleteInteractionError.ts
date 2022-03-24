@@ -7,6 +7,6 @@ import { AutocompleteInteractionPayload, Events, Listener, ListenerOptions } fro
 export class CommandAutocompleteInteractionError extends Listener<typeof Events.CommandAutocompleteInteractionError> {
 
     public async run(error: Error, payload: AutocompleteInteractionPayload) {
-        this.container.logger.error(error);
+        this.container.logger.error(error, payload);
     }
 };
