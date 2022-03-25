@@ -26,15 +26,16 @@ export class ContextMenuCommandError extends Listener<typeof Events.ContextMenuC
         }
 
         this.container.logger.error(error, payload);
-
-        return interaction.replied || interaction.deferred
-            ? interaction.followUp({
-                content: errMsg,
-                ephemeral: true
-            })
-            : interaction.reply({
-                content: errMsg,
-                ephemeral: true
+        
+        if (interaction.replied || interaction.deferred) {
+            return interaction.editReply({
+                content: errMsg
             });
+        }
+
+        return interaction.reply({
+            content: errMsg,
+            ephemeral: true
+        });
     }
 };

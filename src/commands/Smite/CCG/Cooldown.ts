@@ -23,6 +23,8 @@ export class Cooldown extends NoxCommand {
         const { member, guildId } = interaction;
         const author = member.user as User;
 
+        await interaction.deferReply();
+
         let user = interaction.options.getUser('user');
         if (user == null) {
             user = author;
@@ -68,7 +70,7 @@ export class Cooldown extends NoxCommand {
         }
         embed.addField('Claims', cdMsg, true);
 
-        return await interaction.reply({ embeds: [embed] });
+        return await interaction.followUp({ embeds: [embed] });
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {

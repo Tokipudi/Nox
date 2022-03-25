@@ -25,15 +25,16 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
                 }
         }
 
-        return interaction.replied || interaction.deferred
-            ? interaction.followUp({
-                content: errMsg,
-                ephemeral: true
-            })
-            : interaction.reply({
-                content: errMsg,
-                ephemeral: true
+        if (interaction.replied || interaction.deferred) {
+            return interaction.editReply({
+                content: errMsg
             });
+        }
+
+        return interaction.reply({
+            content: errMsg,
+            ephemeral: true
+        });
     }
 
     private getTimeLeftBeforeRoll(milliseconds: number) {
