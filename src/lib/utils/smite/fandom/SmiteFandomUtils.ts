@@ -1,6 +1,6 @@
-import got from 'got';
-import * as cheerio from 'cheerio';
 import { toTitleCase } from '@sapphire/utilities';
+import * as cheerio from 'cheerio';
+import got from 'got';
 
 export async function getGodSkinMissingData(godName) {
     godName = toTitleCase(godName);

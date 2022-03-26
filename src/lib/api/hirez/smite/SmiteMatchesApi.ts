@@ -1,10 +1,10 @@
 import { SmiteApiSession } from '@lib/api/hirez/smite/SmiteApiSession';
-import fetch, { FetchResultTypes } from '@sapphire/fetch';
+import { fetch, FetchResultTypes } from '@sapphire/fetch';
 import { sprintf } from 'sprintf-js';
 import { MOTDResponse } from './interfaces/MatchesInterface';
 
 export class SmiteMatchesApi extends SmiteApiSession {
-    
+
     public async getMOTDs() {
         if (!this.sessionId || this.sessionId === 'undefined') {
             await this.createSession();

@@ -1,61 +1,61 @@
 {
-    "name": "nox",
-    "version": "0.0.1",
-    "description": "A simple Sapphire-based bot",
-    "main": "build/src/index.js",
-    "scripts": {
-        "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
-        "start-dev": "node build/src/index.js",
-        "prisma-migrate-prod": "npx prisma migrate deploy",
-        "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
-        "start": "systemctl start nox",
-        "stop": "systemctl stop nox",
-        "logs": "journalctl -u nox -f | sed 's/.*]: //'"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Tokipudi/nox.git"
-    },
-    "author": "Tokipudi",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/Tokipudi/nox/issues"
-    },
-    "homepage": "https://github.com/Tokipudi/nox#readme",
-    "dependencies": {
-        "@prisma/client": "3.0.2",
-        "@sapphire/decorators": "2.2.0",
-        "@sapphire/discord-utilities": "^2.1.5",
-        "@sapphire/discord.js-utilities": "^3.2.2",
-        "@sapphire/fetch": "1.0.5",
-        "@sapphire/framework": "next",
-        "@sapphire/plugin-logger": "1.0.13",
-        "@sapphire/utilities": "^2.0.1",
-        "@types/require-dir": "^1.0.2",
-        "cheerio": "1.0.0-rc.10",
-        "discord.js": "^13.5.1",
-        "got": "11.8.2",
-        "match-sorter": "^6.3.1",
-        "md5": "2.3.0",
-        "moment": "2.29.1",
-        "require-dir": "^1.2.0",
-        "sprintf-js": "1.1.2"
-    },
-    "devDependencies": {
-        "@commitlint/cli": "13.1.0",
-        "@commitlint/config-conventional": "13.1.0",
-        "@favware/rollup-type-bundler": "1.0.3",
-        "@types/md5": "2.3.1",
-        "@types/sprintf-js": "1.1.2",
-        "@typescript-eslint/eslint-plugin": "4.31.0",
-        "@typescript-eslint/parser": "4.31.0",
-        "@zerollup/ts-transform-paths": "1.7.18",
-        "dotenv": "10.0.0",
-        "eslint": "7.32.0",
-        "esprima": "4.0.1",
-        "prisma": "^3.4.2",
-        "tsconfig-paths": "^3.11.0",
-        "ttypescript": "1.5.12",
-        "typescript": "4.4.2"
-    }
+  "name": "nox",
+  "version": "0.0.1",
+  "description": "A simple Sapphire-based bot",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build-dev": "npx ttsc --build --clean && npx ttsc --build --verbose",
+    "start-dev": "node build/src/index.js",
+    "prisma-migrate-prod": "npx prisma migrate deploy",
+    "build": "rm -rf build/* && npx ttsc --build --verbose && chmod +x /var/www/Nox/build/src/index.js",
+    "start": "systemctl start nox",
+    "stop": "systemctl stop nox",
+    "logs": "journalctl -u nox -f | sed 's/.*]: //'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tokipudi/nox.git"
+  },
+  "author": "Tokipudi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tokipudi/nox/issues"
+  },
+  "homepage": "https://github.com/Tokipudi/nox#readme",
+  "dependencies": {
+    "@prisma/client": "3.11.1",
+    "@sapphire/decorators": "4.3.3",
+    "@sapphire/discord-utilities": "^2.10.2",
+    "@sapphire/discord.js-utilities": "^4.9.3",
+    "@sapphire/fetch": "2.3.0",
+    "@sapphire/framework": "next",
+    "@sapphire/plugin-logger": "2.2.0",
+    "@sapphire/utilities": "^3.6.1",
+    "@types/require-dir": "^1.0.2",
+    "cheerio": "1.0.0-rc.10",
+    "discord.js": "^13.6.0",
+    "got": "11.x",
+    "match-sorter": "^6.3.1",
+    "md5": "2.3.0",
+    "moment": "2.29.1",
+    "require-dir": "^1.2.0",
+    "sprintf-js": "1.1.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "16.2.3",
+    "@commitlint/config-conventional": "16.2.1",
+    "@favware/rollup-type-bundler": "1.0.7",
+    "@types/md5": "2.3.2",
+    "@types/sprintf-js": "1.1.2",
+    "@typescript-eslint/eslint-plugin": "5.16.0",
+    "@typescript-eslint/parser": "5.16.0",
+    "@ovos-media/ts-transform-paths": "^1.7.18-1",
+    "dotenv": "16.0.0",
+    "eslint": "8.12.0",
+    "esprima": "4.0.1",
+    "prisma": "^3.11.1",
+    "tsconfig-paths": "^3.14.1",
+    "ttypescript": "1.5.13",
+    "typescript": "4.6.3"
+  }
 }

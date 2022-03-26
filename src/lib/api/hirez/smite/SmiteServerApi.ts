@@ -1,6 +1,6 @@
-import fetch, { FetchResultTypes } from '@sapphire/fetch';
 import type { ServerStatusResponse } from '@lib/api/hirez/smite/interfaces/SessionResponseInterfaces';
 import { SmiteApiSession } from '@lib/api/hirez/smite/SmiteApiSession';
+import { fetch, FetchResultTypes } from '@sapphire/fetch';
 import { sprintf } from 'sprintf-js';
 
 export class SmiteServerApi extends SmiteApiSession {

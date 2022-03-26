@@ -1,4 +1,4 @@
-import fetch, { FetchResultTypes } from '@sapphire/fetch';
+import { fetch, FetchResultTypes } from '@sapphire/fetch';
 import { sprintf } from 'sprintf-js';
 import { ItemsResponse } from './interfaces/ItemsInterfaces';
 import { SmiteApiSession } from './SmiteApiSession';
