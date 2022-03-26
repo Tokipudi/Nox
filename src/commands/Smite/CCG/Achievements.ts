@@ -3,10 +3,10 @@ import { fetchAchievements } from '@lib/achievements/AchievementUtils';
 import { getPlayer } from '@lib/database/utils/PlayersUtils';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getEndButton, getForwardButton, getStartButton } from '@lib/utils/PaginationUtils';
 import { ApplyOptions } from '@sapphire/decorators';
+import { PaginatedMessage } from '@sapphire/discord.js-utilities';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Guild, Message, MessageActionRow, MessageComponentInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, Guild, MessageEmbed } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows the achievements for the CCG.',
@@ -17,85 +17,22 @@ import { CommandInteraction, Guild, Message, MessageActionRow, MessageComponentI
 export class Achievements extends NoxCommand {
 
     public override async chatInputRun(interaction: CommandInteraction, context: ChatInputCommand.RunContext) {
-        const { member, guildId } = interaction;
-        const author = member.user;
+        const { guildId } = interaction;
 
-        const reply = await interaction.deferReply({
-            fetchReply: true
-        }) as Message;
+        await interaction.deferReply();
 
         const guild = await this.container.client.guilds.fetch(guildId);
 
         const achievements = fetchAchievements();
 
-        const backButton = getBackButton();
-        const forwardButton = getForwardButton();
-        const endButton = getEndButton();
-        const startButton = getStartButton();
-
         const embeds = await this.getEmbeds(achievements, guild);
 
-        let index = 0;
-
-        // Disable the buttons if they cannot be used
-        forwardButton.disabled = index >= embeds.length - 1;
-        endButton.disabled = index >= embeds.length - 1;
-        backButton.disabled = index === 0;
-        startButton.disabled = index === 0;
-
-        await interaction.editReply({
-            embeds: [embeds[index]],
-            components: [
-                new MessageActionRow({
-                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                })
-            ]
-        }) as Message;
-
-        const filter = (i: MessageComponentInteraction) => {
-            return i.user.id === author.id
+        const paginatedMessage = new PaginatedMessage();
+        for (let embed of embeds) {
+            paginatedMessage.addPageEmbed(embed);
         }
-        const collector = reply.createMessageComponentCollector({
-            filter: filter
-        });
 
-        collector.on('collect', async i => {
-            // Increase/decrease index
-            switch (i.customId) {
-                case startButton.customId:
-                    index = 0;
-                    break;
-                case backButton.customId:
-                    if (index > 0) {
-                        index -= 1;
-                    }
-                    break;
-                case forwardButton.customId:
-                    if (index < embeds.length - 1) {
-                        index += 1;
-                    }
-                    break;
-                case endButton.customId:
-                    index = embeds.length - 1;
-                    break;
-            }
-
-            // Disable the buttons if they cannot be used
-            forwardButton.disabled = index >= embeds.length - 1;
-            endButton.disabled = index >= embeds.length - 1;
-            backButton.disabled = index === 0;
-            startButton.disabled = index === 0;
-
-            // Respond to interaction by updating message with new embed
-            await i.update({
-                embeds: [embeds[index]],
-                components: [
-                    new MessageActionRow({
-                        components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                    })
-                ]
-            });
-        });
+        return paginatedMessage.run(interaction);
     }
 
     private async getEmbeds(achievements: Achievement[], guild: Guild): Promise<MessageEmbed[]> {
