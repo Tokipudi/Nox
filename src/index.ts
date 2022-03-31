@@ -16,13 +16,15 @@ const client = new NoxClient({
     presence: {
         status: "online",
         activities: [{
-            name: `Type ${process.env.COMMAND_PREFIX}help for more.`,
+            name: `Smite stuff.`,
             type: 'PLAYING',
             url: 'https://github.com/Tokipudi/Nox'
         }]
     },
     loadMessageCommandListeners: true,
-    defaultPrefix: process.env.COMMAND_PREFIX,
+    logger: {
+        depth: 3
+    }
 });
 
 client.login(process.env.DISCORD_TOKEN);
