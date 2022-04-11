@@ -3,28 +3,28 @@ import { EmojiIdentifierResolvable, MessageButton, MessageButtonStyle } from 'di
 export function getStartButton(
     label: string = '',
     customId: string = 'start',
-    style: MessageButtonStyle | null = 'SECONDARY'
+    style: MessageButtonStyle | null = 'PRIMARY'
 ) {
     return getButton(customId, label, style, '⏪', true);
 }
 export function getBackButton(
     label: string = '',
     customId: string = 'back',
-    style: MessageButtonStyle | null = 'SECONDARY'
+    style: MessageButtonStyle | null = 'PRIMARY'
 ) {
-    return getButton(customId, label, style, '⬅️', true);
+    return getButton(customId, label, style, '◀️', true);
 }
 export function getForwardButton(
     label: string = '',
     customId: string = 'forward',
-    style: MessageButtonStyle | null = 'SECONDARY'
+    style: MessageButtonStyle | null = 'PRIMARY'
 ) {
-    return getButton(customId, label, style, '➡️');
+    return getButton(customId, label, style, '▶️');
 }
 export function getEndButton(
     label: string = '',
     customId: string = 'end',
-    style: MessageButtonStyle | null = 'SECONDARY'
+    style: MessageButtonStyle | null = 'PRIMARY'
 ) {
     return getButton(customId, label, style, '⏩');
 }

@@ -1,14 +1,15 @@
 import { createPlayerIfNotExists } from '@lib/database/utils/PlayersUtils';
 import { disconnectWishlistSkin, getSkinOwner, getSkinWishlist } from '@lib/database/utils/SkinsUtils';
 import { PlayerNotLoadedError } from '@lib/structures/errors/PlayerNotLoadedError';
-import { WrongInteractionError } from '@lib/structures/errors/WrongInteractionError';
 import { NoxCommand } from '@lib/structures/NoxCommand';
 import { NoxCommandOptions } from '@lib/structures/NoxCommandOptions';
-import { getBackButton, getEndButton, getForwardButton, getSelectButton, getStartButton } from '@lib/utils/PaginationUtils';
-import { generateSkinEmbed } from '@lib/utils/smite/SkinsPaginationUtils';
+import { NoxPaginatedMessage } from '@lib/structures/NoxPaginatedMessage';
+import { getSkinsPaginatedMessage } from '@lib/utils/smite/SkinsPaginationUtils';
+import { Players } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
+import { PaginatedMessagePage } from '@sapphire/discord.js-utilities';
 import { ApplicationCommandRegistry, ChatInputCommand } from '@sapphire/framework';
-import { CommandInteraction, Message, MessageActionRow, Snowflake, User } from 'discord.js';
+import { CommandInteraction, Constants, Snowflake, User } from 'discord.js';
 
 @ApplyOptions<NoxCommandOptions>({
     description: 'Shows your wishlist or the wishlist of another player.',
@@ -37,12 +38,6 @@ export class Wishlist extends NoxCommand {
             guildId: guildId
         });
 
-        const backButton = getBackButton();
-        const forwardButton = getForwardButton();
-        const selectButton = getSelectButton('Remove', 'DANGER');
-        const endButton = getEndButton();
-        const startButton = getStartButton();
-
         let skins = await getSkinWishlist(player.id);
         if (!skins || skins.length === 0) {
             return user.id === author.id
@@ -56,118 +51,9 @@ export class Wishlist extends NoxCommand {
                 })
         }
 
-        if (skins.length <= 1) {
-            forwardButton.setDisabled(true);
-            endButton.setDisabled(true);
-        } else {
-            forwardButton.setDisabled(false);
-            endButton.setDisabled(false);
-        }
+        const paginatedMessage = await this.getWishlistPaginatedMessage(skins, guildId, player, author);
 
-        let messageActionRows = user.id === author.id
-            ? [
-                new MessageActionRow({
-                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                }),
-                new MessageActionRow({
-                    components: [...([selectButton])]
-                })
-            ]
-            : [
-                new MessageActionRow({
-                    components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                })
-            ];
-
-        let currentIndex = 0
-        const reply = await interaction.reply({
-            content: `${user}'s wishlist:`,
-            embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
-            components: messageActionRows,
-            fetchReply: true
-        }) as Message;
-
-        const collector = reply.createMessageComponentCollector({
-            filter: ({ user }) => user.id === author.id
-        });
-        collector.on('collect', async interaction => {
-            // Increase/decrease index
-            switch (interaction.customId) {
-                case startButton.customId:
-                    currentIndex = 0;
-                    break;
-                case backButton.customId:
-                    if (currentIndex > 0) {
-                        currentIndex -= 1;
-                    }
-                    break;
-                case forwardButton.customId:
-                    if (currentIndex < skins.length - 1) {
-                        currentIndex += 1;
-                    }
-                    break;
-                case endButton.customId:
-                    currentIndex = skins.length - 1;
-                    break;
-                case selectButton.customId:
-                    for (let skin of skins) {
-                        if (skin.name === interaction.message.embeds[0].title && skin.god.name === interaction.message.embeds[0].author.name) {
-                            await disconnectWishlistSkin(skin.id, player.id)
-                            break;
-                        }
-                    }
-                    if (currentIndex != 0 && currentIndex === skins.length - 1) {
-                        currentIndex--;
-                    }
-                    skins = await getSkinWishlist(player.id);
-                    break;
-                default:
-                    throw new WrongInteractionError({
-                        interaction: interaction
-                    });
-            }
-
-
-            if (skins == null || skins.length === 0) {
-                collector.stop()
-            } else {
-                // Disable the buttons if they cannot be used
-                startButton.disabled = currentIndex === 0;
-                forwardButton.disabled = currentIndex === skins.length - 1;
-                backButton.disabled = currentIndex === 0;
-                endButton.disabled = currentIndex >= skins.length - 1;
-
-                messageActionRows = user.id === author.id
-                    ? [
-                        new MessageActionRow({
-                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                        }),
-                        new MessageActionRow({
-                            components: [...([selectButton])]
-                        })
-                    ]
-                    : [
-                        new MessageActionRow({
-                            components: [...([startButton]), ...([backButton]), ...([forwardButton]), ...([endButton])]
-                        })
-                    ];
-                // Respond to interaction by updating message with new embed
-                await interaction.update({
-                    embeds: [await this.generateGodSkinEmbed(skins, currentIndex, guildId)],
-                    components: messageActionRows
-                })
-            }
-        });
-
-        collector.on('end', collected => {
-            if (skins == null || skins.length === 0) {
-                reply.edit({
-                    content: 'Your wishlist is now empty!',
-                    embeds: [],
-                    components: []
-                });
-            }
-        });
+        return paginatedMessage.run(interaction);
     }
 
     public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -187,19 +73,64 @@ export class Wishlist extends NoxCommand {
         });
     }
 
-    protected async generateGodSkinEmbed(skins, index, guildId: Snowflake) {
-        const embed = generateSkinEmbed(skins, index);
+    protected async getWishlistPaginatedMessage(skins, guildId: Snowflake, player: Players, author: User): Promise<NoxPaginatedMessage> {
+        let paginatedMessage = getSkinsPaginatedMessage(skins);
 
-        const owner = await getSkinOwner(skins[index].id, guildId);
-        if (owner !== null) {
-            const user = await this.container.client.users.fetch(owner.player.user.id);
-            if (user === null) {
-                embed.addField('Owner', `${owner.player.user.id}`);
-            } else {
-                embed.addField('Owner', `${user}`);
+        if (player.userId === author.id) {
+            paginatedMessage.addAction({
+                customId: 'update-paginated-message-unwish',
+                style: Constants.MessageButtonStyles.DANGER,
+                type: Constants.MessageComponentTypes.BUTTON,
+                label: 'Unwish',
+                run: async ({ handler, collector, author, response, interaction }) => {
+                    if (!interaction.deferred && !interaction.replied) await interaction.deferUpdate();
+
+                    const page = handler.pages[handler.index] as PaginatedMessagePage;
+
+                    // Typeguards
+                    if ('embeds' in page && response.type === 'MESSAGE_COMPONENT') {
+                        // Current embed
+                        const embed = page.embeds[0];
+
+                        const selectedSkins = skins.filter(r => r.name === embed.title && r.god.name === embed.author.name);
+                        if (selectedSkins.length) {
+                            await disconnectWishlistSkin(selectedSkins[0].id, player.id);
+                        }
+
+                        let index = paginatedMessage.index;
+                        paginatedMessage = await this.getWishlistPaginatedMessage(
+                            await getSkinWishlist(player.id),
+                            guildId,
+                            player,
+                            author
+                        );
+
+                        if (index >= paginatedMessage.pages.length) {
+                            index--;
+                        }
+                        paginatedMessage.setIndex(index);
+
+                        return paginatedMessage.run(interaction);
+                    }
+                }
+            });
+        }
+
+        for (let page of paginatedMessage.pages) {
+            // Typeguard
+            if ('embeds' in page) {
+                const embed = page.embeds[0];
+
+                const owner = await getSkinOwner(skins[paginatedMessage.pages.indexOf(page)].id, guildId);
+                if (owner !== null) {
+                    const user = await this.container.client.users.fetch(owner.player.user.id);
+                    embed.description = user === null
+                        ? `${owner.player.user.id}`
+                        : `${user}`;
+                }
             }
         }
 
-        return embed;
+        return paginatedMessage;
     }
 }
